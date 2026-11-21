@@ -13,6 +13,7 @@ namespace {
 seed::AgentKernel gKernel;
 std::mutex gMutex;
 std::atomic<bool> gCancel{false};
+std::atomic<bool> gModelReady{false};
 bool gInitialized=false;
 constexpr std::uint64_t kReserveBytes=768ULL*1024ULL*1024ULL;
 
@@ -131,8 +132,16 @@ Java_org_seedx_agent_MainActivity_nativeInit(JNIEnv*,jobject) {
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_org_seedx_agent_MainActivity_nativeRuntimeStatus(JNIEnv* env,jobject) {
- std::lock_guard<std::mutex> lock(gMutex);
+ std::unique_lock<std::mutex> lock(gMutex,std::try_to_lock);
  ensureInitialized();
+ if(!lock.owns_lock()) {
+  std::string busy="{\\"ready\\":";
+  busy+=gModelReady.load()?"true":"false";
+  busy+=",\\"state\\":\\"busy\\",\\"llamaAvailable\\":";
+  busy+=seed::llamaCppBackendAvailable()?"true":"false";
+  busy+=",\\"availableBytes\\":0,\\"reserveBytes\\":"+std::to_string(kReserveBytes)+"}";
+  return toJava(env,busy);
+ }
  seed::DeviceMemory mem;
  std::string memError;
  const bool hasMemory=seed::DeviceMemoryProbe::read(mem,memError,kReserveBytes);
@@ -172,7 +181,9 @@ Java_org_seedx_agent_MainActivity_nativeLoadModel(JNIEnv* env,jobject,jstring pa
  manifest.fileBytes=bytes;
  manifest.estimatedRamBytes=bytes+std::max<std::uint64_t>(bytes/2,256ULL*1024ULL*1024ULL);
  manifest.contextTokens=static_cast<std::uint32_t>(std::clamp(contextTokens,512,8192));
- if(!gKernel.localAi().load(manifest,seed::makeLlamaCppBackend(),memory,error)) return toJava(env,error);
+ const bool loaded=gKernel.localAi().load(manifest,seed::makeLlamaCppBackend(),memory,error);
+ gModelReady.store(gKernel.localAi().state()==seed::RuntimeState::Ready);
+ if(!loaded) return toJava(env,error);
  return toJava(env,"Model loaded successfully.");
 }
 
@@ -225,11 +236,11 @@ extern "C" JNIEXPORT void JNICALL
 Java_org_seedx_agent_MainActivity_nativeUnloadModel(JNIEnv*,jobject) {
  std::lock_guard<std::mutex> lock(gMutex);
  gKernel.localAi().unload();
+ gModelReady.store(false);
 }
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_org_seedx_agent_MainActivity_nativeGuardianStatus(JNIEnv* env,jobject) {
- std::lock_guard<std::mutex> lock(gMutex);
  ensureInitialized();
  const bool frozen=gKernel.emergencyStopped();
  const bool audit=gKernel.verifyAudit();
