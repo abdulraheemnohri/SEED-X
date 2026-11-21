@@ -16,3 +16,11 @@
 - The workflow editor is a reorderable linear node list, not a free-form drag-and-drop graph canvas.
 - No autonomous agent loop, scheduled tool execution, provider-triggered background execution or Android device-control automation is implemented.
 - Device-specific responsive layout and TalkBack/manual accessibility review remain outstanding.
+
+## Additional workspace expansion
+- Added Prompt Library with six built-in prompt starters and up to 50 custom local templates. Choosing a template only fills the chat composer; the user must press Send.
+- Added conversation search, Markdown export through Android's document picker, copy-latest-response and confirmation-protected history clearing.
+- Added Storage Manager for app-owned model/download size estimates and controlled cleanup of local chat, memories and diagnostic reports. It does not scan or modify external storage.
+- Added read-only Network Diagnostics for active transport, validated connectivity, metering/roaming capability and current provider endpoint; it does not scan LAN devices or generate network traffic.
+- Added About screen with repository, documentation, issue-reporting and optional donation links.
+- Settings backup now includes custom prompt templates and dashboard widget preferences, with schema validation. Provider profiles, credentials, chat history and model files remain excluded.
