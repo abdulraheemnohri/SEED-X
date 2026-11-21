@@ -125,12 +125,12 @@ public final class MainActivity extends Activity {
   Uri uri=data.getData();
   ProgressBar loading=new ProgressBar(this);loading.setIndeterminate(true);content.addView(loading);
   worker.execute(()->{
-   String message;
+   String message;File temp=null;
    try {
     String name=queryName(uri).replaceAll("[^A-Za-z0-9._-]","_");
     if(!name.toLowerCase(Locale.ROOT).endsWith(".gguf"))throw new IllegalArgumentException("Only .gguf files accepted.");
     File dir=new File(getFilesDir(),"models");if(!dir.exists()&&!dir.mkdirs())throw new IOException("Cannot create private model directory.");
-    File temp=new File(dir,name+".importing");File target=new File(dir,name);
+    temp=new File(dir,name+".importing");File target=new File(dir,name);
     try(InputStream in=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(temp)){
      if(in==null)throw new IOException("Cannot open selected document.");
      byte[] buffer=new byte[64*1024];int n;long total=0;
@@ -143,7 +143,7 @@ public final class MainActivity extends Activity {
     if(target.exists()&&!target.delete())throw new IOException("Cannot replace existing model file.");
     if(!temp.renameTo(target))throw new IOException("Could not finalize imported model file.");
     message="GGUF model copied to private storage.";
-   } catch(Exception e){message="Import failed: "+(e.getMessage()==null?"unknown error":e.getMessage());}
+   } catch(Exception e){if(temp!=null&&temp.exists())temp.delete();message="Import failed: "+(e.getMessage()==null?"unknown error":e.getMessage());}
    final String resultMessage=message;
    runOnUiThread(()->{Toast.makeText(this,resultMessage,Toast.LENGTH_LONG).show();render();});
   });
