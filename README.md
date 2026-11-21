@@ -88,7 +88,7 @@ System 1 (Guardian) owns policy and authorization. System 2 model output is untr
 - The Android Java provider transport and C++ Phase 4 provider adapter remain separate implementations.
 - Policy dashboard is read-only; a visual policy editor and third-party dynamic plugin loading are pending.
 - Model-initiated autonomous tool planning is not enabled; operators launch tools from the Tool Center. No GPU/NPU acceleration or physical-device benchmark is claimed.
-- SHA-256 model verification, signed model provenance and model catalog/downloader remain pending.
+- SHA-256 model verification, signed model provenance and an in-app model downloader remain pending.
 
 ## License
 MIT. See LICENSE.
