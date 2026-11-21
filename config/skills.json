@@ -1,0 +1,145 @@
+{
+  "schemaVersion": 1,
+  "skills": [
+    {
+      "id": "explain-code",
+      "name": "Explain Code",
+      "category": "Development",
+      "description": "Explain source code in beginner-friendly steps.",
+      "prompt": "Explain the following code step by step. Identify its purpose, important functions, data flow, dependencies, and possible pitfalls. Assume I am learning."
+    },
+    {
+      "id": "review-code",
+      "name": "Code Review",
+      "category": "Development",
+      "description": "Review code for correctness, security, maintainability and tests.",
+      "prompt": "Review the provided code. Prioritize correctness and security, identify concrete defects with file/line references when available, suggest minimal fixes, and propose tests. Do not claim tests were run unless results are supplied."
+    },
+    {
+      "id": "debug-helper",
+      "name": "Debug Assistant",
+      "category": "Development",
+      "description": "Turn logs and symptoms into a reproducible debugging plan.",
+      "prompt": "Diagnose the issue using only the supplied evidence. Separate confirmed facts from hypotheses, identify likely root causes, and give a minimal step-by-step reproduction and fix plan."
+    },
+    {
+      "id": "architecture",
+      "name": "Architecture Designer",
+      "category": "Development",
+      "description": "Design modular system architecture and interfaces.",
+      "prompt": "Design a modular architecture. Include component boundaries, interfaces, data flow, failure handling, security boundaries, and a phased implementation plan."
+    },
+    {
+      "id": "test-planner",
+      "name": "Test Planner",
+      "category": "Development",
+      "description": "Generate unit, integration, UI and regression tests.",
+      "prompt": "Create a test plan with unit, integration, security, performance, regression and manual device tests. Include test data, expected results and edge cases."
+    },
+    {
+      "id": "api-designer",
+      "name": "API Designer",
+      "category": "Development",
+      "description": "Design stable REST and local IPC contracts.",
+      "prompt": "Design an API contract with request/response schemas, validation, errors, versioning, authentication and example calls."
+    },
+    {
+      "id": "readme-writer",
+      "name": "README Writer",
+      "category": "Documentation",
+      "description": "Create clear installation and project documentation.",
+      "prompt": "Write a practical README with overview, prerequisites, install steps, configuration, usage, troubleshooting, security notes and contribution guidance."
+    },
+    {
+      "id": "release-notes",
+      "name": "Release Notes",
+      "category": "Documentation",
+      "description": "Prepare versioned release notes from supplied changes.",
+      "prompt": "Create concise release notes grouped into Added, Changed, Fixed, Security, Known Limitations and Upgrade Instructions. Do not invent changes."
+    },
+    {
+      "id": "project-planner",
+      "name": "Project Planner",
+      "category": "Planning",
+      "description": "Convert a project idea into phases and deliverables.",
+      "prompt": "Convert the idea into a delivery plan with milestones, scope, dependencies, acceptance criteria, risks and a realistic MVP."
+    },
+    {
+      "id": "requirements",
+      "name": "Requirements Analyst",
+      "category": "Planning",
+      "description": "Turn rough requirements into verifiable requirements.",
+      "prompt": "Extract functional and non-functional requirements. Give each a unique ID, priority, acceptance criteria and open questions."
+    },
+    {
+      "id": "security-audit",
+      "name": "Security Audit",
+      "category": "Security",
+      "description": "Threat model the supplied system.",
+      "prompt": "Perform a defensive security review. Identify assets, trust boundaries, attack surfaces, threats, mitigations and residual risks. Do not suggest offensive exploitation."
+    },
+    {
+      "id": "privacy-review",
+      "name": "Privacy Reviewer",
+      "category": "Security",
+      "description": "Review data collection, retention and sharing.",
+      "prompt": "Review privacy implications: data minimization, local storage, cloud transfer, retention, secrets, permissions, backup and user consent."
+    },
+    {
+      "id": "model-selector",
+      "name": "Local Model Selector",
+      "category": "AI Operations",
+      "description": "Recommend models based on device RAM and task.",
+      "prompt": "Recommend local models based on the exact device RAM, available storage, quantization, context length and task. Use conservative memory estimates and clearly label unverified performance."
+    },
+    {
+      "id": "provider-advisor",
+      "name": "Provider Advisor",
+      "category": "AI Operations",
+      "description": "Compare local and cloud inference routes.",
+      "prompt": "Compare configured local and remote AI options. Consider privacy, cost, rate limits, latency, model capability, network reliability and data policy. Never assume free access is unlimited."
+    },
+    {
+      "id": "prompt-optimizer",
+      "name": "Prompt Optimizer",
+      "category": "AI Operations",
+      "description": "Improve prompts while preserving intent.",
+      "prompt": "Rewrite the supplied prompt to be precise, structured and testable. Preserve all requirements and list assumptions separately."
+    },
+    {
+      "id": "summarizer",
+      "name": "Conversation Summarizer",
+      "category": "Productivity",
+      "description": "Summarize long conversations into actionable context.",
+      "prompt": "Summarize the conversation into objective, decisions, requirements, completed work, unresolved issues, risks and next actions. Preserve exact names and constraints."
+    },
+    {
+      "id": "study-tutor",
+      "name": "Study Tutor",
+      "category": "Learning",
+      "description": "Teach a topic with examples and short exercises.",
+      "prompt": "Teach the topic progressively. Start with a simple explanation, then an example, common mistakes, and a short practice exercise with answer."
+    },
+    {
+      "id": "urdu-english",
+      "name": "Urdu + English Explainer",
+      "category": "Learning",
+      "description": "Explain technical subjects in simple English and Roman Urdu.",
+      "prompt": "Explain the technical subject in simple English followed by clear Roman Urdu. Keep commands and code exact, and define important terms."
+    },
+    {
+      "id": "workflow-builder",
+      "name": "Workflow Builder",
+      "category": "Automation",
+      "description": "Design a human-approved workflow with checkpoints.",
+      "prompt": "Design a workflow with explicit trigger, inputs, steps, approvals, outputs, failure recovery and audit events. Never include hidden or unapproved device actions."
+    },
+    {
+      "id": "donation-copy",
+      "name": "Donation Page Writer",
+      "category": "Business",
+      "description": "Write transparent optional donation messaging.",
+      "prompt": "Draft ethical, transparent donation messaging. Make donations optional, explain what they support, avoid manipulative claims, and do not promise features that are not implemented."
+    }
+  ]
+}
