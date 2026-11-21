@@ -5,7 +5,8 @@
 The Chat screen now includes:
 - Select the currently loaded local model or a saved cloud provider profile directly from Chat.
 - Explicit local/provider routing preference. Selecting a provider bypasses local auto-routing; selecting local requires a loaded local runtime.
-- New chat and local chat history switching.
+- New chat and local chat history switching, plus per-conversation rename/delete actions.
+- The selected local/provider route and provider profile ID are saved with each archived conversation.
 - Up to 30 archived conversations, with up to the most recent 100 messages retained in the active conversation.
 - Search, retry, copy, Markdown export, clear and long-press message actions remain available.
 - Quick links to Skills, Guardian Tools, Providers, Integrations and Workflows.
@@ -33,7 +34,7 @@ Chat archive is local-only and is not included in settings backup. If history re
 
 ## Model, skills and tools
 
-- The chat model picker selects a loaded local runtime or one of the saved provider profiles.
+- The chat model picker selects a loaded local runtime or one of the saved provider profiles. Route selection is stored per conversation, so switching chats restores its selected route.
 - Skills are existing reusable prompt templates, not arbitrary executable code.
 - Tools continue to require native Guardian authorization.
 - Workflows remain manually launched plans; no model-initiated autonomous execution is introduced.
