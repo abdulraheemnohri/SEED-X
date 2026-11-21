@@ -14,3 +14,10 @@
 - No Accessibility service, overlay, SMS, call-log, contacts, location, camera, background microphone, notification listener or device-admin permission is declared.
 - Task Manager currently manages the foreground session only. Persistent scheduled WorkManager jobs, pause/resume queues and unattended task execution are not implemented.
 - Full light/system theme switching and a visual drag-and-drop workflow editor remain future work; the current interface uses the dark palette and manual workflow launcher.
+
+
+## Additional mobile UI improvements
+- Compact bottom navigation with Home, Chat, Models and Settings.
+- Grouped mobile drawer menu for all screens, global screen search, screen favourites and startup-screen selection.
+- Quick-launch dashboard grid and top-bar overflow actions for emergency stop, cancellation and support.
+- Settings JSON export/import through Android's Storage Access Framework. The backup is allowlisted and excludes provider profiles, API keys, chat history and model files; imported values are schema- and range-validated.
