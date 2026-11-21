@@ -1,4 +1,5 @@
 #include "seed/agent_kernel.hpp"
+#include "seed/tool_registry.hpp"
 #include <cassert>
 #include <iostream>
 int main(){
