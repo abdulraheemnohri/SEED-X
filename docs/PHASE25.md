@@ -28,3 +28,12 @@
 - Expanded chat message controls: long-press a message to copy/delete it, speak assistant messages, or resend user messages; retry the latest user message and copy the full transcript.
 
 - Added Android 15+ foreground-service timeout handling. The user-started dataSync session now clears its running state and stops itself when Android invokes the platform timeout callback.
+
+## Adaptive UI expansion
+- Replaced the fixed phone-only shell with width-aware navigation: a five-item bottom bar on compact windows and a persistent grouped side rail on large windows.
+- Added automatic layout selection plus user overrides for automatic, bottom-bar and side-rail navigation.
+- Added comfortable/compact content density, responsive dashboard quick-launch columns (2/3/4), clearer active navigation states and consistent touch targets.
+- Added resizable-activity and configuration handling so rotation, foldable/window-size changes rebuild the adaptive shell.
+- Improved light-theme system-bar icon contrast, card spacing, control contrast and screen-reader content descriptions for navigation actions.
+- Navigation mode and density are included in the validated settings backup.
+- Device screenshots, TalkBack traversal and multi-device manual verification remain outstanding; the current implementation is native Android Views, not a Compose redesign.
