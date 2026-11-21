@@ -103,7 +103,7 @@ print("OK task reminders, workflow builder and runtime/provider diagnostics")
 
 # Regression checks for the full-project audit findings.
 service = (ROOT / "android/app/src/main/java/org/seedx/agent/AgentForegroundService.java").read_text(encoding="utf-8")
-for marker in ("running = false;", "running = true;", "onDestroy()"):
+for marker in ("running = false;", "running = true;", "onDestroy()", "onTimeout(int startId, int foregroundServiceType)", "stopSelf(startId)"):
     if marker not in service:
         raise SystemExit(f"Foreground service state lifecycle is missing: {marker}")
 if "boolean ok=result.startsWith(\"Provider connection succeeded.\");" not in activity:
