@@ -210,7 +210,7 @@ for marker in ("interface InferenceAdapter", "void generate(", "void cancel()", 
 for marker in ('endsWith(".litertlm")', 'endsWith(".pte")', "requireMemoryHeadroom", "generationExecutor", "active.unload()"):
     if marker not in adapter_manager:
         raise SystemExit(f"Runtime selection or memory management is missing: {marker}")
-for marker in ("PICK_EDGE_MODEL", "PICK_EDGE_TOKENIZER", "sendThirdPartyLocal", "runtimeAdapters.isLoaded()", "Import LiteRT-LM / ExecuTorch model"):
+for marker in ("PICK_EDGE_MODEL", "PICK_EDGE_TOKENIZER", "sendThirdPartyLocal", "runtimeAdapters.isLoaded()", "Import LiteRT-LM / ExecuTorch model", "Stop current generation"):
     if marker not in activity:
         raise SystemExit(f"Android UI integration for third-party inference is missing: {marker}")
 print("OK Phase 29 LiteRT-LM/ExecuTorch adapters, model import, streaming and runtime selection")
