@@ -94,3 +94,12 @@ The following features were added after the baseline source review:
 - Android 15+ dataSync foreground-service timeout callback now stops the session service and clears its running state.
 
 These additions are subject to the latest CI run. They have not been physically tested on an Android device. The audit's runtime, security and instrumentation-test limitations remain in force.
+
+
+## Phase 26 follow-up
+
+The current main branch adds two workspace screens:
+- **Device Status** reports Android identity, supported ABIs, logical CPU count, battery charge/state/source/health/temperature/voltage, battery-saver state, app battery-optimization exemption, supported thermal status, RAM pressure, storage capacity, app-owned model/download sizes and selected hardware feature declarations.
+- **Backend Manager** separates embedded runtime state from saved local/LAN/cloud provider profiles, exposes online fallback and private-LAN HTTP controls, and links to Provider Hub, Runtime Manager, Models and Network Diagnostics.
+
+No new Android permissions were added. These are read-only status integrations, not device-control features. The provider catalog remains a finite set of presets plus custom OpenAI-compatible endpoint support. Only the optional llama.cpp build is currently integrated as an embedded LLM backend; other runtime catalog entries remain unavailable until adapters are implemented. See [PHASE26.md](PHASE26.md).
