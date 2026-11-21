@@ -81,3 +81,16 @@ The project deliberately distinguishes catalog metadata from executable runtime 
 ## Verification status
 
 The audit reviewed source and CI configuration. It did not execute the app on a physical device. CI at the review point had successful native tests, llama.cpp build and unsigned release artifact jobs on a nearby prior commit; the latest Android debug job was still in progress. Treat final status as pending until the latest workflow run finishes.
+
+
+## Post-audit implementation addendum
+The following features were added after the baseline source review:
+- Prompt Library with six built-in prompt templates and up to 50 custom templates. Template selection only fills the composer; sending remains a deliberate user action.
+- Chat search, long-press message actions (copy/delete, speak assistant messages, resend user messages), retry-last-user, copy transcript, Markdown export and confirmation-protected history clearing.
+- Storage Manager with app-owned model/download size estimates and local cleanup controls for chat, memory and diagnostic reports.
+- Read-only Network Diagnostics for active transport, validated connectivity, metering/roaming and active provider endpoint. It does not scan the LAN.
+- About & Support screen with repository, docs, issue and optional donation links.
+- Settings backup includes prompt templates and dashboard visibility preferences, while continuing to exclude provider profiles, API keys, chat history and model files.
+- Android 15+ dataSync foreground-service timeout callback now stops the session service and clears its running state.
+
+These additions are subject to the latest CI run. They have not been physically tested on an Android device. The audit's runtime, security and instrumentation-test limitations remain in force.
