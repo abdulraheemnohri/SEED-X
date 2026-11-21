@@ -34,6 +34,8 @@ public final class MainActivity extends Activity {
  public interface TokenListener { void onToken(String token); }
  private native boolean nativeInit(String workspaceRoot);
  private native String nativeToolCatalog();
+ private native String nativePolicySnapshot();
+ private native String nativeAuditLog();
  private native String nativeRequestApproval(String tool,String operation,String resource,boolean confirmed);
  private native String nativeExecuteTool(String tool,String operation,String resource,String payload,String approvalTicket);
  private native String nativeRuntimeStatus();
@@ -174,6 +176,7 @@ public final class MainActivity extends Activity {
    }
   }catch(Exception e){catalog.addView(text("Tool catalog unavailable.",12,muted,false));}
   button("Read device / runtime status",accent,()->runTool("system.status","read","system://status","",""));
+  button("View recent tool audit history",panel,()->showAuditLog());
   button("List private workspace files",panel,()->runTool("files.list","read","workspace://","",""));
   LinearLayout read=card();
   read.addView(text("Read a workspace text file",15,Color.WHITE,true));
@@ -214,9 +217,45 @@ public final class MainActivity extends Activity {
   new AlertDialog.Builder(this).setTitle("SEED-X Tool Result").setMessage(message).setPositiveButton("OK",null).show();
  }
  private void toast(String value){Toast.makeText(this,value,Toast.LENGTH_SHORT).show();}
- private void guardian(){heading("Guardian & Safety","Live status from the C++ System 1 kernel.");
-  String[] items={"Default-deny policy engine — Phase 2 core","One-use, request-bound operator approvals","Emergency-stop and audit chain","Provider responses treated as untrusted text","No shell or device-control actions exposed by chat"};for(String s:items){LinearLayout c=card();c.addView(text("✓  "+s,14,Color.WHITE,false));}
-  LinearLayout c=card();try{JSONObject gs=new JSONObject(nativeGuardianStatus());c.addView(text("Emergency stop: "+(gs.optBoolean("emergencyStop")?"ACTIVE":"inactive"),16,gs.optBoolean("emergencyStop")?Color.RED:accent,true));c.addView(text("Audit chain: "+(gs.optBoolean("auditValid")?"valid":"INVALID"),13,Color.WHITE,true));c.addView(text("Kernel status code: "+gs.optInt("kernelStatus"),12,muted,false));}catch(Exception e){c.addView(text("Guardian status unavailable: "+e.getMessage(),12,muted,false));}button("ENGAGE EMERGENCY STOP",Color.rgb(190,55,65),()->new AlertDialog.Builder(this).setTitle("Emergency stop").setMessage("Block Guardian-authorized actions and cancel active local or online generation?").setNegativeButton("Cancel",null).setPositiveButton("Engage",(d,w)->{engageEmergencyStop();render();}).show());button("Reset emergency stop",panel,()->new AlertDialog.Builder(this).setTitle("Reset Guardian").setMessage("Only reset if you have checked the reason for the stop.").setNegativeButton("Cancel",null).setPositiveButton("I confirm",(d,w)->{boolean ok=nativeResetEmergencyStop(true);if(ok)stopRequested=false;Toast.makeText(this,ok?"Guardian reset.":"Reset rejected.",Toast.LENGTH_SHORT).show();render();}).show());
+ private void guardian(){
+  heading("Guardian & Safety","Live System 1 permissions, approval controls and tamper-evident audit status.");
+  LinearLayout status=card();
+  try{
+   JSONObject gs=new JSONObject(nativeGuardianStatus());
+   status.addView(text("Emergency stop: "+(gs.optBoolean("emergencyStop")?"ACTIVE":"inactive"),16,gs.optBoolean("emergencyStop")?Color.RED:accent,true));
+   status.addView(text("Audit chain integrity: "+(gs.optBoolean("auditValid")?"VALID":"INVALID"),13,Color.WHITE,true));
+   status.addView(text("Kernel status code: "+gs.optInt("kernelStatus"),12,muted,false));
+  }catch(Exception e){status.addView(text("Guardian status unavailable: "+e.getMessage(),12,muted,false));}
+  LinearLayout rules=card();
+  rules.addView(text("PERMISSION DASHBOARD",14,accent,true));
+  try{
+   JSONArray policy=new JSONArray(nativePolicySnapshot());
+   for(int i=0;i<policy.length();i++){
+    JSONObject rule=policy.getJSONObject(i);
+    String effect=rule.optString("effect").toUpperCase(Locale.ROOT);
+    int color=effect.equals("ALLOW")?accent:effect.equals("APPROVAL")?Color.rgb(245,190,75):Color.rgb(235,95,105);
+    rules.addView(text(rule.optString("tool")+" / "+rule.optString("operation"),13,Color.WHITE,true));
+    rules.addView(text(rule.optString("resourcePrefix")+"  •  "+effect+"  •  "+(rule.optBoolean("enabled")?"enabled":"disabled"),11,color,false));
+   }
+  }catch(Exception e){rules.addView(text("Could not load policy snapshot: "+e.getMessage(),12,muted,false));}
+  button("View recent audit history",panel,()->showAuditLog());
+  button("ENGAGE EMERGENCY STOP",Color.rgb(190,55,65),()->new AlertDialog.Builder(this).setTitle("Emergency stop").setMessage("Block new Guardian-authorized actions and cancel active inference/provider requests? Any short tool operation already in its protected execution section will finish before this call returns.").setNegativeButton("Cancel",null).setPositiveButton("Engage",(d,w)->{engageEmergencyStop();render();}).show());
+  button("Reset emergency stop",panel,()->new AlertDialog.Builder(this).setTitle("Reset Guardian").setMessage("Only reset after reviewing the audit history and resolving the cause.").setNegativeButton("Cancel",null).setPositiveButton("I confirm",(d,w)->{boolean ok=nativeResetEmergencyStop(true);if(ok)stopRequested=false;Toast.makeText(this,ok?"Guardian reset.":"Reset rejected.",Toast.LENGTH_SHORT).show();render();}).show());
+ }
+ private void showAuditLog(){
+  try{
+   JSONArray entries=new JSONArray(nativeAuditLog());StringBuilder report=new StringBuilder();
+   for(int i=entries.length()-1;i>=0;i--){
+    JSONObject e=entries.getJSONObject(i);
+    report.append("#").append(e.optLong("sequence")).append("  ").append(e.optString("decision").toUpperCase(Locale.ROOT)).append("\\n")
+     .append(e.optString("tool")).append(" / ").append(e.optString("operation")).append("\\n")
+     .append(e.optString("resource")).append("\\n").append(e.optString("reason")).append("\\n\\n");
+   }
+   if(report.length()==0)report.append("No audit events recorded yet.");
+   TextView body=text(report.toString(),12,Color.WHITE,false);body.setPadding(dp(16),dp(12),dp(16),dp(12));
+   ScrollView scroll=new ScrollView(this);scroll.addView(body);
+   new AlertDialog.Builder(this).setTitle("Recent Guardian Audit").setView(scroll).setPositiveButton("Close",null).show();
+  }catch(Exception e){showToolMessage("Audit history unavailable: "+e.getMessage());}
  }
  private void settings(){heading("Settings","Control privacy, routing and local application data.");
   CheckBox online=new CheckBox(this);online.setText("Allow online provider fallback");online.setTextColor(Color.WHITE);online.setButtonTintList(android.content.res.ColorStateList.valueOf(accent));online.setChecked(prefs.getBoolean("online_allowed",false));online.setOnCheckedChangeListener((v,checked)->prefs.edit().putBoolean("online_allowed",checked).apply());LinearLayout c=card();c.addView(online);c.addView(text("OFF by default. When disabled, prompts are not sent to cloud providers.",12,muted,false));
