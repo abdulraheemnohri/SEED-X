@@ -67,6 +67,8 @@ public final class MainActivity extends Activity {
  private static final String[] TABS={"Home","Chat","Voice","Memory","Models","Downloads","Runtimes","Providers","Skills","Workflows","Tasks","Permissions","Tools","Guardian","Diagnostics","Settings"};
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
+ private static final int EXPORT_SETTINGS=4104;
+ private static final int IMPORT_SETTINGS=4105;
  private static final int VOICE_INPUT=4103;
  @Override public void onCreate(Bundle state){super.onCreate(state);CrashReporter.install(this);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);migrateProviderProfiles();String startup=prefs.getString("startup_screen","Home");page=Arrays.asList(TABS).contains(startup)?startup:"Home";getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();nativeReady=nativeInit(getFilesDir().getAbsolutePath());if(!nativeReady)Toast.makeText(this,"Native Guardian or workspace initialization failed. AI inference and tools are disabled for safety.",Toast.LENGTH_LONG).show();tts=new TextToSpeech(this,status->{if(status==TextToSpeech.SUCCESS){int result=tts.setLanguage(Locale.getDefault());if(result==TextToSpeech.LANG_MISSING_DATA||result==TextToSpeech.LANG_NOT_SUPPORTED)Toast.makeText(this,"Default text-to-speech language is unavailable.",Toast.LENGTH_SHORT).show();}});shell();render();}
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
@@ -258,6 +260,8 @@ public final class MainActivity extends Activity {
  @Override protected void onActivityResult(int request,int result,Intent data){
   super.onActivityResult(request,result,data);
   if(request==VOICE_INPUT){if(result==RESULT_OK&&data!=null){ArrayList<String> heard=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);if(heard!=null&&!heard.isEmpty()){pendingChatDraft=heard.get(0);page="Chat";render();}}return;}
+  if(request==EXPORT_SETTINGS){if(result==RESULT_OK&&data!=null&&data.getData()!=null)exportSettingsTo(data.getData());return;}
+  if(request==IMPORT_SETTINGS){if(result==RESULT_OK&&data!=null&&data.getData()!=null)confirmImportSettings(data.getData());return;}
   if(request!=PICK_MODEL||result!=RESULT_OK||data==null||data.getData()==null)return;
   Uri uri=data.getData();
   ProgressBar loading=new ProgressBar(this);loading.setIndeterminate(true);content.addView(loading);
@@ -501,6 +505,34 @@ public final class MainActivity extends Activity {
  private void recordDiagnosticExample(String area,Throwable error){CrashReporter.recordNonFatal(this,area,error);}
  private void chooseStartupScreen(){new AlertDialog.Builder(this).setTitle("Choose startup screen").setItems(TABS,(d,which)->{String selected=TABS[which];prefs.edit().putString("startup_screen",selected).apply();toast("Startup screen set to "+selected);}).show();}
  private void manageFavourites(){Set<String> current=new HashSet<>(prefs.getStringSet("favorite_screens",Collections.<String>emptySet()));String[] labels=TABS.clone();boolean[] checked=new boolean[labels.length];for(int i=0;i<labels.length;i++)checked[i]=current.contains(labels[i]);new AlertDialog.Builder(this).setTitle("Favourite screens").setMultiChoiceItems(labels,checked,(d,which,on)->{if(on)current.add(labels[which]);else current.remove(labels[which]);}).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{prefs.edit().putStringSet("favorite_screens",new HashSet<>(current)).apply();toast("Favourite shortcuts saved.");render();}).show();}
+ private JSONObject exportableSettings(){
+  JSONObject out=new JSONObject();String[] strings={"startup_screen","system_prompt","custom_workflows"};
+  String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs"};
+  String[] integers={"max_output_tokens","context_tokens","provider_timeout_ms","provider_max_bytes","provider_retries"};
+  String[] floats={"temperature","top_p","ui_text_scale"};
+  try{out.put("schema","seedx-settings-v1").put("appVersion","0.8.0").put("exportedAt",System.currentTimeMillis());
+   for(String k:strings)if(prefs.contains(k))out.put(k,prefs.getString(k,""));
+   for(String k:booleans)if(prefs.contains(k))out.put(k,prefs.getBoolean(k,false));
+   for(String k:integers)if(prefs.contains(k))out.put(k,prefs.getInt(k,0));
+   for(String k:floats)if(prefs.contains(k))out.put(k,prefs.getFloat(k,1f));
+  }catch(Exception ignored){}return out;
+ }
+ private void startSettingsExport(){Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");i.putExtra(Intent.EXTRA_TITLE,"seedx-settings-backup.json");startActivityForResult(i,EXPORT_SETTINGS);}
+ private void exportSettingsTo(Uri uri){try(OutputStream out=getContentResolver().openOutputStream(uri)){if(out==null)throw new IOException("Could not open destination.");out.write(exportableSettings().toString(2).getBytes("UTF-8"));toast("Settings backup exported. Provider keys and chat history were excluded.");}catch(Exception e){toast("Export failed: "+e.getMessage());}}
+ private void startSettingsImport(){Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("application/json");startActivityForResult(i,IMPORT_SETTINGS);}
+ private void confirmImportSettings(Uri uri){new AlertDialog.Builder(this).setTitle("Import settings backup?").setMessage("Only validated app preferences and custom workflows will be imported. Provider profiles, API keys, chat history and model files are never imported. Current matching settings will be replaced.").setNegativeButton("Cancel",null).setPositiveButton("Import",(d,w)->readAndImportSettings(uri)).show();}
+ private void readAndImportSettings(Uri uri){
+  try(InputStream in=getContentResolver().openInputStream(uri);ByteArrayOutputStream out=new ByteArrayOutputStream()){
+   if(in==null)throw new IOException("Cannot open selected file.");byte[] buf=new byte[8192];int n;while((n=in.read(buf))>0){if(out.size()+n>262144)throw new IOException("Settings file exceeds 256 KiB.");out.write(buf,0,n);}
+   JSONObject data=new JSONObject(new String(out.toByteArray(),"UTF-8"));if(!"seedx-settings-v1".equals(data.optString("schema")))throw new IllegalArgumentException("Unsupported settings backup format.");
+   android.content.SharedPreferences.Editor e=prefs.edit();String[] strings={"startup_screen","system_prompt","custom_workflows"};
+   for(String k:strings)if(data.has(k)){String v=data.getString(k);if(v.length()>12000)throw new IllegalArgumentException(k+" is too long.");if("startup_screen".equals(k)&&!Arrays.asList(TABS).contains(v))throw new IllegalArgumentException("Invalid startup screen.");if("custom_workflows".equals(k)){JSONArray a=new JSONArray(v);if(a.length()>100)throw new IllegalArgumentException("Too many workflows.");for(int z=0;z<a.length();z++){JSONObject item=a.getJSONObject(z);if(item.optString("name").length()>100||item.optString("description").length()>3000)throw new IllegalArgumentException("Workflow entry exceeds limits.");}}e.putString(k,v);}
+   String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs"};for(String k:booleans)if(data.has(k))e.putBoolean(k,data.getBoolean(k));
+   String[] ints={"max_output_tokens","context_tokens","provider_timeout_ms","provider_max_bytes","provider_retries"};int[] mins={16,128,5000,65536,0},maxs={4096,8192,180000,8388608,3};for(int z=0;z<ints.length;z++)if(data.has(ints[z])){int v=data.getInt(ints[z]);if(v<mins[z]||v>maxs[z])throw new IllegalArgumentException("Invalid "+ints[z]);e.putInt(ints[z],v);}
+   String[] floats={"temperature","top_p","ui_text_scale"};float[] fmin={0f,0.05f,0.85f},fmax={2f,1f,1.5f};for(int z=0;z<floats.length;z++)if(data.has(floats[z])){double v=data.getDouble(floats[z]);if(!Double.isFinite(v)||v<fmin[z]||v>fmax[z])throw new IllegalArgumentException("Invalid "+floats[z]);e.putFloat(floats[z],(float)v);}
+   e.apply();toast("Settings imported. Provider credentials and chat history were untouched.");render();
+  }catch(Exception e){toast("Import rejected: "+e.getMessage());}
+ }
  private void settings(){heading("Settings","Privacy, routing, generation, model memory and network controls.");
   LinearLayout diagnostics=card();diagnostics.addView(text("CRASH & BUG REPORTING",12,accent,true));
   CheckBox breadcrumbs=new CheckBox(this);breadcrumbs.setText("Record screen-navigation breadcrumbs locally");breadcrumbs.setTextColor(Color.WHITE);breadcrumbs.setChecked(prefs.getBoolean("diagnostic_breadcrumbs",true));breadcrumbs.setOnCheckedChangeListener((v,checked)->prefs.edit().putBoolean("diagnostic_breadcrumbs",checked).apply());diagnostics.addView(breadcrumbs);
@@ -518,6 +550,7 @@ public final class MainActivity extends Activity {
   button("Open Android app permissions",panel,()->openAppPermissionSettings());
   button("Open battery optimization settings",panel,()->openBatterySettings());
   os.addView(text("SEED-X requests notification permission only when you start this session. No Accessibility, overlay, microphone, camera, location, contacts, SMS, notification-listener, all-files, or device-admin access is requested.",11,muted,false));
+  LinearLayout backup=card();backup.addView(text("SETTINGS BACKUP & RESTORE",12,accent,true));backup.addView(text("Export or restore selected app preferences and custom workflows using Android document picker. Provider profiles, API keys, chat history and model files are excluded.",11,muted,false));button("Export settings backup (JSON)",panel,()->startSettingsExport());button("Import settings backup (JSON)",panel,()->startSettingsImport());
   LinearLayout navigation=card();navigation.addView(text("MOBILE NAVIGATION & PERSONALIZATION",12,accent,true));navigation.addView(text("Four primary tabs stay visible at the bottom. All remaining screens are grouped in the mobile menu.",11,muted,false));button("Choose startup screen",panel,()->chooseStartupScreen());button("Manage favourite screens",panel,()->manageFavourites());button("Clear all favourite screens",panel,()->new AlertDialog.Builder(this).setTitle("Clear favourites?").setMessage("Remove all saved screen shortcuts?").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->{prefs.edit().remove("favorite_screens").apply();render();}).show());
   LinearLayout accessibility=card();accessibility.addView(text("ACCESSIBILITY & APPEARANCE",12,accent,true));
   CheckBox contrast=new CheckBox(this);contrast.setText("High contrast text");contrast.setTextColor(Color.WHITE);contrast.setChecked(prefs.getBoolean("ui_high_contrast",false));contrast.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("ui_high_contrast",on).apply();render();});accessibility.addView(contrast);
