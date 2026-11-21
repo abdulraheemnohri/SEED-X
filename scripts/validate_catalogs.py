@@ -266,6 +266,7 @@ for marker in (
     "private void pickChatAttachments", "ACTION_OPEN_DOCUMENT", "EXTRA_ALLOW_MULTIPLE",
     "private void showChatModelPicker", "private void showChatHistory", "private void startNewChat",
     "private void startVoiceChat", "private void speakAssistantIfEnabled",
+    "private String imageAttachmentBase64", "inlineData", "image_url", "private void clearCurrentChat",
     "private void integrations()", "private void growth()", "private void configureMcpEndpoint",
     "PICK_CHAT_ATTACHMENTS", "voice_chat_auto_speak", "chat_archive",
 ):
