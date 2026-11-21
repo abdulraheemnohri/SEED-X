@@ -576,8 +576,31 @@ public final class MainActivity extends Activity {
  private void skills(){heading("Skill Library","Built-in skills are reusable prompt templates. They are not executable plugins and cannot bypass Guardian.");
   EditText search=field("Search skills by name, category or purpose","",false);LinearLayout list=card();Runnable[] refresh=new Runnable[1];refresh[0]=()->{list.removeAllViews();try{JSONArray all=assetJson("skills.json").optJSONArray("skills");String q=search.getText().toString().toLowerCase(Locale.ROOT);for(int i=0;all!=null&&i<all.length();i++){JSONObject s=all.getJSONObject(i);String hay=(s.optString("name")+" "+s.optString("category")+" "+s.optString("description")).toLowerCase(Locale.ROOT);if(!q.isEmpty()&&!hay.contains(q))continue;list.addView(text(s.optString("name")+"  •  "+s.optString("category"),14,Color.WHITE,true));list.addView(text(s.optString("description"),11,muted,false));String skillId=s.optString("id");CheckBox enabled=new CheckBox(this);enabled.setText("Enable skill");enabled.setTextColor(Color.WHITE);enabled.setChecked(prefs.getBoolean("skill_enabled_"+skillId,true));list.addView(enabled);Button run=new Button(this);run.setText("Use this skill in Chat");run.setAllCaps(false);run.setEnabled(enabled.isChecked());enabled.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("skill_enabled_"+skillId,on).apply();run.setEnabled(on);});run.setOnClickListener(v->{pendingSkillPrompt=s.optString("prompt")+"\n\n";page="Chat";render();});list.addView(run);}}catch(Exception e){list.addView(text("Skill catalog error: "+e.getMessage(),12,muted,false));}};search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){refresh[0].run();}public void afterTextChanged(android.text.Editable e){}});refresh[0].run();
  }
- private void workflows(){heading("Workflow Studio","Manually started, human-controlled prompt workflows. No hidden background automation.");
-  try{JSONArray flows=assetJson("workflows.json").optJSONArray("workflows");for(int i=0;flows!=null&&i<flows.length();i++){JSONObject w=flows.getJSONObject(i);LinearLayout item=card();item.addView(text(w.optString("name"),15,Color.WHITE,true));item.addView(text(w.optString("description"),12,muted,false));button("Start workflow",accent,()->{pendingSkillPrompt="Act as the SEED-X workflow assistant. Execute this workflow as a plan, ask for missing inputs only when essential, and do not claim external actions were performed. Workflow: "+w.optString("name")+". "+w.optString("description")+"\n\n";page="Chat";render();});}}catch(Exception e){card().addView(text("Workflow catalog unavailable: "+e.getMessage(),12,muted,false));}
+ private JSONArray customWorkflows(){try{return new JSONArray(prefs.getString("custom_workflows","[]"));}catch(Exception e){return new JSONArray();}}
+ private void workflows(){
+  heading("Workflow Studio","Create, save, edit and manually launch prompt workflows. These are plans, not autonomous device actions.");
+  EditText name=field("Workflow name","My workflow",false);
+  EditText description=field("Workflow instructions / objective","Describe the steps and expected output.",false);
+  button("Save custom workflow",accent,()->{
+   String n=name.getText().toString().trim(),d=description.getText().toString().trim();
+   if(n.isEmpty()||d.isEmpty()||n.length()>100||d.length()>3000){toast("Enter a name and instructions (maximum 100 and 3000 characters).");return;}
+   JSONArray all=customWorkflows();
+   try{all.put(new JSONObject().put("id","custom-"+System.currentTimeMillis()).put("name",n).put("description",d));prefs.edit().putString("custom_workflows",all.toString()).apply();toast("Workflow saved locally.");render();}
+   catch(Exception e){toast("Could not save workflow: "+e.getMessage());}
+  });
+  try{
+   JSONArray builtIn=assetJson("workflows.json").optJSONArray("workflows"),custom=customWorkflows();
+   for(int source=0;source<2;source++){
+    JSONArray flows=source==0?builtIn:custom;
+    for(int i=0;flows!=null&&i<flows.length();i++){
+     JSONObject w=flows.getJSONObject(i);final JSONObject selected=w;final boolean userCreated=source==1;
+     LinearLayout item=card();item.addView(text(w.optString("name"),15,Color.WHITE,true));item.addView(text(w.optString("description"),12,muted,false));
+     button("Edit workflow",panel,()->{EditText editName=field("Workflow name",selected.optString("name"),false);EditText editDescription=field("Instructions",selected.optString("description"),false);button("Save workflow changes",accent,()->{try{String nn=editName.getText().toString().trim(),dd=editDescription.getText().toString().trim();if(nn.isEmpty()||dd.isEmpty()||nn.length()>100||dd.length()>3000)throw new IllegalArgumentException("Name or instructions exceed limits.");if(!userCreated)throw new IllegalStateException("Built-in templates are read-only. Save a copy as a custom workflow to edit it.");JSONArray list=customWorkflows(),next=new JSONArray();for(int z=0;z<list.length();z++){JSONObject old=list.getJSONObject(z);if(old.optString("id").equals(selected.optString("id")))next.put(new JSONObject().put("id",old.optString("id")).put("name",nn).put("description",dd));else next.put(old);}prefs.edit().putString("custom_workflows",next.toString()).apply();page="Workflows";render();}catch(Exception e){toast("Edit failed: "+e.getMessage());}});});
+     button("Start workflow in Chat",accent,()->{pendingSkillPrompt="Act as the SEED-X workflow assistant. Produce a safe, step-by-step plan and ask for essential missing information. Do not claim external actions were performed. Workflow: "+selected.optString("name")+". "+selected.optString("description")+"\n\n";page="Chat";render();});
+     if(userCreated)button("Delete custom workflow",panel,()->new AlertDialog.Builder(this).setTitle("Delete workflow?").setMessage(selected.optString("name")).setNegativeButton("Cancel",null).setPositiveButton("Delete",(d,which)->{JSONArray list=customWorkflows(),next=new JSONArray();for(int z=0;z<list.length();z++){JSONObject old=list.optJSONObject(z);if(old!=null&&!old.optString("id").equals(selected.optString("id")))next.put(old);}prefs.edit().putString("custom_workflows",next.toString()).apply();render();}).show());
+    }
+   }
+  }catch(Exception e){card().addView(text("Workflow catalog unavailable: "+e.getMessage(),12,muted,false));}
  }
  private void showDiagnosticHistory(){
   File[] files=CrashReporter.history(this);
