@@ -800,7 +800,7 @@ private void voice(){
  private void manageFavourites(){Set<String> current=new HashSet<>(prefs.getStringSet("favorite_screens",Collections.<String>emptySet()));String[] labels=TABS.clone();boolean[] checked=new boolean[labels.length];for(int i=0;i<labels.length;i++)checked[i]=current.contains(labels[i]);new AlertDialog.Builder(this).setTitle("Favourite screens").setMultiChoiceItems(labels,checked,(d,which,on)->{if(on)current.add(labels[which]);else current.remove(labels[which]);}).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{prefs.edit().putStringSet("favorite_screens",new HashSet<>(current)).apply();toast("Favourite shortcuts saved.");render();}).show();}
  private JSONObject exportableSettings(){
   JSONObject out=new JSONObject();String[] strings={"startup_screen","system_prompt","custom_workflows","prompt_templates","ui_theme","ui_navigation_mode","ui_density","voice_asr_mode","voice_language"};
-  String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs","dashboard_overview","dashboard_quick_launch","dashboard_favourites"};
+  String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs","dashboard_overview","dashboard_quick_launch","dashboard_favourites","voice_chat_auto_speak"};
   String[] integers={"max_output_tokens","context_tokens","provider_timeout_ms","provider_max_bytes","provider_retries"};
   String[] floats={"temperature","top_p","ui_text_scale","voice_tts_rate","voice_tts_pitch"};
   try{out.put("schema","seedx-settings-v1").put("appVersion","0.8.0").put("exportedAt",System.currentTimeMillis());
