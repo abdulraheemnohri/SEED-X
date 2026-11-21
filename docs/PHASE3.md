@@ -1,36 +1,37 @@
-# SEED-X Phase 3 — Local AI Runtime Foundation
+# SEED-X Phase 3 — Local AI Brain
 
 ## Delivered
-- Backend-neutral C++20 inference interface.
-- GGUF model manifest validation and local regular-file checks.
-- Device-memory budget checks with a configurable reserve.
-- Candidate filtering ordered by estimated RAM use.
-- Explicit backend load/unload lifecycle.
-- Streaming callback contract; callback can cancel generation.
-- Prompt and generation-parameter bounds.
-- Runtime state tracking and exception containment.
-- Host tests using a deterministic test backend.
+- Backend-neutral C++20 InferenceBackend contract.
+- LocalAiRuntime load, generate, streaming callback, cancellation and unload lifecycle.
+- ModelManager validates local regular files, GGUF magic, manifest size, context limits and RAM estimates.
+- DeviceMemoryProbe reads Linux/Android /proc/meminfo and reports MemAvailable (falling back to MemTotal).
+- RAM candidate filtering and a configurable reserve budget.
+- Optional real llama.cpp backend, pinned to upstream b4514, with GGUF model loading, prompt tokenization, KV cache reset, autoregressive decoding and temperature/top-p sampling.
+- Default no-backend stub keeps CI and shell builds independent of large third-party dependencies.
+- Deterministic host tests validate lifecycle, memory admission, streaming, cancellation and malformed GGUF rejection.
 
-## Runtime boundary
-The repository now defines the integration contract; it does not yet ship a production inference backend. The test backend exists only in tests and must never be represented as actual AI inference. A compatible llama.cpp backend is the next implementation task. Android builds must package or build that backend separately for each ABI.
+## Build configuration
+SEEDX_ENABLE_LLAMA_CPP=OFF is the default. With it ON, CMake fetches llama.cpp from https://github.com/ggml-org/llama.cpp.git at b4514 and links the llama target. The source is fetched at build time, not copied into this repository. Android can opt in with gradle assembleDebug -PseedxLlamaCpp=ON. CPU inference is enabled; GPU offload is intentionally disabled until device-specific validation exists.
 
-## Model manifest
-A model manifest contains a stable ID, display name, local file path, GGUF format, file size, estimated RAM use and context-token limit. The current validator checks file existence, regular-file status, nonzero size and optional exact file-size match.
+## Model manifest and safety
+Manifest includes ID, display name, absolute local path, format, optional byte size, estimated RAM, context length and a reserved SHA-256 field. Validation checks path, regular-file status, nonzero file length, GGUF magic and optional exact file size. SHA-256 is NOT yet calculated or verified. A valid GGUF header does not prove the model is trustworthy.
 
-The sha256 field is reserved for future integrity verification. It is not verified in this phase. Do not load untrusted model files in a production deployment until cryptographic hash verification and provenance checks are implemented.
+## Memory behavior
+Available memory is read from /proc/meminfo; callers must still reserve memory for Android and other app processes. estimatedRamBytes must include weights, KV cache, runtime workspace and tokenizer overhead. A budget pass is not a guarantee against Android low-memory killing. Use one active model at a time and start with small quantized models and 2K–4K context on 6 GB devices.
 
-## Memory budget
-The caller supplies an available-memory estimate and a reserve that must remain unused. A model is considered eligible only when its estimated RAM requirement fits below available memory minus reserve. This is a conservative admission check, not a guarantee against Android process memory pressure. Real model sizing must account for weights, KV cache, context length, backend workspace, tokenizer and concurrent app memory.
+## Inference behavior
+Prompt is tokenized by llama.cpp. The runtime clears the KV cache before each request, evaluates the prompt, then samples one token at a time. Chunks are delivered to the callback; returning false cancels generation. Temperature zero selects greedy sampling; otherwise top-p, temperature and a seeded distribution sampler are used. Runtime access is serialized by its caller; concurrent load/unload/generate and reentrant calls from callbacks are unsupported.
 
-## Streaming
-Backends emit text chunks through a callback. Returning false requests generation cancellation. This API does not define tool calling or execute model-suggested commands. All future tool proposals must pass through the independent Phase 2 Guardian.
+## Security boundary
+The model output is untrusted text. No model-generated shell commands or tool calls are executed. Any future tool proposal must be parsed as data and authorized by the independent Phase 2 Guardian before a separate executor can act.
 
-## Known limitations
-- No llama.cpp or other production inference backend is bundled yet.
-- No model download, catalog network service, checksum verification or signature validation.
-- No Android-specific memory probe, NNAPI/GPU acceleration or background model loading.
-- Runtime calls are currently intended to be serialized by the caller; concurrent load/unload/generate calls are not supported.
-- No APK or physical-device inference test is claimed.
+## Not included
+- SHA-256/signature verification and trusted model provenance.
+- Model downloader, catalog, resume and update manager.
+- Android SAF model picker and UI wiring.
+- GPU/Vulkan/NNAPI/Hexagon acceleration.
+- Durable conversation memory or multi-turn chat-template orchestration.
+- Production inference benchmarks or real-device verification.
 
-## Next
-Integrate llama.cpp as an optional Android backend, expose model download and integrity verification, add device-memory telemetry, and connect a proper chat UI without giving System 2 authority over Guardian policy.
+## Upstream
+llama.cpp build documentation: https://github.com/ggml-org/llama.cpp/blob/master/docs/build.md
