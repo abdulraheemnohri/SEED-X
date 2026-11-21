@@ -155,3 +155,7 @@ The Android app includes a compact four-tab bottom bar, grouped mobile drawer, s
 
 ### Themes and command palette
 SEED-X supports dark, light and Android-system themes, a searchable command palette with fixed guarded actions, and independently configurable Home dashboard widgets. Theme and dashboard preferences are supported by the validated JSON settings backup.
+
+
+### Task reminders and workflow plans
+SEED-X can schedule periodic local reminders through Android WorkManager, keep a bounded local task event history, and create structured linear workflow plans. Reminder workers only show notifications; they do not invoke providers or execute tools. Provider connection diagnostics and native runtime status probes are available in the app.
