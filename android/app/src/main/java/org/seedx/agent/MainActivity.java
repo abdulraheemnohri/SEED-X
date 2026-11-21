@@ -212,7 +212,7 @@ public final class MainActivity extends Activity {
  }
  private void showToolMessage(String value){
   String message=value;
-  try{JSONObject json=new JSONObject(value);message=(json.optBoolean("success")?"SUCCESS":"BLOCKED")+"  •  "+json.optString("decision")+"\\n\\n"+json.optString("output");}
+  try{JSONObject json=new JSONObject(value);message=(json.optBoolean("success")?"SUCCESS":"BLOCKED")+"  •  "+json.optString("decision")+"\n\n"+json.optString("output");}
   catch(Exception ignored){}
   new AlertDialog.Builder(this).setTitle("SEED-X Tool Result").setMessage(message).setPositiveButton("OK",null).show();
  }
@@ -247,9 +247,9 @@ public final class MainActivity extends Activity {
    JSONArray entries=new JSONArray(nativeAuditLog());StringBuilder report=new StringBuilder();
    for(int i=entries.length()-1;i>=0;i--){
     JSONObject e=entries.getJSONObject(i);
-    report.append("#").append(e.optLong("sequence")).append("  ").append(e.optString("decision").toUpperCase(Locale.ROOT)).append("\\n")
-     .append(e.optString("tool")).append(" / ").append(e.optString("operation")).append("\\n")
-     .append(e.optString("resource")).append("\\n").append(e.optString("reason")).append("\\n\\n");
+    report.append("#").append(e.optLong("sequence")).append("  ").append(e.optString("decision").toUpperCase(Locale.ROOT)).append("\n")
+     .append(e.optString("tool")).append(" / ").append(e.optString("operation")).append("\n")
+     .append(e.optString("resource")).append("\n").append(e.optString("reason")).append("\n\n");
    }
    if(report.length()==0)report.append("No audit events recorded yet.");
    TextView body=text(report.toString(),12,Color.WHITE,false);body.setPadding(dp(16),dp(12),dp(16),dp(12));
