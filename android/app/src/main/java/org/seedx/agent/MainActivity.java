@@ -88,12 +88,17 @@ public final class MainActivity extends Activity {
   LinearLayout.LayoutParams navParams=new LinearLayout.LayoutParams(-1,dp(54));navParams.topMargin=dp(7);root.addView(nav,navParams);setContentView(root);
  }
  private void navigateTo(String destination){if(destination==null)return;page=destination;render();}
+ @Override public void onBackPressed(){if(!"Home".equals(page)){navigateTo("Home");return;}super.onBackPressed();}
  private void showMobileMenu(View anchor){
   android.widget.PopupMenu popup=new android.widget.PopupMenu(this,anchor);
   android.view.Menu menu=popup.getMenu();
   menu.add(0,1,0,"Search screens");
   menu.add(0,2,1,"New chat");
   menu.add(0,3,2,"Toggle favourite for "+page);
+  menu.add(0,4,3,"Manage favourite screens");
+  menu.add(0,5,4,"Guardian emergency stop");
+  menu.add(0,6,5,"Stop current generation");
+  menu.add(0,7,6,"Support SEED-X development");
   android.view.SubMenu workspace=menu.addSubMenu("WORKSPACE");
   addScreenMenu(workspace,new String[]{"Home","Chat","Voice","Memory"});
   android.view.SubMenu intelligence=menu.addSubMenu("AI & MODELS");
@@ -106,7 +111,7 @@ public final class MainActivity extends Activity {
   addScreenMenu(system,new String[]{"Settings"});
   Set<String> favourites=prefs.getStringSet("favorite_screens",Collections.<String>emptySet());
   if(!favourites.isEmpty()){android.view.SubMenu fav=menu.addSubMenu("FAVOURITES");for(String f:favourites)fav.add(0,screenMenuId(f),0,"★ "+f);}
-  popup.setOnMenuItemClickListener(item->{int id=item.getItemId();if(id==1){showScreenSearch();return true;}if(id==2){pendingChatDraft="";navigateTo("Chat");return true;}if(id==3){toggleFavourite(page);return true;}String destination=screenForMenuId(id);if(destination!=null){navigateTo(destination);return true;}return false;});
+  popup.setOnMenuItemClickListener(item->{int id=item.getItemId();if(id==1){showScreenSearch();return true;}if(id==2){pendingChatDraft="";navigateTo("Chat");return true;}if(id==3){toggleFavourite(page);return true;}if(id==4){manageFavourites();return true;}if(id==5){new AlertDialog.Builder(this).setTitle("Emergency stop").setMessage("Stop active Guardian-controlled tools and require an explicit reset before resuming?").setNegativeButton("Cancel",null).setPositiveButton("Stop",(d,w)->{nativeEmergencyStop();toast("Guardian emergency stop activated.");navigateTo("Guardian");}).show();return true;}if(id==6){nativeCancel();HttpURLConnection connection=activeConnection;if(connection!=null)connection.disconnect();toast("Generation cancellation requested.");return true;}if(id==7){openUrl("https://github.com/sponsors/abdulraheemnohri");return true;}String destination=screenForMenuId(id);if(destination!=null){navigateTo(destination);return true;}return false;});
   popup.show();
  }
  private void addScreenMenu(android.view.SubMenu menu,String[] screens){for(String screen:screens)menu.add(0,screenMenuId(screen),0,screen);}
@@ -495,7 +500,7 @@ public final class MainActivity extends Activity {
  }
  private void recordDiagnosticExample(String area,Throwable error){CrashReporter.recordNonFatal(this,area,error);}
  private void chooseStartupScreen(){new AlertDialog.Builder(this).setTitle("Choose startup screen").setItems(TABS,(d,which)->{String selected=TABS[which];prefs.edit().putString("startup_screen",selected).apply();toast("Startup screen set to "+selected);}).show();}
- private void manageFavourites(){Set<String> current=prefs.getStringSet("favorite_screens",Collections.<String>emptySet());String[] labels=TABS.clone();boolean[] checked=new boolean[labels.length];for(int i=0;i<labels.length;i++)checked[i]=current.contains(labels[i]);new AlertDialog.Builder(this).setTitle("Favourite screens").setMultiChoiceItems(labels,checked,(d,which,on)->{if(on)current.add(labels[which]);else current.remove(labels[which]);}).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{prefs.edit().putStringSet("favorite_screens",new HashSet<>(current)).apply();toast("Favourite shortcuts saved.");render();}).show();}
+ private void manageFavourites(){Set<String> current=new HashSet<>(prefs.getStringSet("favorite_screens",Collections.<String>emptySet()));String[] labels=TABS.clone();boolean[] checked=new boolean[labels.length];for(int i=0;i<labels.length;i++)checked[i]=current.contains(labels[i]);new AlertDialog.Builder(this).setTitle("Favourite screens").setMultiChoiceItems(labels,checked,(d,which,on)->{if(on)current.add(labels[which]);else current.remove(labels[which]);}).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{prefs.edit().putStringSet("favorite_screens",new HashSet<>(current)).apply();toast("Favourite shortcuts saved.");render();}).show();}
  private void settings(){heading("Settings","Privacy, routing, generation, model memory and network controls.");
   LinearLayout diagnostics=card();diagnostics.addView(text("CRASH & BUG REPORTING",12,accent,true));
   CheckBox breadcrumbs=new CheckBox(this);breadcrumbs.setText("Record screen-navigation breadcrumbs locally");breadcrumbs.setTextColor(Color.WHITE);breadcrumbs.setChecked(prefs.getBoolean("diagnostic_breadcrumbs",true));breadcrumbs.setOnCheckedChangeListener((v,checked)->prefs.edit().putBoolean("diagnostic_breadcrumbs",checked).apply());diagnostics.addView(breadcrumbs);
