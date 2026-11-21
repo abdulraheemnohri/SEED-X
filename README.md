@@ -165,3 +165,12 @@ SEED-X can schedule periodic local reminders through Android WorkManager, keep a
 
 ## Additional mobile workspace screens
 The app now includes Prompt Library (built-in and custom local templates), conversation search and Markdown export, Storage Manager, read-only Network Diagnostics, and About/Support. Prompt selection only fills the composer; no prompt is sent automatically. Storage tools operate only on SEED-X app-owned data. Settings backup includes custom prompts and dashboard visibility preferences, but never exports provider credentials, chat history or model files.
+
+## Adaptive UI expansion
+- Replaced the fixed phone-only shell with width-aware navigation: a five-item bottom bar on compact windows and a persistent grouped side rail on large windows.
+- Added automatic layout selection plus user overrides for automatic, bottom-bar and side-rail navigation.
+- Added comfortable/compact content density, responsive dashboard quick-launch columns (2/3/4), clearer active navigation states and consistent touch targets.
+- Added resizable-activity and configuration handling so rotation, foldable/window-size changes rebuild the adaptive shell.
+- Improved light-theme system-bar icon contrast, card spacing, control contrast and screen-reader content descriptions for navigation actions.
+- Navigation mode and density are included in the validated settings backup.
+- Device screenshots, TalkBack traversal and multi-device manual verification remain outstanding; the current implementation is native Android Views, not a Compose redesign.
