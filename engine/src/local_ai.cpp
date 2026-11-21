@@ -7,10 +7,11 @@
 #include <string>
 #include <utility>
 namespace seed {
+const char* modelFormatName(ModelFormat f) noexcept {switch(f){case ModelFormat::GGUF:return "GGUF";case ModelFormat::ONNX:return "ONNX";case ModelFormat::LiteRT:return "LiteRT";case ModelFormat::MLC:return "MLC";case ModelFormat::ExecuTorch:return "ExecuTorch";case ModelFormat::MNN:return "MNN";case ModelFormat::NCNN:return "ncnn";default:return "Unknown";}}
 ModelCheck ModelManager::validate(const ModelManifest&m){
  if(m.id.empty()||m.displayName.empty()||m.filePath.empty())return {false,"Model id, display name and file path are required."};
  if(m.id.size()>128||m.displayName.size()>256||m.filePath.size()>2048)return {false,"Model metadata exceeds allowed limits."};
- if(m.format!=ModelFormat::GGUF)return {false,"Only GGUF manifests are currently accepted."};
+ if(m.format!=ModelFormat::GGUF)return {false,std::string(modelFormatName(m.format))+" model packages are not yet supported by the model validator. Only GGUF is currently integrated."};
  if(m.contextTokens<128||m.contextTokens>131072)return {false,"Context length must be between 128 and 131072 tokens."};
  if(m.estimatedRamBytes==0)return {false,"Estimated RAM requirement must be provided."};
  std::error_code ec;const auto path=std::filesystem::path(m.filePath);
