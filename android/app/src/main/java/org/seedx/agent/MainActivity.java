@@ -142,7 +142,15 @@ public final class MainActivity extends Activity {
   });
   button("Stop generation",panel,()->nativeCancel());
  }
- private String requestProvider(JSONObject c)throws Exception{\n  int maxRetries=providerRetries();\n  for(int attempt=0;;attempt++){\n   ProviderUsageLedger.recordAttempt(this);\n   try{String answer=requestProviderOnce(c);if(answer.startsWith("Provider HTTP "))ProviderUsageLedger.recordFailure(this);else ProviderUsageLedger.recordSuccess(this);return answer;}\n   catch(IOException error){ProviderUsageLedger.recordFailure(this);if(stopRequested||attempt>=maxRetries)throw error;try{Thread.sleep(Math.min(4000L,500L*(1L<<attempt)));}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new InterruptedIOException("Provider retry interrupted.");}}\n  }\n }\n private String requestProviderOnce(JSONObject c)throws Exception{
+ private String requestProvider(JSONObject c)throws Exception{
+  int maxRetries=providerRetries();
+  for(int attempt=0;;attempt++){
+   ProviderUsageLedger.recordAttempt(this);
+   try{String answer=requestProviderOnce(c);if(answer.startsWith("Provider HTTP "))ProviderUsageLedger.recordFailure(this);else ProviderUsageLedger.recordSuccess(this);return answer;}
+   catch(IOException error){ProviderUsageLedger.recordFailure(this);if(stopRequested||attempt>=maxRetries)throw error;try{Thread.sleep(Math.min(4000L,500L*(1L<<attempt)));}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new InterruptedIOException("Provider retry interrupted.");}}
+  }
+ }
+ private String requestProviderOnce(JSONObject c)throws Exception{
   String kind=c.optString("kind","openai"),base=c.optString("base").replaceAll("/+$",""),model=c.optString("model"),ref=c.optString("credentialRef");
   String secret=decrypt(ref);if(!localEndpointAllowed(base))throw new IllegalArgumentException("Endpoint rejected by HTTPS/local-network policy.");if(secret.isEmpty()&&!base.startsWith("http://"))throw new IllegalStateException("API key missing. Save it again in Providers.");
   JSONArray messages=new JSONArray();messages.put(new JSONObject().put("role","system").put("content",systemPrompt()+memoryContext()));
