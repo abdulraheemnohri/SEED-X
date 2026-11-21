@@ -43,7 +43,7 @@ public final class RuntimeSdkManager {
         try {
             row.put("name", name);
             row.put("sdkPresent", installed);
-            row.put("status", installed ? "SDK_PRESENT_ADAPTER_PENDING" : "SDK_NOT_PACKAGED");
+            row.put("status", installed ? "SDK_PRESENT_adapter-pending" : "SDK_NOT_PACKAGED");
             row.put("detail", detail);
             row.put("classProbe", className);
             rows.put(row);
