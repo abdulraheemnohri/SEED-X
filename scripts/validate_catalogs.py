@@ -10,6 +10,9 @@ CATALOGS = [
     "config/provider_catalog.json",
     "config/model_catalog.json",
     "config/runtime_catalog.json",
+    "config/voice_runtime_catalog.json",
+    "config/ai_capability_catalog.json",
+    "config/web_ai_provider_catalog.json",
     "config/skills.json",
     "config/tools.json",
     "config/workflows.json",
@@ -56,12 +59,17 @@ for forbidden in (
     "android.permission.MANAGE_EXTERNAL_STORAGE",
     "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE",
     "android.permission.BIND_DEVICE_ADMIN",
-    "android.permission.RECORD_AUDIO",
     "android.permission.CAMERA",
 ):
     if forbidden in permissions:
         raise SystemExit(f"High-risk permission requires security review: {forbidden}")
-print("OK Android manifest permission boundary")
+if "android.permission.RECORD_AUDIO" not in permissions:
+    raise SystemExit("Voice feature must declare RECORD_AUDIO and request it at runtime")
+if "android.speech.RecognitionService" not in {
+    node.attrib.get(android_ns + "name", "") for node in manifest.findall("./queries/intent/action")
+}:
+    raise SystemExit("SpeechRecognizer package visibility query is missing")
+print("OK Android manifest permission boundary; microphone is a user-started capability")
 
 # Guard the mobile navigation shell against accidental removal of entry points.
 activity = (ROOT / "android/app/src/main/java/org/seedx/agent/MainActivity.java").read_text(encoding="utf-8")
@@ -77,7 +85,7 @@ required_ui = (
 for marker in required_ui:
     if marker not in activity:
         raise SystemExit(f"MainActivity is missing mobile UI entry point: {marker}")
-for screen in ("Home", "Chat", "Voice", "Memory", "Prompts", "Models", "Downloads", "Runtimes",
+for screen in ("Home", "Chat", "Voice", "Puter.js", "AI Capabilities", "Memory", "Prompts", "Models", "Downloads", "Runtimes",
                "Providers", "Skills", "Workflows", "Tasks", "Permissions", "Tools",
                "Guardian", "Diagnostics", "Network", "Storage", "About", "Settings"):
     if f'"{screen}"' not in activity:
@@ -214,3 +222,34 @@ for marker in ("PICK_EDGE_MODEL", "PICK_EDGE_TOKENIZER", "sendThirdPartyLocal", 
     if marker not in activity:
         raise SystemExit(f"Android UI integration for third-party inference is missing: {marker}")
 print("OK Phase 29 LiteRT-LM/ExecuTorch adapters, model import, streaming and runtime selection")
+
+
+# Phase 30: voice runtime, AI capability inventory and Puter.js workspace.
+voice_catalog = json.loads((ROOT / "config/voice_runtime_catalog.json").read_text(encoding="utf-8"))
+ai_catalog = json.loads((ROOT / "config/ai_capability_catalog.json").read_text(encoding="utf-8"))
+web_catalog = json.loads((ROOT / "config/web_ai_provider_catalog.json").read_text(encoding="utf-8"))
+voice_ids = {item.get("id") for item in voice_catalog.get("runtimes", [])}
+for required in ("android-speech-recognizer", "android-tts", "whisper-cpp", "sherpa-onnx", "vosk", "silero-vad", "piper", "puter-js"):
+    if required not in voice_ids:
+        raise SystemExit(f"Voice runtime inventory is missing: {required}")
+capability_ids = {item.get("id") for item in ai_catalog.get("capabilities", [])}
+for required in ("text-generation", "vision-language", "speech-recognition", "speech-synthesis", "embeddings", "reranking", "ocr-documents", "image-generation", "video-understanding", "agent-tools"):
+    if required not in capability_ids:
+        raise SystemExit(f"AI capability inventory is missing: {required}")
+if not any(item.get("id") == "puter-js" and item.get("status") == "integrated-optional-webview" for item in web_catalog.get("integrations", [])):
+    raise SystemExit("Puter.js optional WebView integration catalog entry is missing")
+puter_page = ROOT / "android/app/src/main/assets/puter/index.html"
+if not puter_page.exists():
+    raise SystemExit("Puter.js workspace HTML asset is missing")
+puter_html = puter_page.read_text(encoding="utf-8")
+for marker in ("https://js.puter.com/v2/", "puter.ai.chat", "puter.ai.txt2speech", "puter.ai.speech2txt", "puter.ai.img2txt", "puter.ai.txt2img"):
+    if marker not in puter_html:
+        raise SystemExit(f"Puter.js workspace feature is missing: {marker}")
+if "addJavascriptInterface" in activity:
+    raise SystemExit("Puter WebView must not expose a native JavaScript bridge")
+for marker in ("SpeechRecognizer.createOnDeviceSpeechRecognizer", "isOnDeviceRecognitionAvailable", "RECORD_AUDIO", "VOICE_PERMISSION", "stopVoiceRecognition", "private void puterWorkspace", "private void aiCapabilities"):
+    if marker not in activity:
+        raise SystemExit(f"Voice / Puter UI integration is missing: {marker}")
+if '"voice_tts_rate"' not in activity or '"voice_asr_mode"' not in activity:
+    raise SystemExit("Voice preferences are missing from settings export")
+print("OK Phase 30 voice/ASR, AI capability catalogs, Puter.js WebView and settings")
