@@ -84,7 +84,7 @@ For a 6 GB RAM phone, start with small quantized GGUF models and a 2K context. T
 System 1 (Guardian) owns policy and authorization. System 2 model output is untrusted text. No model/provider output is executed as a shell command or tool action. Emergency-stop reset is operator-confirmed; model output cannot modify policies or reset Guardian.
 
 ## Current limitations
-- Android local inference requires -PseedxLlamaCpp=ON; default CI compiles the JNI bridge with a stub backend.
+- The default APK uses the JNI stub backend. CI also attempts a second Android build with embedded llama.cpp and uploads it as `seedx-debug-apk-llama` if the NDK build succeeds. Locally enable it with `-PseedxLlamaCpp=ON`.
 - The Android Java provider transport and C++ Phase 4 provider adapter remain separate implementations.
 - Policy dashboard is read-only; a visual policy editor and third-party dynamic plugin loading are pending.
 - Model-initiated autonomous tool planning is not enabled; operators launch tools from the Tool Center. No GPU/NPU acceleration or physical-device benchmark is claimed.
