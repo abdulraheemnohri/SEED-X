@@ -13,6 +13,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 
 /**
@@ -28,6 +29,7 @@ class LiteRtLmAdapter(context: Context) : InferenceAdapter {
     private val cancelled = AtomicBoolean(false)
     @Volatile private var engine: Engine? = null
     @Volatile private var conversation: Conversation? = null
+    @Volatile private var generationJob: Job? = null
 
     override fun id(): String = "litert-lm"
 
@@ -67,15 +69,15 @@ class LiteRtLmAdapter(context: Context) : InferenceAdapter {
             return
         }
         cancelled.set(false)
-        scope.launch {
+        generationJob = scope.launch {
             try {
-                current.sendMessageAsync(prompt).collect { chunk ->
+                current.sendMessageAsync(prompt, maxOutputToken = maxTokens.coerceIn(1, 4096)).collect { chunk ->
                     if (!cancelled.get()) listener.onToken(chunk.toString())
                 }
                 if (!cancelled.get()) listener.onComplete()
             } catch (failure: Throwable) {
                 if (!cancelled.get()) listener.onError("LiteRT-LM: ${failure.message ?: failure.javaClass.simpleName}")
-            }
+            } finally { generationJob = null }
         }
     }
 
@@ -85,8 +87,16 @@ class LiteRtLmAdapter(context: Context) : InferenceAdapter {
     }
 
     override fun unload() {
-        val future = executor.submit { releaseOwned() }
-        future.get()
+        val finished = java.util.concurrent.CompletableFuture<Unit>()
+        scope.launch {
+            try {
+                conversation?.cancelProcess()
+                generationJob?.join()
+                releaseOwned()
+                finished.complete(Unit)
+            } catch (failure: Throwable) { finished.completeExceptionally(failure) }
+        }
+        finished.get()
     }
 
     private fun releaseOwned() {
