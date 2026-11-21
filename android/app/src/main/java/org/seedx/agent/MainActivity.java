@@ -187,7 +187,8 @@ public final class MainActivity extends Activity {
  }
  @Override protected void onActivityResult(int request,int result,Intent data){
   super.onActivityResult(request,result,data);
-  if(request==VOICE_INPUT){if(result==RESULT_OK&&data!=null){ArrayList<String> heard=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);if(heard!=null&&!heard.isEmpty()){pendingChatDraft=heard.get(0);page="Chat";render();}}return;}\n  if(request!=PICK_MODEL||result!=RESULT_OK||data==null||data.getData()==null)return;
+  if(request==VOICE_INPUT){if(result==RESULT_OK&&data!=null){ArrayList<String> heard=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);if(heard!=null&&!heard.isEmpty()){pendingChatDraft=heard.get(0);page="Chat";render();}}return;}
+  if(request!=PICK_MODEL||result!=RESULT_OK||data==null||data.getData()==null)return;
   Uri uri=data.getData();
   ProgressBar loading=new ProgressBar(this);loading.setIndeterminate(true);content.addView(loading);
   worker.execute(()->{
