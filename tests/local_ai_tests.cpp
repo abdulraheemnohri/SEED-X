@@ -10,7 +10,7 @@ class TestBackend final:public seed::InferenceBackend{public:bool loaded{false};
 int main(){
  const auto file=std::filesystem::temp_directory_path()/"seedx-test-model.gguf";{std::ofstream out(file,std::ios::binary);out.write("GGUF",4);out<<"TEST";}
  seed::ModelManifest model{"test-model","Test model",file.string(),seed::ModelFormat::GGUF,std::filesystem::file_size(file),256ULL*1024*1024,2048,{}};
- assert(seed::ModelManager::validate(model).valid);assert(!seed::ModelManager::fitsMemory(model,{512ULL*1024*1024,512ULL*1024*1024}));assert(seed::ModelManager::fitsMemory(model,{1024ULL*1024*1024,512ULL*1024*1024}));
+ assert(seed::ModelManager::validate(model).valid);auto onnx=model;onnx.format=seed::ModelFormat::ONNX;assert(!seed::ModelManager::validate(onnx).valid);assert(std::string(seed::modelFormatName(seed::ModelFormat::ONNX))=="ONNX");assert(!seed::ModelManager::fitsMemory(model,{512ULL*1024*1024,512ULL*1024*1024}));assert(seed::ModelManager::fitsMemory(model,{1024ULL*1024*1024,512ULL*1024*1024}));
  auto candidates=seed::ModelManager::fitCandidates({model},{1024ULL*1024*1024,512ULL*1024*1024});assert(candidates.size()==1&&candidates[0].id=="test-model");
  seed::LocalAiRuntime runtime;std::string error;assert(runtime.load(model,std::make_unique<TestBackend>(),{1024ULL*1024*1024,512ULL*1024*1024},error));assert(runtime.state()==seed::RuntimeState::Ready&&runtime.backendName()=="test-backend");
  std::vector<std::string>streamed;auto result=runtime.generate("hello",{32,0.7F,0.9F},[&](const std::string&t){streamed.push_back(t);return true;});assert(result.success&&result.text=="Test response: hello"&&streamed.size()==1);
