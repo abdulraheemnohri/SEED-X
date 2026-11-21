@@ -2,7 +2,6 @@ package org.seedx.agent;
 
 import android.app.ActivityManager;
 import android.content.Context;
-import android.os.Debug;
 import java.io.File;
 
 /** Selects one compatible local runtime and enforces a conservative memory admission gate. */
@@ -38,7 +37,7 @@ public final class RuntimeAdapterManager {
         ActivityManager.MemoryInfo info = new ActivityManager.MemoryInfo();
         manager.getMemoryInfo(info);
         long estimated = (long) (model.length() * 1.20d) + 384L * 1024L * 1024L;
-        long available = Math.min(info.availMem, Runtime.getRuntime().maxMemory());
+        long available = info.availMem;
         if (available < estimated) {
             throw new IllegalStateException("Not enough available memory for safe loading. Estimated need: "
                 + (estimated / 1048576L) + " MB; current available app/system headroom: "
