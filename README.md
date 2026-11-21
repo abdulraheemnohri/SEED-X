@@ -69,14 +69,16 @@ Host tests:
     cmake --build build --config Release
     ctest --test-dir build -C Release --output-on-failure
 
-Android debug APK with JNI bridge and stub backend:
-    gradle assembleDebug
+Complete Android debug APK with embedded llama.cpp GGUF inference (recommended):
+    gradle clean assembleDebug -PseedxLlamaCpp=ON
 
-Android debug APK with actual llama.cpp GGUF inference:
-    gradle assembleDebug -PseedxLlamaCpp=ON
+Lightweight debug APK with JNI stub backend (no embedded inference):
+    gradle clean assembleDebug -PseedxLlamaCpp=OFF
 
-Install:
+Install the APK produced by the selected build:
     adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+
+GitHub Actions publishes the llama.cpp-enabled build as `seedx-debug-apk` and the smaller stub build as `seedx-debug-apk-stub`. The complete APK includes the app UI, catalogs, provider/backend management, device status and the compiled CPU llama.cpp adapter. It does not bundle provider API keys or large model weights; import a licensed GGUF model separately. Other catalog runtimes still require their own SDK-backed adapters.
 
 For a 6 GB RAM phone, start with small quantized GGUF models and a 2K context. The app estimates memory conservatively, but real device testing is still required.
 
