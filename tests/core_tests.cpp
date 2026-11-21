@@ -1,5 +1,6 @@
 #include "seed/agent_kernel.hpp"
 #include "seed/tool_registry.hpp"
+#include "seed/tool_registry.hpp"
 #include <cassert>
 #include <iostream>
 int main(){
@@ -22,5 +23,24 @@ int main(){
  assert(k.verifyAudit());
  k.emergencyStop();assert(k.emergencyStopped());assert(k.authorize(write).decision==seed::Decision::Deny);assert(!k.start());assert(!k.resetEmergencyStop(false));assert(k.resetEmergencyStop(true));assert(!k.emergencyStopped());
  assert(k.verifyAudit());k.pause();assert(k.status()==seed::AgentStatus::Paused);assert(k.start());k.stop();assert(k.status()==seed::AgentStatus::Stopped);
- std::cout<<"SEED-X Phase 2 tests passed\n";
+ auto toolPolicy=k.replacePolicies({{"files.write","create","workspace://",seed::PolicyEffect::RequireApproval,true}},true);
+ assert(toolPolicy.valid);
+ seed::ToolRegistry tools;
+ int writes=0;
+ assert(tools.add({"files.write","create","workspace://","Create a workspace note"},
+  [&](const seed::ToolRequest&,const std::string& payload){++writes;return seed::ToolResult{true,seed::Decision::Allow,payload};}));
+ assert(!tools.add({"files.write","create","workspace://","duplicate"},[](const seed::ToolRequest&,const std::string&){return seed::ToolResult{};}));
+ const seed::ToolRequest note{"files.write","create","workspace://notes.txt","create note"};
+ auto denied=tools.execute(k,note,"hello");
+ assert(!denied.success&&denied.decision==seed::Decision::RequireApproval&&writes==0);
+ auto approval=k.requestApproval(note,true);
+ assert(!approval.id.empty());
+ auto executed=tools.execute(k,note,"hello",approval.id);
+ assert(executed.success&&executed.output=="hello"&&writes==1);
+ auto replay=tools.execute(k,note,"hello",approval.id);
+ assert(!replay.success&&writes==1);
+ const seed::ToolRequest unknown{"shell","execute","system://root","never run shell"};
+ assert(!tools.execute(k,unknown).success);
+ assert(k.verifyAudit());
+ std::cout<<"SEED-X core and Phase 7 tool registry tests passed\n";
 }
