@@ -1,4 +1,4 @@
-name: SEED-X Core CI
+name: SEED-X Core and Inference CI
 
 on:
   push:
@@ -17,3 +17,13 @@ jobs:
         run: cmake --build build --parallel 2
       - name: Test
         run: ctest --test-dir build --output-on-failure
+
+  llama-backend-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure pinned llama.cpp backend
+        run: cmake -S . -B build-llama -DCMAKE_BUILD_TYPE=Release -DSEEDX_ENABLE_LLAMA_CPP=ON -DGGML_NATIVE=OFF -DGGML_OPENMP=OFF
+      - name: Build SEED-X with real llama.cpp
+        run: cmake --build build-llama --target seed_engine --parallel 2
