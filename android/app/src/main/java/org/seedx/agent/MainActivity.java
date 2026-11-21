@@ -525,6 +525,19 @@ public final class MainActivity extends Activity {
     .setNegativeButton("Close",null).show();
   }).setNegativeButton("Close",null).show();
  }
+ private void showDuplicateCrashGroups(){
+  java.util.LinkedHashMap<String,Integer> groups=new java.util.LinkedHashMap<>();
+  File[] reports=CrashReporter.history(this);
+  for(File report:reports){
+   String value=CrashReporter.readFile(report);
+   java.util.regex.Matcher m=java.util.regex.Pattern.compile("Fingerprint: ([a-f0-9]+)").matcher(value);
+   if(m.find()){String key=m.group(1);groups.put(key,groups.containsKey(key)?groups.get(key)+1:1);}
+  }
+  if(groups.isEmpty()){toast("No fingerprinted crash reports found.");return;}
+  StringBuilder summary=new StringBuilder();
+  for(java.util.Map.Entry<String,Integer> entry:groups.entrySet())summary.append(entry.getKey()).append("  •  ").append(entry.getValue()).append(" report(s)\n");
+  new AlertDialog.Builder(this).setTitle("Duplicate crash groups").setMessage(summary.toString()).setPositiveButton("Close",null).show();
+ }
  private void showEventTimeline(){
   new AlertDialog.Builder(this).setTitle("Recent app events").setMessage(CrashReporter.readBreadcrumbs(this))
    .setPositiveButton("Copy",(d,w)->{String value=CrashReporter.readBreadcrumbs(this);((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED-X events",value));toast("Event timeline copied.");})
@@ -535,6 +548,7 @@ public final class MainActivity extends Activity {
   try{JSONObject rt=new JSONObject(nativeRuntimeStatus());report.addView(text("Native runtime: "+rt.optString("state"),12,Color.WHITE,false));report.addView(text("Backend: "+rt.optString("backend")+" • llama.cpp built: "+rt.optBoolean("llamaAvailable"),12,muted,false));report.addView(text("Available memory: "+(rt.optLong("availableBytes")/1048576)+" MB • reserve: "+(rt.optLong("reserveBytes")/1048576)+" MB",12,muted,false));}catch(Exception e){report.addView(text("Native bridge: error "+e.getMessage(),12,Color.RED,false));}
   JSONObject cfg=config();report.addView(text("Active provider: "+(cfg==null?"none":cfg.optString("name")+" / "+cfg.optString("model")),12,Color.WHITE,false));report.addView(text("Saved provider profiles: "+providerProfiles().length(),12,muted,false));report.addView(text("Saved credential available: "+(cfg!=null&&!decrypt(cfg.optString("credentialRef")).isEmpty()),12,muted,false));report.addView(text("Chat messages in memory: "+history.size(),12,muted,false));
   button("View crash & error history",panel,()->showDiagnosticHistory());
+  button("Group duplicate crashes",panel,()->showDuplicateCrashGroups());
   button("View recent app event timeline",panel,()->showEventTimeline());
   button("View latest crash report",panel,()->showLatestDiagnostic());
   button("Verify Guardian & audit chain",panel,()->{try{JSONObject gs=new JSONObject(nativeGuardianStatus());showTextDialog("Guardian diagnostics","Emergency stop: "+gs.optBoolean("emergencyStop")+"\nAudit integrity: "+gs.optBoolean("auditValid")+"\nKernel status: "+gs.optInt("kernelStatus"));}catch(Exception e){showTextDialog("Guardian diagnostics",e.getMessage());}});
