@@ -1,0 +1,258 @@
+{
+  "schemaVersion": 1,
+  "notice": "Capability inventory. A catalog entry is not a promise that a model or runtime is packaged. Each adapter must declare exact formats, device support and tested status.",
+  "capabilities": [
+    {
+      "id": "text-generation",
+      "label": "Text generation / chat",
+      "formats": [
+        "GGUF",
+        "LiteRT-LM",
+        "ExecuTorch .pte",
+        "ONNX task graphs"
+      ],
+      "status": "partial-integration",
+      "models": [
+        "Llama",
+        "Qwen",
+        "Gemma",
+        "Phi",
+        "SmolLM",
+        "Mistral",
+        "DeepSeek distillations"
+      ]
+    },
+    {
+      "id": "reasoning",
+      "label": "Reasoning / planning",
+      "formats": [
+        "Text generation runtime"
+      ],
+      "status": "policy-gated",
+      "models": [
+        "Reasoning-tuned LLMs"
+      ]
+    },
+    {
+      "id": "vision-language",
+      "label": "Vision-language / image understanding",
+      "formats": [
+        "Model-specific multimodal packages"
+      ],
+      "status": "catalog-only",
+      "models": [
+        "Gemma vision variants",
+        "Qwen-VL",
+        "LLaVA",
+        "InternVL",
+        "MiniCPM-V"
+      ]
+    },
+    {
+      "id": "speech-recognition",
+      "label": "ASR / speech-to-text",
+      "formats": [
+        "GGML",
+        "ONNX",
+        "TFLite",
+        "System API"
+      ],
+      "status": "platform-integrated-plus-catalog",
+      "models": [
+        "Whisper",
+        "Vosk",
+        "Moonshine",
+        "Parakeet",
+        "Zipformer",
+        "SenseVoice"
+      ]
+    },
+    {
+      "id": "speech-synthesis",
+      "label": "TTS / speech generation",
+      "formats": [
+        "ONNX",
+        "System TTS"
+      ],
+      "status": "platform-integrated-plus-catalog",
+      "models": [
+        "Piper",
+        "Kokoro",
+        "MMS-TTS",
+        "VITS",
+        "Coqui"
+      ]
+    },
+    {
+      "id": "speech-translation",
+      "label": "Speech translation",
+      "formats": [
+        "Task-specific ONNX / cloud API"
+      ],
+      "status": "catalog-only",
+      "models": [
+        "ML Kit GenAI translation",
+        "Whisper translation"
+      ]
+    },
+    {
+      "id": "voice-activity",
+      "label": "VAD / wake word",
+      "formats": [
+        "ONNX",
+        "TFLite"
+      ],
+      "status": "catalog-only",
+      "models": [
+        "Silero VAD",
+        "Porcupine",
+        "openWakeWord"
+      ]
+    },
+    {
+      "id": "speaker",
+      "label": "Speaker ID / diarization",
+      "formats": [
+        "ONNX"
+      ],
+      "status": "catalog-only",
+      "models": [
+        "pyannote exports",
+        "sherpa-onnx speaker models"
+      ]
+    },
+    {
+      "id": "audio-understanding",
+      "label": "Audio event / sound understanding",
+      "formats": [
+        "ONNX",
+        "TFLite"
+      ],
+      "status": "catalog-only",
+      "models": [
+        "YAMNet",
+        "PANNs",
+        "BEATs"
+      ]
+    },
+    {
+      "id": "embeddings",
+      "label": "Text / image embeddings",
+      "formats": [
+        "ONNX",
+        "TFLite",
+        "LiteRT"
+      ],
+      "status": "catalog-only",
+      "models": [
+        "BGE",
+        "E5",
+        "GTE",
+        "SigLIP"
+      ]
+    },
+    {
+      "id": "reranking",
+      "label": "Reranking / semantic retrieval",
+      "formats": [
+        "ONNX",
+        "GGUF"
+      ],
+      "status": "catalog-only",
+      "models": [
+        "BGE Reranker",
+        "Jina Reranker"
+      ]
+    },
+    {
+      "id": "ocr-documents",
+      "label": "OCR / document parsing",
+      "formats": [
+        "ONNX",
+        "TFLite",
+        "Android ML Kit"
+      ],
+      "status": "platform-and-catalog",
+      "models": [
+        "ML Kit Text Recognition",
+        "PaddleOCR",
+        "Tesseract"
+      ]
+    },
+    {
+      "id": "image-generation",
+      "label": "Image generation / diffusion",
+      "formats": [
+        "Diffusers",
+        "Core ML",
+        "ONNX"
+      ],
+      "status": "remote-or-desktop",
+      "models": [
+        "Stable Diffusion",
+        "SDXL",
+        "FLUX variants"
+      ]
+    },
+    {
+      "id": "video-understanding",
+      "label": "Video understanding / summarization",
+      "formats": [
+        "Multimodal cloud or frame-based local pipeline"
+      ],
+      "status": "remote-or-catalog",
+      "models": [
+        "Video-LLaVA",
+        "Qwen2.5-VL",
+        "Gemini"
+      ]
+    },
+    {
+      "id": "video-generation",
+      "label": "Video generation",
+      "formats": [
+        "Provider APIs"
+      ],
+      "status": "remote-provider",
+      "models": [
+        "Puter.js provider catalogue",
+        "Hosted video models"
+      ]
+    },
+    {
+      "id": "multimodal-realtime",
+      "label": "Realtime voice + vision",
+      "formats": [
+        "WebRTC / WebSocket / model-specific runtime"
+      ],
+      "status": "remote-beta-or-device-specific",
+      "models": [
+        "Puter realtime beta",
+        "Provider realtime APIs"
+      ]
+    },
+    {
+      "id": "agent-tools",
+      "label": "Agent / tool execution",
+      "formats": [
+        "SEED-X typed tool protocol"
+      ],
+      "status": "guardian-gated",
+      "models": [
+        "Model proposes; Guardian authorizes"
+      ]
+    },
+    {
+      "id": "mcp-skills",
+      "label": "MCP / skills / connectors",
+      "formats": [
+        "MCP JSON-RPC / local skill manifests"
+      ],
+      "status": "planned-controlled",
+      "models": [
+        "Local skills",
+        "Approved MCP servers"
+      ]
+    }
+  ]
+}
