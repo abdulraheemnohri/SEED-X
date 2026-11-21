@@ -194,6 +194,87 @@
       ],
       "notes": "Server deployment, not embedded in APK.",
       "url": "https://docs.sglang.ai/"
+    },
+    {
+      "id": "MNN-LLM",
+      "name": "MNN-LLM",
+      "category": "embedded-mobile",
+      "platforms": [
+        "Android",
+        "iOS",
+        "Windows",
+        "Linux",
+        "macOS"
+      ],
+      "formats": [
+        "MNN model packages"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "GPU/NPU where supported"
+      ],
+      "notes": "Mobile-focused inference engine; SEED-X adapter and model conversion pipeline not implemented.",
+      "url": "https://github.com/alibaba/MNN"
+    },
+    {
+      "id": "ncnn",
+      "name": "ncnn",
+      "category": "embedded-mobile",
+      "platforms": [
+        "Android",
+        "iOS",
+        "Windows",
+        "Linux"
+      ],
+      "formats": [
+        "ncnn parameter and binary weights"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Vulkan"
+      ],
+      "notes": "Lightweight mobile neural network inference; LLM tokenizer/chat adapter still needed.",
+      "url": "https://github.com/Tencent/ncnn"
+    },
+    {
+      "id": "OpenVINO",
+      "name": "OpenVINO",
+      "category": "desktop-server",
+      "platforms": [
+        "Windows",
+        "Linux",
+        "macOS"
+      ],
+      "formats": [
+        "OpenVINO IR and supported model formats"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Intel GPU",
+        "NPU on supported hardware"
+      ],
+      "notes": "Best treated as a desktop/edge server backend rather than an Android runtime.",
+      "url": "https://docs.openvino.ai/"
+    },
+    {
+      "id": "TensorRT-LLM",
+      "name": "TensorRT-LLM",
+      "category": "remote-server",
+      "platforms": [
+        "Linux"
+      ],
+      "formats": [
+        "TensorRT engines and supported model formats"
+      ],
+      "status": "remote-server-only",
+      "acceleration": [
+        "NVIDIA GPU"
+      ],
+      "notes": "High-throughput NVIDIA server runtime; not an embedded Android runtime.",
+      "url": "https://nvidia.github.io/TensorRT-LLM/"
     }
   ]
 }
