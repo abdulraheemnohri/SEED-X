@@ -68,7 +68,7 @@ public final class MainActivity extends Activity {
  private String page="Home";
  private String lastBreadcrumbPage="";
  private String pendingSkillPrompt="";
- private static final String[] TABS={"Home","Chat","Voice","Memory","Prompts","Models","Downloads","Runtimes","Providers","Skills","Workflows","Tasks","Permissions","Tools","Guardian","Diagnostics","Network","Storage","About","Settings"};
+ private static final String[] TABS={"Home","Chat","Voice","Memory","Prompts","Models","Downloads","Runtimes","Providers","Backends","Skills","Workflows","Tasks","Permissions","Device","Tools","Guardian","Diagnostics","Network","Storage","About","Settings"};
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
  private static final int EXPORT_SETTINGS=4104;
@@ -109,7 +109,7 @@ public final class MainActivity extends Activity {
   Button palette=navButton("⌕  Search screens","Search screens and actions",false,()->showScreenSearch());LinearLayout.LayoutParams pp=new LinearLayout.LayoutParams(-1,dp(46));pp.topMargin=dp(10);sidebar.addView(palette,pp);
   ScrollView list=new ScrollView(this);LinearLayout items=new LinearLayout(this);items.setOrientation(1);list.addView(items);
   String[] groups={"WORKSPACE","AI & MODELS","AUTOMATION","SECURITY","SYSTEM"};
-  String[][] screens={{"Home","Chat","Voice","Memory","Prompts"},{"Models","Downloads","Runtimes","Providers"},{"Skills","Workflows","Tasks","Tools"},{"Permissions","Guardian","Diagnostics","Network"},{"Storage","About","Settings"}};
+  String[][] screens={{"Home","Chat","Voice","Memory","Prompts"},{"Models","Downloads","Runtimes","Providers","Backends"},{"Skills","Workflows","Tasks","Tools"},{"Permissions","Device","Guardian","Diagnostics","Network"},{"Storage","About","Settings"}};
   for(int g=0;g<groups.length;g++){TextView section=text(groups[g],10,muted,true);section.setPadding(dp(8),dp(16),0,dp(5));items.addView(section);for(String destination:screens[g]){Button item=navButton(destination,(page.equals(destination)?"Current screen: ":"Open ")+destination,page.equals(destination),()->navigateTo(destination));items.addView(item,new LinearLayout.LayoutParams(-1,dp(46)));}}
   sidebar.addView(list,new LinearLayout.LayoutParams(-1,0,1));
   TextView footer=text("LOCAL-FIRST  •  GUARDIAN CONTROL",9,muted,true);footer.setPadding(dp(5),dp(12),0,0);sidebar.addView(footer);
@@ -150,11 +150,11 @@ public final class MainActivity extends Activity {
   android.view.SubMenu workspace=menu.addSubMenu("WORKSPACE");
   addScreenMenu(workspace,new String[]{"Home","Chat","Voice","Memory","Prompts"});
   android.view.SubMenu intelligence=menu.addSubMenu("AI & MODELS");
-  addScreenMenu(intelligence,new String[]{"Models","Downloads","Runtimes","Providers"});
+  addScreenMenu(intelligence,new String[]{"Models","Downloads","Runtimes","Providers","Backends"});
   android.view.SubMenu automation=menu.addSubMenu("AUTOMATION & TOOLS");
   addScreenMenu(automation,new String[]{"Skills","Workflows","Tasks","Tools"});
   android.view.SubMenu security=menu.addSubMenu("SECURITY & HEALTH");
-  addScreenMenu(security,new String[]{"Permissions","Guardian","Diagnostics","Network"});
+  addScreenMenu(security,new String[]{"Permissions","Device","Guardian","Diagnostics","Network"});
   android.view.SubMenu system=menu.addSubMenu("SYSTEM");
   addScreenMenu(system,new String[]{"Storage","About","Settings"});
   Set<String> favourites=prefs.getStringSet("favorite_screens",Collections.<String>emptySet());
@@ -191,7 +191,7 @@ public final class MainActivity extends Activity {
   }
  }
 
- private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Prompts":prompts();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Network":networkDiagnostics();break;case "Storage":storageManager();break;case "About":about();break;case "Settings":settings();break;default:home();}}
+ private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Prompts":prompts();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Backends":backends();break;case "Device":deviceStatus();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Network":networkDiagnostics();break;case "Storage":storageManager();break;case "About":about();break;case "Settings":settings();break;default:home();}}
  private void heading(String title,String sub){content.addView(text(title,22,Color.WHITE,true));content.addView(text(sub,12,muted,false));space(10);}
  private void space(int h){View v=new View(this);content.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  private LinearLayout card(){LinearLayout c=new LinearLayout(this);c.setOrientation(1);int pad=uiSpace(14,10);c.setPadding(pad,uiSpace(13,9),pad,uiSpace(13,9));c.setBackground(rounded(panel,18));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);content.addView(c,p);return c;}
@@ -733,7 +733,7 @@ navigation.addView(text("Four primary tabs stay visible at the bottom. All remai
   status.addView(text("Active provider: "+(cfg==null?"not configured":cfg.optString("name")+" / "+cfg.optString("model")),12,Color.WHITE,false));
   status.addView(text("Network: "+(networkAvailable()?"connected":"offline"),11,muted,false));
   }if(prefs.getBoolean("dashboard_quick_launch",true)){LinearLayout actions=card();actions.addView(text("QUICK LAUNCH",12,accent,true));actions.addView(text("Use the bottom bar for your main screens or ☰ for every feature.",11,muted,false));
-  GridLayout quick=new GridLayout(this);quick.setColumnCount(screenWidthDp()>=900?4:screenWidthDp()>=600?3:2);for(String tab:new String[]{"Chat","Voice","Memory","Prompts","Models","Downloads","Runtimes","Providers","Workflows","Tasks","Permissions","Tools","Guardian","Diagnostics","Network","Storage","About"}){Button b=new Button(this);b.setText(tab);b.setAllCaps(false);b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription("Open "+tab);b.setTextColor(primaryText);b.setBackground(rounded(bg,12));b.setOnClickListener(v->navigateTo(tab));GridLayout.LayoutParams gp=new GridLayout.LayoutParams();gp.width=0;gp.height=dp(46);gp.columnSpec=GridLayout.spec(GridLayout.UNDEFINED,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));quick.addView(b,gp);}actions.addView(quick);
+  GridLayout quick=new GridLayout(this);quick.setColumnCount(screenWidthDp()>=900?4:screenWidthDp()>=600?3:2);for(String tab:new String[]{"Chat","Voice","Memory","Prompts","Models","Downloads","Runtimes","Providers","Backends","Workflows","Tasks","Permissions","Device","Tools","Guardian","Diagnostics","Network","Storage","About"}){Button b=new Button(this);b.setText(tab);b.setAllCaps(false);b.setTextSize(12);b.setMinHeight(dp(48));b.setContentDescription("Open "+tab);b.setTextColor(primaryText);b.setBackground(rounded(bg,12));b.setOnClickListener(v->navigateTo(tab));GridLayout.LayoutParams gp=new GridLayout.LayoutParams();gp.width=0;gp.height=dp(46);gp.columnSpec=GridLayout.spec(GridLayout.UNDEFINED,1f);gp.setMargins(dp(3),dp(3),dp(3),dp(3));quick.addView(b,gp);}actions.addView(quick);
   }Set<String> favourites=prefs.getStringSet("favorite_screens",Collections.<String>emptySet());if(prefs.getBoolean("dashboard_favourites",true)&&!favourites.isEmpty()){LinearLayout fav=card();fav.addView(text("YOUR FAVOURITES",12,accent,true));for(String f:favourites){Button b=new Button(this);b.setText("★  "+f);b.setAllCaps(false);b.setTextColor(primaryText);b.setOnClickListener(v->navigateTo(f));fav.addView(b);}}
   button("Open full mobile menu",panel,()->showMobileMenu(root));
   LinearLayout note=card();note.addView(text("Privacy first",14,accent,true));note.addView(text("Local model wins when loaded. Cloud is disabled by default and each cloud request asks before sending. No provider API keys are bundled.",12,muted,false));
@@ -759,6 +759,84 @@ navigation.addView(text("Four primary tabs stay visible at the bottom. All remai
  }
 
  private void showRuntimeDiagnostics(){long started=android.os.SystemClock.elapsedRealtime();try{JSONObject status=new JSONObject(nativeRuntimeStatus());JSONArray catalog=new JSONArray(nativeRuntimeCatalog());long elapsed=android.os.SystemClock.elapsedRealtime()-started;StringBuilder report=new StringBuilder();report.append("Native status query: ").append(elapsed).append(" ms\n");report.append("State: ").append(status.optString("state")).append("\nBackend: ").append(status.optString("backend")).append("\nllama.cpp compiled: ").append(status.optBoolean("llamaAvailable")).append("\nAvailable memory: ").append(status.optLong("availableBytes")/1048576).append(" MB\nMemory reserve: ").append(status.optLong("reserveBytes")/1048576).append(" MB\nRegistered runtime entries: ").append(catalog.length()).append("\n\nThis is a status probe, not a model inference benchmark.");showTextDialog("Runtime diagnostics",report.toString());}catch(Exception e){showTextDialog("Runtime diagnostics","Native runtime probe failed: "+e.getMessage());}}
+
+ private long directoryBytes(File dir){if(dir==null||!dir.exists())return 0L;if(dir.isFile())return dir.length();long total=0;File[] children=dir.listFiles();if(children!=null)for(File child:children)total+=directoryBytes(child);return total;}
+ private String batteryHealth(int value){switch(value){case android.os.BatteryManager.BATTERY_HEALTH_GOOD:return "Good";case android.os.BatteryManager.BATTERY_HEALTH_OVERHEAT:return "Overheating";case android.os.BatteryManager.BATTERY_HEALTH_DEAD:return "Dead";case android.os.BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE:return "Over-voltage";case android.os.BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE:return "Unspecified failure";case android.os.BatteryManager.BATTERY_HEALTH_COLD:return "Cold";default:return "Unknown";}}
+ private String thermalLabel(int value){switch(value){case android.os.PowerManager.THERMAL_STATUS_NONE:return "Normal";case android.os.PowerManager.THERMAL_STATUS_LIGHT:return "Light";case android.os.PowerManager.THERMAL_STATUS_MODERATE:return "Moderate";case android.os.PowerManager.THERMAL_STATUS_SEVERE:return "Severe";case android.os.PowerManager.THERMAL_STATUS_CRITICAL:return "Critical";case android.os.PowerManager.THERMAL_STATUS_EMERGENCY:return "Emergency";case android.os.PowerManager.THERMAL_STATUS_SHUTDOWN:return "Shutdown";default:return "Unknown";}}
+ private void deviceStatus(){
+  heading("Device Status","Live, read-only Android hardware, battery, memory, storage and power information. No extra device permissions are required.");
+  LinearLayout identity=card();identity.addView(text("DEVICE IDENTITY",12,accent,true));
+  identity.addView(text(android.os.Build.MANUFACTURER+" "+android.os.Build.MODEL,16,primaryText,true));
+  identity.addView(text("Brand: "+android.os.Build.BRAND+" • Device: "+android.os.Build.DEVICE,11,muted,false));
+  identity.addView(text("Android "+android.os.Build.VERSION.RELEASE+" • API "+android.os.Build.VERSION.SDK_INT+" • Build "+android.os.Build.DISPLAY,11,muted,false));
+  identity.addView(text("Supported ABIs: "+Arrays.toString(android.os.Build.SUPPORTED_ABIS),11,muted,false));
+  identity.addView(text("CPU logical cores: "+Runtime.getRuntime().availableProcessors(),11,muted,false));
+  identity.addView(text("Screen: "+screenWidthDp()+" dp wide • density "+getResources().getDisplayMetrics().densityDpi+" dpi",11,muted,false));
+  LinearLayout battery=card();battery.addView(text("BATTERY & POWER",12,accent,true));
+  Intent snapshot=registerReceiver(null,new android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+  if(snapshot!=null){
+   int level=snapshot.getIntExtra(android.os.BatteryManager.EXTRA_LEVEL,-1),scale=snapshot.getIntExtra(android.os.BatteryManager.EXTRA_SCALE,100);
+   int pct=level>=0&&scale>0?Math.round(level*100f/scale):-1;
+   int status=snapshot.getIntExtra(android.os.BatteryManager.EXTRA_STATUS,-1),plug=snapshot.getIntExtra(android.os.BatteryManager.EXTRA_PLUGGED,0);
+   String state=status==android.os.BatteryManager.BATTERY_STATUS_CHARGING?"Charging":status==android.os.BatteryManager.BATTERY_STATUS_FULL?"Full":status==android.os.BatteryManager.BATTERY_STATUS_DISCHARGING?"Discharging":status==android.os.BatteryManager.BATTERY_STATUS_NOT_CHARGING?"Not charging":"Unknown";
+   String source=plug==android.os.BatteryManager.BATTERY_PLUGGED_AC?"AC":plug==android.os.BatteryManager.BATTERY_PLUGGED_USB?"USB":plug==android.os.BatteryManager.BATTERY_PLUGGED_WIRELESS?"Wireless":plug==0?"Not connected":"Other";
+   int temp=snapshot.getIntExtra(android.os.BatteryManager.EXTRA_TEMPERATURE,-1),voltage=snapshot.getIntExtra(android.os.BatteryManager.EXTRA_VOLTAGE,-1),health=snapshot.getIntExtra(android.os.BatteryManager.EXTRA_HEALTH,-1);
+   battery.addView(text("Charge: "+(pct<0?"Unknown":pct+"%")+" • "+state,15,primaryText,true));
+   battery.addView(text("Power source: "+source+" • Health: "+batteryHealth(health),12,muted,false));
+   battery.addView(text("Battery temperature: "+(temp<0?"Unknown":String.format(Locale.US,"%.1f °C",temp/10f))+" • Voltage: "+(voltage<0?"Unknown":voltage+" mV"),12,muted,false));
+  }else battery.addView(text("Battery snapshot unavailable on this device.",12,muted,false));
+  android.os.PowerManager pm=(android.os.PowerManager)getSystemService(POWER_SERVICE);
+  battery.addView(text("Battery saver: "+(pm!=null&&pm.isPowerSaveMode()?"ON":"OFF"),12,muted,false));
+  battery.addView(text("App battery optimization exempt: "+(pm!=null&&pm.isIgnoringBatteryOptimizations(getPackageName())?"Yes":"No"),12,muted,false));
+  if(android.os.Build.VERSION.SDK_INT>=29&&pm!=null){try{battery.addView(text("Android thermal status: "+thermalLabel(pm.getCurrentThermalStatus()),12,muted,false));}catch(Exception ignored){battery.addView(text("Thermal status: unavailable",12,muted,false));}}
+  LinearLayout memory=card();memory.addView(text("MEMORY & STORAGE",12,accent,true));
+  android.app.ActivityManager am=(android.app.ActivityManager)getSystemService(ACTIVITY_SERVICE);android.app.ActivityManager.MemoryInfo mi=new android.app.ActivityManager.MemoryInfo();
+  if(am!=null){am.getMemoryInfo(mi);memory.addView(text("System RAM total: "+(mi.totalMem/1048576)+" MB • available: "+(mi.availMem/1048576)+" MB",13,primaryText,true));memory.addView(text("Low-memory state: "+(mi.lowMemory?"Yes":"No")+" • Android low-RAM device flag: "+am.isLowRamDevice(),11,muted,false));}
+  else memory.addView(text("System memory information unavailable.",12,muted,false));
+  try{android.os.StatFs fs=new android.os.StatFs(getFilesDir().getAbsolutePath());memory.addView(text("Internal data volume free: "+(fs.getAvailableBytes()/1073741824L)+" GB • total: "+(fs.getTotalBytes()/1073741824L)+" GB",12,muted,false));}catch(Exception e){memory.addView(text("Storage volume information unavailable.",12,muted,false));}
+  File modelDir=new File(getFilesDir(),"models"),downloadDir=getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
+  memory.addView(text("SEED-X private models: "+(directoryBytes(modelDir)/1048576)+" MB • files: "+(modelDir.listFiles()==null?0:modelDir.listFiles().length),12,muted,false));
+  memory.addView(text("SEED-X downloads: "+(directoryBytes(downloadDir)/1048576)+" MB",12,muted,false));
+  LinearLayout features=card();features.addView(text("HARDWARE FEATURES",12,accent,true));
+  String[][] featureList={{"Wi-Fi",android.content.pm.PackageManager.FEATURE_WIFI},{"Bluetooth",android.content.pm.PackageManager.FEATURE_BLUETOOTH},{"NFC",android.content.pm.PackageManager.FEATURE_NFC},{"GPS",android.content.pm.PackageManager.FEATURE_LOCATION_GPS},{"Camera",android.content.pm.PackageManager.FEATURE_CAMERA_ANY},{"Microphone hardware",android.content.pm.PackageManager.FEATURE_MICROPHONE},{"Telephony",android.content.pm.PackageManager.FEATURE_TELEPHONY},{"Touchscreen",android.content.pm.PackageManager.FEATURE_TOUCHSCREEN}};
+  for(String[] feature:featureList)features.addView(text(feature[0]+": "+(getPackageManager().hasSystemFeature(feature[1])?"Available":"Not reported"),11,muted,false));
+  LinearLayout actions=card();actions.addView(text("ANDROID DEVICE CONTROLS",12,accent,true));
+  button("Refresh device status",panel,()->render());
+  button("Open Android battery settings",panel,()->openBatterySettings());
+  button("Open SEED-X app settings",panel,()->openAppPermissionSettings());
+  button("Open model & runtime manager",accent,()->navigateTo("Runtimes"));
+  button("Open storage manager",panel,()->navigateTo("Storage"));
+  actions.addView(text("SEED-X reads public Android status APIs only. It does not toggle radios, change system settings, read private sensor streams, or control other apps.",11,muted,false));
+ }
+ private void backends(){
+  heading("Backend Manager","Manage the connection layer between SEED-X and local or hosted AI engines. Runtime availability and provider connectivity are reported separately.");
+  JSONObject active=config();JSONArray saved=providerProfiles();
+  LinearLayout overview=card();overview.addView(text("ACTIVE BACKEND",12,accent,true));
+  overview.addView(text(active==null?"No provider profile selected":active.optString("name")+" • "+active.optString("model"),15,primaryText,true));
+  overview.addView(text(active==null?"Configure a provider to enable online or remote-local inference.":"Endpoint: "+active.optString("base"),11,muted,false));
+  overview.addView(text("Saved connection profiles: "+saved.length()+" • Network: "+(networkAvailable()?"available":"offline"),11,muted,false));
+  try{JSONObject rt=new JSONObject(nativeRuntimeStatus());overview.addView(text("Embedded engine: "+rt.optString("backend")+" • "+rt.optString("state"),12,muted,false));overview.addView(text("llama.cpp compiled: "+(rt.optBoolean("llamaAvailable")?"Yes":"No")+" • loaded model: "+(rt.optBoolean("ready")?rt.optString("model"):"None"),11,muted,false));}catch(Exception e){overview.addView(text("Embedded runtime status unavailable: "+e.getMessage(),11,Color.RED,false));}
+  LinearLayout routing=card();routing.addView(text("ROUTING & SECURITY",12,accent,true));
+  CheckBox online=new CheckBox(this);online.setText("Allow cloud/remote provider fallback");online.setTextColor(primaryText);online.setChecked(prefs.getBoolean("online_allowed",false));online.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("online_allowed",on).apply();toast(on?"Remote fallback enabled; each cloud send still requires confirmation.":"Remote fallback disabled.");});routing.addView(online);
+  CheckBox localHttp=new CheckBox(this);localHttp.setText("Allow trusted private-LAN HTTP endpoints");localHttp.setTextColor(primaryText);localHttp.setChecked(prefs.getBoolean("allow_local_http",false));localHttp.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("allow_local_http",on).apply();toast(on?"Private-LAN HTTP enabled. Use only trusted networks.":"Private-LAN HTTP disabled.");});routing.addView(localHttp);
+  routing.addView(text("Public provider endpoints require HTTPS. Local HTTP is opt-in and limited by endpoint validation. API keys stay encrypted with Android Keystore. Never paste keys into issue reports.",11,muted,false));
+  LinearLayout profiles=card();profiles.addView(text("CONNECTION PROFILES",12,accent,true));
+  for(int i=0;i<saved.length();i++){JSONObject p=saved.optJSONObject(i);if(p==null)continue;boolean selected=active!=null&&p.optString("id").equals(active.optString("id"));String endpoint=p.optString("base");boolean local=endpoint.startsWith("http://")||endpoint.contains("127.0.0.1")||endpoint.contains("localhost")||endpoint.contains(".local");
+   profiles.addView(text((selected?"● ACTIVE  ":"○  ")+p.optString("name")+" • "+(local?"LOCAL / LAN":"REMOTE / HTTPS"),13,primaryText,true));
+   profiles.addView(text(endpoint+"\nModel: "+p.optString("model")+" • Protocol: "+p.optString("kind"),10,muted,false));
+   if(!selected)button("Activate "+p.optString("name"),panel,()->activateProvider(p));
+  }
+  button("Open Provider Hub / add or edit profile",accent,()->navigateTo("Providers"));
+  button("Test active backend connection",panel,()->{if(active==null){toast("Select a provider first.");return;}worker.execute(()->{long started=android.os.SystemClock.elapsedRealtime();String result;try{result=requestProviderTest(active);}catch(Exception e){result="Backend test failed: "+e.getMessage();}long elapsed=android.os.SystemClock.elapsedRealtime()-started;boolean ok=result.startsWith("Provider connection succeeded.");prefs.edit().putLong("provider_last_test_time",System.currentTimeMillis()).putLong("provider_last_test_ms",elapsed).putString("provider_last_test_result",ok?"success":"failed").apply();String message=result+"\nElapsed: "+elapsed+" ms";runOnUiThread(()->showTextDialog("Backend connection test",message));});});
+  button("Open Runtime Manager",panel,()->navigateTo("Runtimes"));
+  button("Open local model manager",panel,()->navigateTo("Models"));
+  button("Open network diagnostics",panel,()->navigateTo("Network"));
+  LinearLayout catalogue=card();catalogue.addView(text("PROVIDER CATALOG",12,accent,true));JSONArray catalog=assetJson("provider_catalog.json").optJSONArray("providers");int localCount=0,remoteCount=0;
+  for(int i=0;catalog!=null&&i<catalog.length();i++){JSONObject p=catalog.optJSONObject(i);if(p==null)continue;if(p.optString("baseUrl").startsWith("http://"))localCount++;else remoteCount++;}
+  catalogue.addView(text((catalog==null?0:catalog.length())+" provider templates • "+localCount+" local HTTP • "+remoteCount+" HTTPS",12,primaryText,true));
+  catalogue.addView(text("Templates are editable connection presets, not proof of account access or active provider support. Custom OpenAI-compatible endpoints are supported.",11,muted,false));
+ }
+
  private void permissions(){
   heading("Permission Center","Least-privilege Android access. SEED-X does not request broad device-control permissions.");
   LinearLayout status=card();status.addView(text("APP PERMISSION STATUS",12,accent,true));
