@@ -52,3 +52,15 @@ jobs:
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Assemble Android debug APK with embedded llama.cpp
+        id: llama_android
+        continue-on-error: true
+        run: gradle assembleDebug -PseedxLlamaCpp=ON
+      - name: Upload llama.cpp-enabled Android APK
+        if: steps.llama_android.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: seedx-debug-apk-llama
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
