@@ -68,11 +68,12 @@ public final class MainActivity extends Activity {
  private String page="Home";
  private String lastBreadcrumbPage="";
  private String pendingSkillPrompt="";
- private static final String[] TABS={"Home","Chat","Voice","Memory","Models","Downloads","Runtimes","Providers","Skills","Workflows","Tasks","Permissions","Tools","Guardian","Diagnostics","Settings"};
+ private static final String[] TABS={"Home","Chat","Voice","Memory","Prompts","Models","Downloads","Runtimes","Providers","Skills","Workflows","Tasks","Permissions","Tools","Guardian","Diagnostics","Network","Storage","About","Settings"};
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
  private static final int EXPORT_SETTINGS=4104;
  private static final int IMPORT_SETTINGS=4105;
+ private static final int EXPORT_CHAT=4106;
  private static final int VOICE_INPUT=4103;
  @Override public void onCreate(Bundle state){super.onCreate(state);CrashReporter.install(this);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);migrateProviderProfiles();applyTheme();String startup=prefs.getString("startup_screen","Home");page=Arrays.asList(TABS).contains(startup)?startup:"Home";getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();nativeReady=nativeInit(getFilesDir().getAbsolutePath());if(!nativeReady)Toast.makeText(this,"Native Guardian or workspace initialization failed. AI inference and tools are disabled for safety.",Toast.LENGTH_LONG).show();tts=new TextToSpeech(this,status->{if(status==TextToSpeech.SUCCESS){int result=tts.setLanguage(Locale.getDefault());if(result==TextToSpeech.LANG_MISSING_DATA||result==TextToSpeech.LANG_NOT_SUPPORTED)Toast.makeText(this,"Default text-to-speech language is unavailable.",Toast.LENGTH_SHORT).show();}});shell();render();}
  private void applyTheme(){
@@ -114,15 +115,15 @@ public final class MainActivity extends Activity {
   menu.add(0,6,5,"Stop current generation");
   menu.add(0,7,6,"Support SEED-X development");
   android.view.SubMenu workspace=menu.addSubMenu("WORKSPACE");
-  addScreenMenu(workspace,new String[]{"Home","Chat","Voice","Memory"});
+  addScreenMenu(workspace,new String[]{"Home","Chat","Voice","Memory","Prompts"});
   android.view.SubMenu intelligence=menu.addSubMenu("AI & MODELS");
   addScreenMenu(intelligence,new String[]{"Models","Downloads","Runtimes","Providers"});
   android.view.SubMenu automation=menu.addSubMenu("AUTOMATION & TOOLS");
   addScreenMenu(automation,new String[]{"Skills","Workflows","Tasks","Tools"});
   android.view.SubMenu security=menu.addSubMenu("SECURITY & HEALTH");
-  addScreenMenu(security,new String[]{"Permissions","Guardian","Diagnostics"});
+  addScreenMenu(security,new String[]{"Permissions","Guardian","Diagnostics","Network"});
   android.view.SubMenu system=menu.addSubMenu("SYSTEM");
-  addScreenMenu(system,new String[]{"Settings"});
+  addScreenMenu(system,new String[]{"Storage","About","Settings"});
   Set<String> favourites=prefs.getStringSet("favorite_screens",Collections.<String>emptySet());
   if(!favourites.isEmpty()){android.view.SubMenu fav=menu.addSubMenu("FAVOURITES");for(String f:favourites)fav.add(0,screenMenuId(f),0,"★ "+f);}
   popup.setOnMenuItemClickListener(item->{int id=item.getItemId();if(id==1){showScreenSearch();return true;}if(id==2){pendingChatDraft="";navigateTo("Chat");return true;}if(id==3){toggleFavourite(page);return true;}if(id==4){manageFavourites();return true;}if(id==5){new AlertDialog.Builder(this).setTitle("Emergency stop").setMessage("Stop active Guardian-controlled tools and require an explicit reset before resuming?").setNegativeButton("Cancel",null).setPositiveButton("Stop",(d,w)->{nativeEmergencyStop();toast("Guardian emergency stop activated.");navigateTo("Guardian");}).show();return true;}if(id==6){nativeCancel();HttpURLConnection connection=activeConnection;if(connection!=null)connection.disconnect();toast("Generation cancellation requested.");return true;}if(id==7){openUrl("https://github.com/sponsors/abdulraheemnohri");return true;}String destination=screenForMenuId(id);if(destination!=null){navigateTo(destination);return true;}return false;});
@@ -157,7 +158,7 @@ public final class MainActivity extends Activity {
   }
  }
 
- private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Settings":settings();break;default:home();}}
+ private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Prompts":prompts();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Network":networkDiagnostics();break;case "Storage":storageManager();break;case "About":about();break;case "Settings":settings();break;default:home();}}
  private void heading(String title,String sub){content.addView(text(title,22,Color.WHITE,true));content.addView(text(sub,12,muted,false));space(10);}
  private void space(int h){View v=new View(this);content.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  private LinearLayout card(){LinearLayout c=new LinearLayout(this);c.setOrientation(1);c.setPadding(dp(14),dp(13),dp(14),dp(13));c.setBackground(rounded(panel,16));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);content.addView(c,p);return c;}
@@ -188,7 +189,10 @@ public final class MainActivity extends Activity {
   if(!pendingSkillPrompt.isEmpty()){LinearLayout skill=card();skill.addView(text("ACTIVE SKILL / WORKFLOW",10,accent,true));skill.addView(text("Instructions will be prepended to your next message.",11,muted,false));}
   EditText input=new EditText(this);if(!pendingChatDraft.isEmpty())input.setText(pendingChatDraft);input.setHint("Message SEED-X...");input.setHintTextColor(muted);input.setTextColor(Color.WHITE);input.setTextSize(15);input.setMinLines(2);input.setMaxLines(5);input.setPadding(dp(12),dp(10),dp(12),dp(10));input.setBackground(rounded(panel,14));content.addView(input,new LinearLayout.LayoutParams(-1,-2));
   button("Send message",accent,()->{String prompt=input.getText().toString().trim();if(!prompt.isEmpty()){String composed=pendingSkillPrompt+prompt;pendingSkillPrompt="";pendingChatDraft="";addMessage("user",composed);render();send(composed);}});
-  button("Clear conversation",panel,()->{history.clear();saveHistory();render();});
+  button("Search conversation",panel,()->searchConversation());
+  button("Export conversation (Markdown)",panel,()->startChatExport());
+  button("Copy latest assistant response",panel,()->copyLatestAssistantResponse());
+  button("Clear conversation",panel,()->new AlertDialog.Builder(this).setTitle("Clear conversation?").setMessage("Delete the locally retained chat messages? This cannot be undone.").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->{history.clear();saveHistory();render();}).show());
  }
  private void send(String prompt){if(!nativeReady){addMessage("assistant","Native Guardian is unavailable. Inference is disabled until System 1 initializes successfully.");render();return;}try{JSONObject gs=new JSONObject(nativeGuardianStatus());if(gs.optBoolean("emergencyStop")){addMessage("assistant","Guardian emergency stop is active. Reset it from the Guardian screen before sending new requests.");render();return;}}catch(Exception e){addMessage("assistant","Guardian status could not be verified. Request blocked (fail-closed).");render();return;}try{JSONObject rt=new JSONObject(nativeRuntimeStatus());if(rt.optBoolean("ready")){sendLocal(prompt);return;}}catch(Exception ignored){}if(!prefs.getBoolean("online_allowed",false)){addMessage("assistant","Online fallback is disabled. Enable it in Settings.");render();return;}JSONObject cfg=config();if(cfg==null){addMessage("assistant","No provider configured. Open Providers to add one.");render();return;}
   new AlertDialog.Builder(this).setTitle("Send to selected provider?")
@@ -289,6 +293,7 @@ public final class MainActivity extends Activity {
   if(request==VOICE_INPUT){if(result==RESULT_OK&&data!=null){ArrayList<String> heard=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);if(heard!=null&&!heard.isEmpty()){pendingChatDraft=heard.get(0);page="Chat";render();}}return;}
   if(request==EXPORT_SETTINGS){if(result==RESULT_OK&&data!=null&&data.getData()!=null)exportSettingsTo(data.getData());return;}
   if(request==IMPORT_SETTINGS){if(result==RESULT_OK&&data!=null&&data.getData()!=null)confirmImportSettings(data.getData());return;}
+  if(request==EXPORT_CHAT){if(result==RESULT_OK&&data!=null&&data.getData()!=null)exportChatTo(data.getData());return;}
   if(request!=PICK_MODEL||result!=RESULT_OK||data==null||data.getData()==null)return;
   Uri uri=data.getData();
   ProgressBar loading=new ProgressBar(this);loading.setIndeterminate(true);content.addView(loading);
@@ -564,6 +569,64 @@ public final class MainActivity extends Activity {
    e.apply();applyTheme();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);toast("Settings imported. Provider credentials and chat history were untouched.");render();
   }catch(Exception e){toast("Import rejected: "+e.getMessage());}
  }
+ private JSONArray customPromptTemplates(){try{return new JSONArray(prefs.getString("prompt_templates","[]"));}catch(Exception e){return new JSONArray();}}
+ private void prompts(){
+  heading("Prompt Library","Reusable prompt starters. Selecting one fills the Chat composer; nothing is sent until you press Send.");
+  String[][] builtins={
+   {"Explain simply","Explain the following topic in simple language. Use a short step-by-step explanation and a practical example."},
+   {"Code review","Review the code I provide. Identify correctness bugs, security risks, performance issues and maintainability problems. Give file-specific fixes and tests. Do not claim tests were run unless they were."},
+   {"Debug assistant","Help debug this issue. First identify likely causes, then ask for missing evidence only if essential. Give safe, minimal fixes and verification steps."},
+   {"Project architect","Design a complete implementation plan for this project. Include architecture, screens, data models, permissions, error handling, tests, documentation and build steps. Distinguish implemented work from planned work."},
+   {"Security review","Threat-model the design. Check trust boundaries, permissions, secrets, input validation, network endpoints, data retention and recovery. Prioritize concrete mitigations."},
+   {"Roman Urdu tutor","Explain the answer in easy English with Roman Urdu clarification where useful. Keep technical names and code identifiers unchanged."}
+  };
+  LinearLayout built=card();built.addView(text("BUILT-IN PROMPTS",12,accent,true));
+  for(String[] p:builtins){built.addView(text(p[0],14,primaryText,true));built.addView(text(p[1],11,muted,false));button("Use prompt",panel,()->usePromptTemplate(p[0],p[1]));}
+  LinearLayout custom=card();JSONArray saved=customPromptTemplates();custom.addView(text("MY PROMPTS • "+saved.length(),12,accent,true));
+  for(int i=0;i<saved.length();i++){JSONObject p=saved.optJSONObject(i);if(p==null)continue;final JSONObject selected=p;custom.addView(text(p.optString("name"),14,primaryText,true));custom.addView(text(p.optString("prompt"),11,muted,false));button("Use this prompt",panel,()->usePromptTemplate(selected.optString("name"),selected.optString("prompt")));button("Delete prompt",panel,()->new AlertDialog.Builder(this).setTitle("Delete prompt?").setMessage("Remove this saved prompt from this device?").setNegativeButton("Cancel",null).setPositiveButton("Delete",(d,w)->{JSONArray now=customPromptTemplates(),next=new JSONArray();for(int z=0;z<now.length();z++){JSONObject q=now.optJSONObject(z);if(q!=null&&!q.optString("id").equals(selected.optString("id")))next.put(q);}prefs.edit().putString("prompt_templates",next.toString()).apply();render();}).show());}
+  button("Create custom prompt",accent,()->createPromptTemplate());
+ }
+ private void usePromptTemplate(String name,String prompt){pendingSkillPrompt="";pendingChatDraft="["+name+"]\n"+prompt+"\n\n";navigateTo("Chat");}
+ private void createPromptTemplate(){
+  LinearLayout box=new LinearLayout(this);box.setOrientation(1);box.setPadding(dp(16),dp(8),dp(16),dp(8));
+  EditText name=new EditText(this);name.setHint("Prompt name");name.setTextColor(primaryText);name.setHintTextColor(muted);box.addView(name,new LinearLayout.LayoutParams(-1,dp(48)));
+  EditText prompt=new EditText(this);prompt.setHint("Prompt instructions");prompt.setTextColor(primaryText);prompt.setHintTextColor(muted);prompt.setMinLines(5);prompt.setGravity(Gravity.TOP);box.addView(prompt,new LinearLayout.LayoutParams(-1,dp(150)));
+  new AlertDialog.Builder(this).setTitle("New prompt template").setView(box).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{String n=name.getText().toString().trim(),p=prompt.getText().toString().trim();if(n.isEmpty()||p.isEmpty()||n.length()>80||p.length()>4000){toast("Name and prompt are required (maximum 80 and 4000 characters).");return;}JSONArray all=customPromptTemplates();if(all.length()>=50){toast("Maximum 50 custom prompts.");return;}try{all.put(new JSONObject().put("id","prompt-"+System.currentTimeMillis()).put("name",n).put("prompt",p));prefs.edit().putString("prompt_templates",all.toString()).apply();toast("Prompt saved locally.");render();}catch(Exception e){toast("Could not save prompt.");}}).show();
+ }
+ private void searchConversation(){
+  LinearLayout box=new LinearLayout(this);box.setOrientation(1);box.setPadding(dp(14),dp(8),dp(14),dp(8));
+  EditText query=new EditText(this);query.setSingleLine(true);query.setHint("Search message text");query.setTextColor(primaryText);query.setHintTextColor(muted);box.addView(query,new LinearLayout.LayoutParams(-1,dp(48)));
+  ScrollView scroll=new ScrollView(this);LinearLayout results=new LinearLayout(this);results.setOrientation(1);scroll.addView(results);box.addView(scroll,new LinearLayout.LayoutParams(-1,dp(340)));
+  AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Search conversation").setView(box).setNegativeButton("Close",null).create();
+  Runnable refresh=()->{results.removeAllViews();String q=query.getText().toString().toLowerCase(Locale.ROOT);for(int i=history.size()-1;i>=0;i--){JSONObject m=history.get(i);String value=m.optString("text");if(q.isEmpty()||value.toLowerCase(Locale.ROOT).contains(q)){final String full=value;Button item=new Button(this);item.setAllCaps(false);item.setGravity(Gravity.START|Gravity.CENTER_VERTICAL);item.setText(m.optString("role").toUpperCase(Locale.ROOT)+" • "+(value.length()>90?value.substring(0,90)+"…":value));item.setOnClickListener(v->showTextDialog("Conversation message",full));results.addView(item,new LinearLayout.LayoutParams(-1,-2));}}};
+  query.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){refresh.run();}public void afterTextChanged(android.text.Editable e){}});refresh.run();dialog.show();
+ }
+ private void copyLatestAssistantResponse(){for(int i=history.size()-1;i>=0;i--){JSONObject m=history.get(i);if("assistant".equals(m.optString("role"))){((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED-X response",m.optString("text")));toast("Latest assistant response copied.");return;}}toast("No assistant response available.");}
+ private void startChatExport(){Intent i=new Intent(Intent.ACTION_CREATE_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("text/markdown");i.putExtra(Intent.EXTRA_TITLE,"seedx-conversation.md");startActivityForResult(i,EXPORT_CHAT);}
+ private void exportChatTo(Uri uri){StringBuilder out=new StringBuilder("# SEED-X conversation\\n\\n");for(JSONObject m:history){String role=m.optString("role","message");out.append("## ").append(role.equals("assistant")?"SEED-X":role.equals("user")?"You":role).append("\\n\\n").append(m.optString("text")).append("\\n\\n");}try(OutputStream stream=getContentResolver().openOutputStream(uri)){if(stream==null)throw new IOException("Cannot open selected destination.");stream.write(out.toString().getBytes("UTF-8"));toast("Conversation exported as Markdown.");}catch(Exception e){toast("Conversation export failed: "+e.getMessage());}}
+ private long directoryBytes(File file){if(file==null||!file.exists())return 0;if(file.isFile())return file.length();long total=0;File[] children=file.listFiles();if(children!=null)for(File child:children)total+=directoryBytes(child);return total;}
+ private void storageManager(){
+  heading("Storage Manager","Review SEED-X app-owned storage. Files outside the app's private folders are not scanned or modified.");
+  File models=new File(getFilesDir(),"models"),downloads=getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
+  LinearLayout usage=card();usage.addView(text("APP STORAGE USAGE",12,accent,true));usage.addView(text("Imported models: "+(directoryBytes(models)/1048576)+" MB",14,primaryText,true));usage.addView(text("App downloads: "+(directoryBytes(downloads)/1048576)+" MB",14,primaryText,true));usage.addView(text("Chat history: "+history.size()+" messages • "+(prefs.getString("history","").length()/1024)+" KB",12,muted,false));usage.addView(text("Saved memories: "+memoryItems().length()+" • custom prompts: "+customPromptTemplates().length(),12,muted,false));
+  button("Open model manager",panel,()->navigateTo("Models"));button("Open download manager",panel,()->navigateTo("Downloads"));button("Export conversation",panel,()->startChatExport());
+  button("Clear chat history",panel,()->new AlertDialog.Builder(this).setTitle("Delete chat history?").setMessage("Delete all locally retained messages? Export first if you need a copy.").setNegativeButton("Cancel",null).setPositiveButton("Delete",(d,w)->{history.clear();prefs.edit().remove("history").apply();toast("Chat history cleared.");render();}).show());
+  button("Clear saved crash reports",panel,()->new AlertDialog.Builder(this).setTitle("Clear crash reports?").setMessage("Delete local crash reports and breadcrumbs only.").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->{CrashReporter.clear(this);toast("Local diagnostic reports cleared.");render();}).show());
+  button("Clear saved memories",panel,()->new AlertDialog.Builder(this).setTitle("Delete local memories?").setMessage("Delete all manually saved memory entries.").setNegativeButton("Cancel",null).setPositiveButton("Delete",(d,w)->{prefs.edit().remove("memory_items").apply();toast("Local memories cleared.");render();}).show());
+ }
+ private void networkDiagnostics(){
+  heading("Network Diagnostics","Read-only network status. This screen does not scan LAN devices or send test traffic.");
+  LinearLayout card=card();card.addView(text("CONNECTIVITY",12,accent,true));card.addView(text("Network available: "+(networkAvailable()?"Yes":"No"),14,primaryText,true));
+  try{ConnectivityManager cm=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);Network active=cm==null?null:cm.getActiveNetwork();NetworkCapabilities caps=active==null||cm==null?null:cm.getNetworkCapabilities(active);if(caps==null)card.addView(text("No active network capabilities reported.",12,muted,false));else{card.addView(text("Transport: "+(caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)?"Wi-Fi":caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)?"Mobile data":caps.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)?"Ethernet":caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)?"VPN":"Other"),14,primaryText,true));card.addView(text("Validated internet: "+caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED),12,muted,false));card.addView(text("Unmetered: "+caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_METERED),12,muted,false));card.addView(text("Not roaming: "+caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_ROAMING),12,muted,false));}}catch(Exception e){card.addView(text("Network capability query failed: "+e.getMessage(),12,muted,false));}
+  JSONObject cfg=config();card.addView(text("Active endpoint: "+(cfg==null?"not configured":cfg.optString("base")),12,muted,false));card.addView(text("Cloud routing: "+(prefs.getBoolean("online_allowed",false)?"enabled; per-send confirmation required":"disabled"),12,muted,false));card.addView(text("Local HTTP: "+(prefs.getBoolean("allow_local_http",false)?"opted in; endpoint restrictions still apply":"disabled"),12,muted,false));
+  button("Open provider connection tests",panel,()->navigateTo("Providers"));button("Open Android network settings",panel,()->{try{startActivity(new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS));}catch(Exception e){toast("Android network settings unavailable.");}});
+ }
+ private void about(){
+  heading("About SEED-X","Local-first AI workspace with explicit operator control and Guardian-governed tools.");
+  LinearLayout info=card();info.addView(text("SEED-X • 0.8.0",18,accent,true));info.addView(text("Android API "+android.os.Build.VERSION.SDK_INT+" • "+android.os.Build.MANUFACTURER+" "+android.os.Build.MODEL,12,muted,false));info.addView(text("Default build uses the native stub backend. Embedded llama.cpp requires the optional llama-enabled build.",12,muted,false));info.addView(text("AI outputs are untrusted. Registered tools require Guardian authorization. No shell or unrestricted Android control is provided.",12,muted,false));
+  button("GitHub repository",panel,()->openUrl("https://github.com/abdulraheemnohri/SEED-X"));button("Project documentation",panel,()->openUrl("https://github.com/abdulraheemnohri/SEED-X/tree/main/docs"));button("Report a bug",panel,()->openUrl("https://github.com/abdulraheemnohri/SEED-X/issues/new/choose"));button("Support development • Donations",accent,()->openUrl("https://github.com/sponsors/abdulraheemnohri"));
+  button("Open settings",panel,()->navigateTo("Settings"));
+ }
  private void settings(){heading("Settings","Privacy, routing, generation, model memory and network controls.");
   LinearLayout diagnostics=card();diagnostics.addView(text("CRASH & BUG REPORTING",12,accent,true));
   CheckBox breadcrumbs=new CheckBox(this);breadcrumbs.setText("Record screen-navigation breadcrumbs locally");breadcrumbs.setTextColor(Color.WHITE);breadcrumbs.setChecked(prefs.getBoolean("diagnostic_breadcrumbs",true));breadcrumbs.setOnCheckedChangeListener((v,checked)->prefs.edit().putBoolean("diagnostic_breadcrumbs",checked).apply());diagnostics.addView(breadcrumbs);
@@ -581,6 +644,7 @@ public final class MainActivity extends Activity {
   button("Open Android app permissions",panel,()->openAppPermissionSettings());
   button("Open battery optimization settings",panel,()->openBatterySettings());
   os.addView(text("SEED-X requests notification permission only when you start this session. No Accessibility, overlay, microphone, camera, location, contacts, SMS, notification-listener, all-files, or device-admin access is requested.",11,muted,false));
+  LinearLayout tools=card();tools.addView(text("WORKSPACE TOOLS",12,accent,true));button("Prompt library",panel,()->navigateTo("Prompts"));button("Network diagnostics",panel,()->navigateTo("Network"));button("Storage manager",panel,()->navigateTo("Storage"));button("About SEED-X",panel,()->navigateTo("About"));
   LinearLayout backup=card();backup.addView(text("SETTINGS BACKUP & RESTORE",12,accent,true));backup.addView(text("Export or restore selected app preferences and custom workflows using Android document picker. Provider profiles, API keys, chat history and model files are excluded.",11,muted,false));button("Export settings backup (JSON)",panel,()->startSettingsExport());button("Import settings backup (JSON)",panel,()->startSettingsImport());
   LinearLayout navigation=card();navigation.addView(text("MOBILE NAVIGATION & PERSONALIZATION",12,accent,true));navigation.addView(text("Four primary tabs stay visible at the bottom. All remaining screens are grouped in the mobile menu.",11,muted,false));button("Choose startup screen",panel,()->chooseStartupScreen());button("Manage favourite screens",panel,()->manageFavourites());button("Clear all favourite screens",panel,()->new AlertDialog.Builder(this).setTitle("Clear favourites?").setMessage("Remove all saved screen shortcuts?").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->{prefs.edit().remove("favorite_screens").apply();render();}).show());
   LinearLayout dashboard=card();dashboard.addView(text("HOME DASHBOARD WIDGETS",12,accent,true));
