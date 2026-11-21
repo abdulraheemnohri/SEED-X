@@ -45,6 +45,7 @@ public final class ExecuTorchAdapter implements InferenceAdapter {
         if (active == null) { listener.onError("ExecuTorch model is not loaded."); return; }
         if (prompt == null || prompt.trim().isEmpty()) { listener.onError("Prompt is empty."); return; }
         cancelled.set(false);
+        final java.util.concurrent.atomic.AtomicBoolean failed = new java.util.concurrent.atomic.AtomicBoolean(false);
         try {
             ClassLoader loader = getClass().getClassLoader();
             Class<?> configType = Class.forName("org.pytorch.executorch.extension.llm.LlmGenerationConfig", true, loader);
@@ -59,13 +60,13 @@ public final class ExecuTorchAdapter implements InferenceAdapter {
                     listener.onToken(String.valueOf(args[0]));
                 } else if ("onError".equals(name)) {
                     String message = args != null && args.length > 1 ? String.valueOf(args[1]) : "ExecuTorch generation failed.";
-                    listener.onError(message);
+                    failed.set(true); listener.onError(message);
                 }
                 return null;
             });
             active.getClass().getMethod("generate", String.class, configType, callbackType)
                 .invoke(active, prompt, config, callback);
-            if (!cancelled.get()) listener.onComplete();
+            if (!cancelled.get() && !failed.get()) listener.onComplete();
         } catch (Throwable error) {
             Throwable cause = error.getCause() == null ? error : error.getCause();
             listener.onError("ExecuTorch: " + (cause.getMessage() == null ? cause.getClass().getSimpleName() : cause.getMessage()));
