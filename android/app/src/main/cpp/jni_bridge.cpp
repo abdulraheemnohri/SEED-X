@@ -245,15 +245,13 @@ Java_org_seedx_agent_MainActivity_nativeGuardianStatus(JNIEnv* env,jobject) {
 extern "C" JNIEXPORT void JNICALL
 Java_org_seedx_agent_MainActivity_nativeEmergencyStop(JNIEnv*,jobject) {
  gCancel.store(true);
- std::lock_guard<std::mutex> lock(gMutex);
- ensureInitialized();
+ // Guardian has its own internal synchronization. Do not wait for the inference mutex:
+ // emergency stop must be able to interrupt a generation callback immediately.
  gKernel.emergencyStop();
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
 Java_org_seedx_agent_MainActivity_nativeResetEmergencyStop(JNIEnv*,jobject,jboolean confirmed) {
  if(confirmed!=JNI_TRUE) return JNI_FALSE;
- std::lock_guard<std::mutex> lock(gMutex);
- ensureInitialized();
  return gKernel.resetEmergencyStop(true)?JNI_TRUE:JNI_FALSE;
 }
