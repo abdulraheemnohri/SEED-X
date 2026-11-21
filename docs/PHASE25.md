@@ -1,15 +1,18 @@
-# Phase 25 — Mobile UI Settings and Quality Gates
+# Phase 25 — Mobile UI, Workflows and Task Reminders
 
-## Settings
-- Startup destination can be selected from the full screen registry.
-- Favourite screens can be added, removed and cleared.
-- The Home dashboard offers a two-column quick-launch grid and favourite shortcuts.
-- Screen search is reachable from the header and mobile menu.
+## Delivered
+- Dark, light and Android-system theme selection with persisted preference.
+- Searchable mobile screen palette, grouped navigation menu, startup destination and favourite screens.
+- Home dashboard controls for overview, quick launch and favourites.
+- Validated JSON settings backup and restore; provider profiles, API keys, chat history and model files are excluded.
+- Local task event history bounded to 50 events.
+- User-configured WorkManager periodic reminder (1–24 hours). Reminder worker posts a notification only; it does not start the agent, contact providers or execute tools.
+- Linear workflow node editor with add, remove, reorder and inspect operations (up to 20 steps). Workflows are plans and are not autonomously executed.
+- Provider test timestamp/result/elapsed time and local usage counters.
+- Native runtime status probe. This is not an inference throughput benchmark.
 
-## Validation
-- CI checks the provider/model/runtime catalogs and permission boundary.
-- CI now also checks that the mobile navigation entry points and all registered screen names remain present in the Android activity source.
-
-## Remaining work
-- Device-specific responsive layout validation and TalkBack/manual accessibility review are still required.
-- Full dynamic light/dark/system themes, localization, drag-and-drop workflow canvas, and an actual scheduled task queue are not claimed as complete.
+## Safety and limitations
+- Android may delay periodic reminders; notification visibility requires notification permission.
+- The workflow editor is a reorderable linear node list, not a free-form drag-and-drop graph canvas.
+- No autonomous agent loop, scheduled tool execution, provider-triggered background execution or Android device-control automation is implemented.
+- Device-specific responsive layout and TalkBack/manual accessibility review remain outstanding.
