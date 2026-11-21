@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "executionBoundary": "Only the native Guardian-gated registry entries below are executable. Unknown tools are denied.",
+  "executionBoundary": "Only native Guardian-gated registry entries below are executable. Unknown tools are denied.",
   "registered": [
     {
       "id": "system.status",
@@ -25,6 +25,19 @@
         "maxBytes": 1048576
       },
       "description": "Read a regular file inside the app-private workspace."
+    },
+    {
+      "id": "workspace.search",
+      "operation": "search",
+      "resourcePrefix": "workspace://",
+      "policy": "allow",
+      "limits": {
+        "maxFiles": 200,
+        "maxDepth": 3,
+        "maxFileBytes": 262144,
+        "maxMatches": 50
+      },
+      "description": "Search text files in the app-private workspace with bounded depth, file count and file size."
     },
     {
       "id": "files.write",
