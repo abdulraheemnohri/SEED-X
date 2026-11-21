@@ -78,9 +78,10 @@ public final class MainActivity extends Activity {
   else{bg=Color.rgb(10,17,27);panel=Color.rgb(20,30,44);accent=Color.rgb(61,210,151);muted=Color.rgb(155,174,194);primaryText=Color.WHITE;}
  }
  private void chooseTheme(){String[] labels={"Dark","Light","Follow Android system"};String[] values={"dark","light","system"};String current=prefs.getString("ui_theme","dark");int selected=Arrays.asList(values).indexOf(current);new AlertDialog.Builder(this).setTitle("Appearance theme").setSingleChoiceItems(labels,Math.max(0,selected),(d,which)->{prefs.edit().putString("ui_theme",values[which]).apply();d.dismiss();applyTheme();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);render();}).setNegativeButton("Cancel",null).show();}
+ private int lightenMuted(){return "light".equals(prefs.getString("ui_theme","dark"))?Color.rgb(65,77,90):Color.LTGRAY;}
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
- private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);float scale=prefs==null?1f:prefs.getFloat("ui_text_scale",1f);t.setTextSize(size*scale);if(prefs!=null&&prefs.getBoolean("ui_high_contrast",false)&&color==muted)color=Color.LTGRAY;t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
+ private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);float scale=prefs==null?1f:prefs.getFloat("ui_text_scale",1f);t.setTextSize(size*scale);if(color==Color.WHITE)color=primaryText;if(prefs!=null&&prefs.getBoolean("ui_high_contrast",false)&&color==muted)color=lightenMuted();t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
  private void shell(){
   root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(12),dp(8),dp(12),dp(6));root.setBackgroundColor(bg);
   LinearLayout head=new LinearLayout(this);head.setOrientation(0);head.setGravity(Gravity.CENTER_VERTICAL);
@@ -529,7 +530,7 @@ public final class MainActivity extends Activity {
  private void manageFavourites(){Set<String> current=new HashSet<>(prefs.getStringSet("favorite_screens",Collections.<String>emptySet()));String[] labels=TABS.clone();boolean[] checked=new boolean[labels.length];for(int i=0;i<labels.length;i++)checked[i]=current.contains(labels[i]);new AlertDialog.Builder(this).setTitle("Favourite screens").setMultiChoiceItems(labels,checked,(d,which,on)->{if(on)current.add(labels[which]);else current.remove(labels[which]);}).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{prefs.edit().putStringSet("favorite_screens",new HashSet<>(current)).apply();toast("Favourite shortcuts saved.");render();}).show();}
  private JSONObject exportableSettings(){
   JSONObject out=new JSONObject();String[] strings={"startup_screen","system_prompt","custom_workflows","ui_theme"};
-  String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs"};
+  String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs","dashboard_overview","dashboard_quick_launch","dashboard_favourites"};
   String[] integers={"max_output_tokens","context_tokens","provider_timeout_ms","provider_max_bytes","provider_retries"};
   String[] floats={"temperature","top_p","ui_text_scale"};
   try{out.put("schema","seedx-settings-v1").put("appVersion","0.8.0").put("exportedAt",System.currentTimeMillis());
