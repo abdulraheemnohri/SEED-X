@@ -245,3 +245,8 @@ See [docs/PHASE31.md](docs/PHASE31.md) for the full feature list, attachment lim
 ## Phase 32 — Build repair and Office attachment extraction
 
 Fixed the duplicate Java helper that blocked Android debug/release compilation. Chat attachments now receive bounded best-effort text extraction for DOCX, PPTX, XLSX, ODT, ODS and ODP files. Extraction is capped by ZIP entry count, expanded byte limits and 64 KiB output; macros and external relationships are not executed. PDF text extraction, audio transcription, video frame extraction and live MCP remain separate implementation tasks. See [docs/PHASE32.md](docs/PHASE32.md).
+
+
+## Phase 33 — PDF attachment text extraction
+
+Chat now performs bounded, local PDF text extraction using PdfBox-Android. It processes at most 40 pages and 64 KiB of output; encrypted PDFs are rejected. Scanned PDFs still require OCR, and parser/device verification remains part of CI and physical-device testing. See [docs/PHASE33.md](docs/PHASE33.md).
