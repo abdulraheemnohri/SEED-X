@@ -71,6 +71,17 @@ public final class AgentForegroundService extends Service {
             .build();
     }
 
+    /**
+     * Android 15+ enforces a cumulative time limit for dataSync foreground
+     * services. This session service performs no autonomous work, so stop
+     * cleanly when the platform reports that its foreground budget expired.
+     */
+    @Override public void onTimeout(int startId, int foregroundServiceType) {
+        running = false;
+        stopForeground(STOP_FOREGROUND_REMOVE);
+        stopSelf(startId);
+    }
+
     @Override public void onDestroy() {
         running = false;
         stopForeground(STOP_FOREGROUND_REMOVE);
