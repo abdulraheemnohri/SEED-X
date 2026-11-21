@@ -135,11 +135,11 @@ Java_org_seedx_agent_MainActivity_nativeRuntimeStatus(JNIEnv* env,jobject) {
  std::unique_lock<std::mutex> lock(gMutex,std::try_to_lock);
  ensureInitialized();
  if(!lock.owns_lock()) {
-  std::string busy="{\\"ready\\":";
+  std::string busy="{\"ready\":";
   busy+=gModelReady.load()?"true":"false";
-  busy+=",\\"state\\":\\"busy\\",\\"llamaAvailable\\":";
+  busy+=",\"state\":\"busy\",\"llamaAvailable\":";
   busy+=seed::llamaCppBackendAvailable()?"true":"false";
-  busy+=",\\"availableBytes\\":0,\\"reserveBytes\\":"+std::to_string(kReserveBytes)+"}";
+  busy+=",\"availableBytes\":0,\"reserveBytes\":"+std::to_string(kReserveBytes)+"}";
   return toJava(env,busy);
  }
  seed::DeviceMemory mem;
