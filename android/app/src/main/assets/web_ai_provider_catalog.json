@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "notice": "Browser runtimes require a compatible WebView/browser and may download model weights. They are not native Android NPU runtimes.",
+  "integrations": [
+    {
+      "id": "puter-js",
+      "name": "Puter.js",
+      "category": "hosted-multi-provider-ai",
+      "status": "integrated-optional-webview",
+      "features": [
+        "chat",
+        "text-to-image",
+        "image-to-text",
+        "text-to-speech",
+        "speech-to-text",
+        "speech-to-speech",
+        "text-to-video",
+        "realtime-beta"
+      ],
+      "billing": "Puter user-pays model; account-specific usage/terms",
+      "url": "https://docs.puter.com/AI/",
+      "notes": "SEED-X optional WebView workspace. No SEED-X API key stored. Online requests leave device."
+    },
+    {
+      "id": "webllm",
+      "name": "WebLLM",
+      "category": "browser-local-llm",
+      "status": "catalog-only-adapter-needed",
+      "features": [
+        "text-generation"
+      ],
+      "billing": "local model download and device compute",
+      "url": "https://webllm.mlc.ai/",
+      "notes": "WebGPU browser runtime; device/browser compatibility and memory constraints apply."
+    },
+    {
+      "id": "transformers-js",
+      "name": "Transformers.js",
+      "category": "browser-local-multimodal",
+      "status": "catalog-only-adapter-needed",
+      "features": [
+        "text",
+        "vision",
+        "audio",
+        "embeddings"
+      ],
+      "billing": "local model download and device compute",
+      "url": "https://huggingface.co/docs/transformers.js",
+      "notes": "Browser inference via ONNX Runtime Web; model/task support depends on release."
+    },
+    {
+      "id": "onnxruntime-web",
+      "name": "ONNX Runtime Web",
+      "category": "browser-ml-runtime",
+      "status": "catalog-only-adapter-needed",
+      "features": [
+        "onnx-inference",
+        "webgpu",
+        "wasm"
+      ],
+      "billing": "local model download and device compute",
+      "url": "https://onnxruntime.ai/docs/get-started/with-javascript.html",
+      "notes": "Web runtime distinct from ONNX Runtime Android."
+    },
+    {
+      "id": "mediapipe-tasks-web",
+      "name": "MediaPipe Tasks Web",
+      "category": "browser-vision-audio",
+      "status": "catalog-only-adapter-needed",
+      "features": [
+        "vision",
+        "pose",
+        "hand",
+        "audio"
+      ],
+      "billing": "local browser inference",
+      "url": "https://ai.google.dev/edge/mediapipe/solutions/guide",
+      "notes": "Task-specific web models and browser APIs required."
+    },
+    {
+      "id": "tensorflow-js",
+      "name": "TensorFlow.js",
+      "category": "browser-ml-runtime",
+      "status": "catalog-only-adapter-needed",
+      "features": [
+        "vision",
+        "classification",
+        "custom-models"
+      ],
+      "billing": "local browser inference",
+      "url": "https://www.tensorflow.org/js",
+      "notes": "Browser runtime; not the native TensorFlow Lite Android runtime."
+    }
+  ]
+}
