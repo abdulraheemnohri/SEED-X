@@ -202,3 +202,15 @@ gradle clean assembleDebug -PseedxLlamaCpp=ON -PseedxRuntimeSdks=litert,executor
 ```
 
 Important: SDK packaging is not the same as an integrated generation adapter. LiteRT-LM and ExecuTorch still need tested SEED-X model lifecycle/generation bridges. ONNX Runtime Mobile is not ONNX Runtime GenAI. MLC LLM requires its generated `mlc4j` project and per-model compiled libraries. See [docs/PHASE28.md](docs/PHASE28.md).
+
+
+## Phase 29 — Real LiteRT-LM and ExecuTorch inference adapters
+
+- Adds a common Java inference contract and an actual LiteRT-LM Kotlin conversation adapter for external `.litertlm` model packages.
+- Adds an ExecuTorch Android LLM adapter for `.pte` model files plus their matching tokenizer assets. ExecuTorch Android LLM API is experimental and invoked through a compatibility reflection bridge.
+- Adds local model import through Android document picker, app-private model storage, automatic format-based runtime selection, one-active-runtime policy, model memory admission checks, token streaming, cancellation and explicit unload.
+- Chat routes to a loaded Phase 29 adapter after Guardian status is verified; existing GGUF inference remains on the llama.cpp JNI path.
+- LiteRT-LM is pinned to 0.16.1 to keep its Kotlin metadata compatible with the Kotlin 2.2 toolchain; the app includes Kotlin Android plugin and coroutines.
+- A matching tokenizer is mandatory for ExecuTorch `.pte` models. Model weights are not bundled into the APK. LiteRT-LM defaults to CPU; GPU/NPU selection remains a separate device-capability validation step.
+- CI and physical-device inference verification are required before treating either adapter as release-certified.
+See [docs/PHASE29.md](docs/PHASE29.md).
