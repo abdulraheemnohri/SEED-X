@@ -354,10 +354,21 @@ private void deletePendingChatAttachments(){for(JSONObject item:pendingChatAttac
  }
  private void showChatHistory(){
   JSONArray archive=chatArchive();ArrayList<JSONObject> chats=new ArrayList<>();ArrayList<String> labels=new ArrayList<>();
-  for(int i=0;i<archive.length();i++){JSONObject item=archive.optJSONObject(i);if(item!=null){chats.add(item);labels.add(item.optString("title","Untitled chat")+" • "+item.optJSONArray("messages").length()+" messages");}}
-  if(chats.isEmpty()){toast("No archived chats yet. Create a new chat to archive this conversation.");return;}
-  new AlertDialog.Builder(this).setTitle("Chat history • "+chats.size()).setItems(labels.toArray(new String[0]),(d,which)->switchChat(chats.get(which))).setNegativeButton("Close",null).show();
+  for(int i=0;i<archive.length();i++){JSONObject item=archive.optJSONObject(i);if(item!=null){chats.add(item);JSONArray msgs=item.optJSONArray("messages");labels.add(item.optString("title","Untitled chat")+" • "+(msgs==null?0:msgs.length())+" messages");}}
+  if(chats.isEmpty()){toast("No archived chats yet. Send a message with history retention enabled.");return;}
+  new AlertDialog.Builder(this).setTitle("Chat history • "+chats.size()).setItems(labels.toArray(new String[0]),(d,which)->showChatActions(chats.get(which))).setNegativeButton("Close",null).show();
  }
+ private void showChatActions(JSONObject chat){
+  String[] actions={"Open conversation","Rename conversation","Delete conversation"};
+  new AlertDialog.Builder(this).setTitle(chat.optString("title","Chat")).setItems(actions,(d,w)->{
+   if(w==0){switchChat(chat);return;}
+   if(w==1){EditText name=new EditText(this);name.setSingleLine(true);name.setText(chat.optString("title","Chat"));name.setTextColor(primaryText);new AlertDialog.Builder(this).setTitle("Rename chat").setView(name).setNegativeButton("Cancel",null).setPositiveButton("Save",(x,y)->{String title=name.getText().toString().trim();if(title.isEmpty()||title.length()>80){toast("Chat title must be 1–80 characters.");return;}chat.put("title",title);if(activeChatId.equals(chat.optString("id"))){activeChatTitle=title;prefs.edit().putString("active_chat_title",title).apply();}replaceArchivedChat(chat);render();}).show();return;}
+   new AlertDialog.Builder(this).setTitle("Delete archived chat?").setMessage("Delete this conversation and its privately stored attachments from this device?").setNegativeButton("Cancel",null).setPositiveButton("Delete",(x,y)->{deleteArchivedChat(chat);if(activeChatId.equals(chat.optString("id"))){history.clear();activeChatTitle="New chat";prefs.edit().putString("history","[]").putString("active_chat_title",activeChatTitle).apply();}render();}).show();
+  }).setNegativeButton("Close",null).show();
+ }
+ private void replaceArchivedChat(JSONObject changed){JSONArray all=chatArchive(),next=new JSONArray();for(int i=0;i<all.length();i++){JSONObject item=all.optJSONObject(i);if(item==null)continue;next.put(item.optString("id").equals(changed.optString("id"))?changed:item);}saveChatArchive(next);}
+ private void deleteArchivedChat(JSONObject target){JSONArray all=chatArchive(),next=new JSONArray();for(int i=0;i<all.length();i++){JSONObject item=all.optJSONObject(i);if(item==null||item.optString("id").equals(target.optString("id")))continue;next.put(item);}saveChatArchive(next);deleteDirectoryRecursively(new File(getFilesDir(),"chat-attachments/"+target.optString("id")));}
+
  private void switchChat(JSONObject selected){
   saveHistory();deletePendingChatAttachments();
   try{activeChatId=selected.optString("id");activeChatTitle=selected.optString("title","Chat");activeChatRoute=selected.optString("route","auto");activeChatProviderId=selected.optString("providerId","");history.clear();JSONArray messages=selected.optJSONArray("messages");for(int i=0;messages!=null&&i<messages.length();i++)history.add(messages.getJSONObject(i));prefs.edit().putString("active_chat_id",activeChatId).putString("active_chat_title",activeChatTitle).putString("active_chat_route",activeChatRoute).putString("active_chat_provider",activeChatProviderId).putString("history",new JSONArray(messages.toString()).toString()).apply();pendingChatAttachments.clear();render();}
