@@ -44,6 +44,7 @@ public final class MainActivity extends Activity {
  private native String nativeRequestApproval(String tool,String operation,String resource,boolean confirmed);
  private native String nativeExecuteTool(String tool,String operation,String resource,String payload,String approvalTicket);
  private native String nativeRuntimeStatus();
+ private native String nativeRuntimeCatalog();
  private native String nativeLoadModel(String path,String id,String displayName,int contextTokens);
  private native String nativeGenerate(String prompt,int maxTokens,float temperature,float topP,TokenListener listener);
  private native void nativeCancel();
@@ -420,8 +421,22 @@ public final class MainActivity extends Activity {
   for(String tab:new String[]{"Chat","Voice","Memory","Models","Runtimes","Providers","Skills","Workflows","Tools","Guardian","Diagnostics","Settings"}){Button b=new Button(this);b.setText(tab);b.setAllCaps(false);b.setTextColor(Color.WHITE);b.setOnClickListener(v->{page=tab;render();});actions.addView(b);}
   LinearLayout note=card();note.addView(text("Privacy first",14,accent,true));note.addView(text("Local model wins when loaded. Cloud is disabled by default and each cloud request asks before sending. No provider API keys are bundled.",12,muted,false));
  }
- private void runtimes(){heading("Runtime Manager","Know what runs on-device, what connects over LAN, and what still needs an adapter.");
-  try{JSONArray list=assetJson("runtime_catalog.json").optJSONArray("runtimes");if(list!=null)for(int i=0;i<list.length();i++){JSONObject r=list.getJSONObject(i);LinearLayout item=card();item.addView(text(r.optString("name"),15,Color.WHITE,true));String state=r.optString("status");item.addView(text(state.replace('-',' ').toUpperCase(Locale.ROOT),10,state.equals("integrated-optional-build")?accent:Color.rgb(245,190,75),true));item.addView(text(r.optString("notes"),12,muted,false));item.addView(text("Platforms: "+r.optJSONArray("platforms")+" • Formats: "+r.optJSONArray("formats"),10,muted,false));Button open=new Button(this);open.setText("Runtime documentation");open.setAllCaps(false);open.setOnClickListener(v->openUrl(r.optString("url")));item.addView(open);}}catch(Exception e){card().addView(text("Runtime catalog unavailable: "+e.getMessage(),12,muted,false));}
+ private void runtimes(){heading("Runtime Manager","Live native availability is authoritative. Catalog-only runtimes are shown as unavailable until their adapter is installed.");
+  try{
+   JSONArray live=new JSONArray(nativeRuntimeCatalog());java.util.HashMap<String,JSONObject> actual=new java.util.HashMap<>();
+   for(int i=0;i<live.length();i++){JSONObject entry=live.getJSONObject(i);actual.put(entry.optString("id"),entry);}
+   JSONArray list=assetJson("runtime_catalog.json").optJSONArray("runtimes");
+   if(list!=null)for(int i=0;i<list.length();i++){
+    JSONObject r=list.getJSONObject(i);JSONObject state=actual.get(r.optString("id"));
+    LinearLayout item=card();item.addView(text(r.optString("name"),15,Color.WHITE,true));
+    boolean canRun=state!=null&&state.optBoolean("canRun",false);
+    String status=state==null?r.optString("status","catalog-only"):state.optString("status");
+    item.addView(text((canRun?"AVAILABLE NOW • ":status.replace('-',' ').toUpperCase(Locale.ROOT)+" • NOT RUNNABLE"),10,canRun?accent:Color.rgb(245,190,75),true));
+    item.addView(text(state==null?r.optString("notes"):state.optString("detail"),12,muted,false));
+    item.addView(text("Platforms: "+r.optJSONArray("platforms")+" • Formats: "+r.optJSONArray("formats"),10,muted,false));
+    Button open=new Button(this);open.setText("Runtime documentation");open.setAllCaps(false);open.setOnClickListener(v->openUrl(r.optString("url")));item.addView(open);
+   }
+  }catch(Exception e){card().addView(text("Runtime registry unavailable: "+e.getMessage(),12,Color.RED,false));}
   button("Import local GGUF model",accent,()->{page="Models";render();});
  }
  private void skills(){heading("Skill Library","Built-in skills are reusable prompt templates. They are not executable plugins and cannot bypass Guardian.");
