@@ -371,7 +371,9 @@ Java_org_seedx_agent_MainActivity_nativeToolCatalog(JNIEnv* env,jobject) {
 extern "C" JNIEXPORT jstring JNICALL
 Java_org_seedx_agent_MainActivity_nativeRequestApproval(JNIEnv* env,jobject,jstring toolValue,jstring operationValue,jstring resourceValue,jboolean confirmed) {
  if(confirmed!=JNI_TRUE||gKernel.emergencyStopped()) return toJava(env,"");
- seed::ToolRequest request{fromJava(env,toolValue),fromJava(env,operationValue),fromJava(env,resourceValue),"Operator-approved Phase 7 tool request"};
+ const std::string tool=fromJava(env,toolValue),operation=fromJava(env,operationValue),resource=fromJava(env,resourceValue);
+ if(tool.size()>128||operation.size()>64||resource.size()>512)return toJava(env,"");
+ seed::ToolRequest request{tool,operation,resource,"Operator-approved Phase 7 tool request"};
  const auto ticket=gKernel.requestApproval(request,true);
  return toJava(env,ticket.id);
 }
