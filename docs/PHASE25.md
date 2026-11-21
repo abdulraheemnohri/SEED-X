@@ -24,3 +24,5 @@
 - Added read-only Network Diagnostics for active transport, validated connectivity, metering/roaming capability and current provider endpoint; it does not scan LAN devices or generate network traffic.
 - Added About screen with repository, documentation, issue-reporting and optional donation links.
 - Settings backup now includes custom prompt templates and dashboard widget preferences, with schema validation. Provider profiles, credentials, chat history and model files remain excluded.
+
+- Expanded chat message controls: long-press a message to copy/delete it, speak assistant messages, or resend user messages; retry the latest user message and copy the full transcript.
