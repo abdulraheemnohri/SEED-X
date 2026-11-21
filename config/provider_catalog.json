@@ -192,6 +192,66 @@
       "access": "self-hosted-server",
       "keyUrl": "https://docs.sglang.ai/",
       "notes": "Usually runs on a workstation/server."
+    },
+    {
+      "id": "cerebras",
+      "name": "Cerebras Inference",
+      "kind": "openai",
+      "baseUrl": "https://api.cerebras.ai/v1",
+      "defaultModel": "gpt-oss-120b",
+      "access": "trial-or-account-dependent",
+      "keyUrl": "https://cloud.cerebras.ai/",
+      "notes": "Verify whether a trial or recurring free allowance is available to your account."
+    },
+    {
+      "id": "together",
+      "name": "Together AI",
+      "kind": "openai",
+      "baseUrl": "https://api.together.xyz/v1",
+      "defaultModel": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+      "access": "paid-or-trial-check",
+      "keyUrl": "https://api.together.ai/settings/api-keys",
+      "notes": "Check current account credits and model pricing."
+    },
+    {
+      "id": "fireworks",
+      "name": "Fireworks AI",
+      "kind": "openai",
+      "baseUrl": "https://api.fireworks.ai/inference/v1",
+      "defaultModel": "accounts/fireworks/models/llama-v3p3-70b-instruct",
+      "access": "paid-or-trial-check",
+      "keyUrl": "https://fireworks.ai/account/api-keys",
+      "notes": "Check current trial credits and model pricing."
+    },
+    {
+      "id": "perplexity",
+      "name": "Perplexity API",
+      "kind": "openai",
+      "baseUrl": "https://api.perplexity.ai",
+      "defaultModel": "sonar",
+      "access": "paid-by-usage",
+      "keyUrl": "https://www.perplexity.ai/account/api",
+      "notes": "API usage is billed separately from the consumer search product."
+    },
+    {
+      "id": "xai",
+      "name": "xAI API",
+      "kind": "openai",
+      "baseUrl": "https://api.x.ai/v1",
+      "defaultModel": "grok-3-mini",
+      "access": "paid-or-trial-check",
+      "keyUrl": "https://console.x.ai/",
+      "notes": "Check current console credits and API pricing."
+    },
+    {
+      "id": "huggingface",
+      "name": "Hugging Face Inference Router",
+      "kind": "openai",
+      "baseUrl": "https://router.huggingface.co/v1",
+      "defaultModel": "provider/model",
+      "access": "paid-or-credit-check",
+      "keyUrl": "https://huggingface.co/settings/tokens",
+      "notes": "Free account inference credits may be unavailable; verify current billing and provider support."
     }
   ]
 }
