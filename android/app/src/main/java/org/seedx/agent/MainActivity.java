@@ -470,7 +470,7 @@ private void send(String prompt){if(!nativeReady){addMessage("assistant","Native
     public void onBufferReceived(byte[] buffer){ }
     public void onEndOfSpeech(){runOnUiThread(()->{if(voiceStatus!=null)voiceStatus.setText("Processing speech…");});}
     public void onError(int error){runOnUiThread(()->{if(voiceStatus!=null)voiceStatus.setText("Recognition error: "+error);toast("Speech recognition stopped (error "+error+").");stopVoiceRecognition();});}
-    public void onResults(Bundle results){ArrayList<String> values=results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);runOnUiThread(()->{if(values!=null&&!values.isEmpty()){pendingChatDraft=values.get(0);if(voiceStatus!=null)voiceStatus.setText("Recognized: "+pendingChatDraft);page="Chat";render();}stopVoiceRecognition();});}
+    public void onResults(Bundle results){ArrayList<String> values=results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);runOnUiThread(()->{if(values!=null&&!values.isEmpty()){String recognized=values.get(0);if(voiceChatArmed){voiceChatArmed=false;pendingChatDraft="";addMessage("user",recognized);page="Chat";render();send(recognized);}else{pendingChatDraft=recognized;if(voiceStatus!=null)voiceStatus.setText("Recognized: "+pendingChatDraft);page="Chat";render();}}stopVoiceRecognition();});}
     public void onPartialResults(Bundle partial){ArrayList<String> values=partial.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);if(values!=null&&!values.isEmpty())runOnUiThread(()->{if(voiceStatus!=null)voiceStatus.setText("Hearing: "+values.get(0));});}
     public void onEvent(int eventType,Bundle params){ }
    });
@@ -497,6 +497,12 @@ private void send(String prompt){if(!nativeReady){addMessage("assistant","Native
  }
  @Override protected void onActivityResult(int request,int result,Intent data){
   super.onActivityResult(request,result,data);
+  if(request==PICK_CHAT_ATTACHMENTS){
+   if(result==RESULT_OK&&data!=null){
+    if(data.getClipData()!=null){android.content.ClipData clips=data.getClipData();for(int n=0;n<clips.getItemCount();n++){Uri selected=clips.getItemAt(n).getUri();if(selected!=null)importChatAttachment(selected);}}
+    else if(data.getData()!=null)importChatAttachment(data.getData());
+   }return;
+  }
   if(request==VOICE_INPUT){if(result==RESULT_OK&&data!=null){ArrayList<String> heard=data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);if(heard!=null&&!heard.isEmpty()){pendingChatDraft=heard.get(0);page="Chat";render();}}return;}
   if(request==EXPORT_SETTINGS){if(result==RESULT_OK&&data!=null&&data.getData()!=null)exportSettingsTo(data.getData());return;}
   if(request==IMPORT_SETTINGS){if(result==RESULT_OK&&data!=null&&data.getData()!=null)confirmImportSettings(data.getData());return;}
