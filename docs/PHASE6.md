@@ -4,13 +4,14 @@
 - JNI bridge compiled into the Android shared native library.
 - Java Android application loads seedx_android and initializes the C++ AgentKernel.
 - Native runtime status reports llama.cpp availability, lifecycle state, loaded model and available memory.
-- GGUF model selection calls the real C++ LocalAiRuntime loader.
+- GGUF import runs off the UI thread, checks the GGUF magic header, writes to a temporary file, and enforces an 8 GiB import ceiling.
+- GGUF model selection calls the real C++ LocalAiRuntime loader off the UI thread.
 - Model admission estimates RAM at 1.5x model file size plus a minimum 256 MiB runtime allowance; a 768 MiB system reserve is kept.
 - Local chat routes to the loaded model before online providers.
 - C++ token callbacks stream generated text to Android; UTF-8 partial token boundaries are buffered before crossing JNI.
 - Stop Generation calls an atomic cancellation flag checked between generated tokens.
 - Guardian screen reads live C++ emergency-stop and audit-chain status.
-- Operator-confirmed Emergency Stop cancels generation and freezes Guardian authorization; reset requires a second explicit confirmation.
+- Operator-confirmed Emergency Stop cancels local generation, disconnects an active online HTTP request, and freezes Guardian authorization; reset requires a second explicit confirmation.
 - Online fallback remains disabled by default and is blocked while Guardian emergency stop is active.
 - Host core tests verify the kernel emergency-stop accessor and reset behavior.
 
