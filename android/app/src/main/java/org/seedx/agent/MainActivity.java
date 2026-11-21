@@ -274,7 +274,7 @@ public final class MainActivity extends Activity {
   if(label.isEmpty()||modelId.isEmpty()||url.isEmpty())throw new IllegalArgumentException("Name, endpoint and model ID are required.");
   if(!localEndpointAllowed(url))throw new IllegalArgumentException("Public endpoints require HTTPS. Local HTTP requires the explicit local HTTP setting and a loopback/private-LAN host.");
   String id=label.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+","-").replaceAll("^-|-$","");
-  String ref="provider."+id;if(key.length()>0)encrypt(ref,key.getText().toString().trim());if(decrypt(ref).isEmpty()&&!url.startsWith("http://"))throw new IllegalArgumentException("Enter an API key for cloud providers. Trusted local HTTP servers may be keyless.");
+  String ref="provider."+id;if(key.length()>0)encrypt(ref,key.getText().toString().trim());else if(url.startsWith("http://"))secrets.edit().remove(ref).apply();if(decrypt(ref).isEmpty()&&!url.startsWith("http://"))throw new IllegalArgumentException("Enter an API key for cloud providers. Trusted local HTTP servers may be keyless.");
   String protocol=kind.getSelectedItemPosition()==1?"anthropic":kind.getSelectedItemPosition()==2?"gemini":"openai";
   JSONObject cfg=new JSONObject().put("id",id).put("name",label).put("kind",protocol).put("base",url).put("model",modelId).put("credentialRef",ref);
   persistProvider(cfg);toast("Provider profile saved securely.");page="Chat";render();
