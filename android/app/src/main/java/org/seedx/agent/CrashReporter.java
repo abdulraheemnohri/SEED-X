@@ -13,11 +13,14 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Arrays;
 
 /** Local-only crash recorder. Reports are never transmitted automatically. */
 public final class CrashReporter {
     private static final String DIRECTORY = "crash-reports";
     private static final String FILE_NAME = "latest-crash.txt";
+    private static final String BREADCRUMB_FILE = "breadcrumbs.txt";
+    private static final int MAX_HISTORY = 10;
     private static final int MAX_BYTES = 96 * 1024;
     private static volatile Thread.UncaughtExceptionHandler previous;
 
@@ -59,6 +62,66 @@ public final class CrashReporter {
             bytes = report.getBytes(StandardCharsets.UTF_8);
         }
         try (FileOutputStream out = new FileOutputStream(target, false)) { out.write(bytes); out.getFD().sync(); }
+        String stamp = new SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(new Date());
+        File history = new File(dir, stamp + "-" + System.currentTimeMillis() + ".txt");
+        try (FileOutputStream out = new FileOutputStream(history, false)) { out.write(bytes); out.getFD().sync(); }
+        pruneHistory(dir);
+    }
+
+    public static synchronized void breadcrumb(Context context, String event) {
+        try {
+            File dir = new File(context.getFilesDir(), DIRECTORY);
+            if (!dir.exists() && !dir.mkdirs()) return;
+            File file = new File(dir, BREADCRUMB_FILE);
+            String line = new SimpleDateFormat("HH:mm:ss", Locale.US).format(new Date()) + " | " + safe(event) + "\n";
+            byte[] old = file.isFile() ? readBytes(file, 12 * 1024) : new byte[0];
+            byte[] add = line.getBytes(StandardCharsets.UTF_8);
+            byte[] combined = new byte[Math.min(16 * 1024, old.length + add.length)];
+            int keep = Math.min(old.length, combined.length - Math.min(add.length, combined.length));
+            System.arraycopy(old, Math.max(0, old.length - keep), combined, 0, keep);
+            int addCount = Math.min(add.length, combined.length - keep);
+            System.arraycopy(add, 0, combined, keep, addCount);
+            try (FileOutputStream out = new FileOutputStream(file, false)) { out.write(combined); }
+        } catch (Throwable ignored) {}
+    }
+
+    public static File[] history(Context context) {
+        File dir = new File(context.getFilesDir(), DIRECTORY);
+        File[] files = dir.listFiles((d, name) -> name.endsWith(".txt") && !name.equals(FILE_NAME) && !name.equals(BREADCRUMB_FILE));
+        if (files == null) return new File[0];
+        Arrays.sort(files, (x, y) -> Long.compare(y.lastModified(), x.lastModified()));
+        return files;
+    }
+
+    public static String readFile(File file) {
+        if (file == null || !file.isFile()) return "";
+        try { return new String(readBytes(file, MAX_BYTES), StandardCharsets.UTF_8); }
+        catch (Exception e) { return "Could not read report."; }
+    }
+
+    public static String readBreadcrumbs(Context context) {
+        File file = new File(new File(context.getFilesDir(), DIRECTORY), BREADCRUMB_FILE);
+        return file.isFile() ? readBounded(file, 16 * 1024) : "No recent app events recorded.";
+    }
+
+    private static String readBounded(File file, int max) {
+        try { return new String(readBytes(file, max), StandardCharsets.UTF_8); }
+        catch (Exception e) { return "Could not read event history."; }
+    }
+
+    private static byte[] readBytes(File file, int max) throws Exception {
+        try (java.io.FileInputStream in = new java.io.FileInputStream(file)) {
+            byte[] data = new byte[(int)Math.min(file.length(), max)];
+            int count = in.read(data);
+            return count <= 0 ? new byte[0] : Arrays.copyOf(data, count);
+        }
+    }
+
+    private static void pruneHistory(File dir) {
+        File[] files = dir.listFiles((d, name) -> name.endsWith(".txt") && !name.equals(FILE_NAME) && !name.equals(BREADCRUMB_FILE));
+        if (files == null || files.length <= MAX_HISTORY) return;
+        Arrays.sort(files, (x, y) -> Long.compare(y.lastModified(), x.lastModified()));
+        for (int i = MAX_HISTORY; i < files.length; i++) files[i].delete();
     }
 
     public static File latest(Context context) {
