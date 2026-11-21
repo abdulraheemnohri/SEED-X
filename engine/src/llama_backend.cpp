@@ -19,7 +19,7 @@ public:
   auto mp=llama_model_default_params();mp.use_mmap=true;mp.n_gpu_layers=0;
   model_=llama_model_load_from_file(m.filePath.c_str(),mp);
   if(!model_){error="llama.cpp could not load this GGUF model.";return false;}
-  auto cp=llama_context_default_params();cp.n_ctx=m.contextTokens;cp.n_batch=std::min<std::uint32_t>(m.contextTokens,512);
+  auto cp=llama_context_default_params();cp.n_ctx=m.contextTokens;cp.n_batch=m.contextTokens;
   const auto hw=std::thread::hardware_concurrency();const auto threads=static_cast<int32_t>(std::max(1U,hw>1?hw-1:1U));cp.n_threads=threads;cp.n_threads_batch=threads;
   context_=llama_init_from_model(model_,cp);
   if(!context_){llama_model_free(model_);model_=nullptr;error="llama.cpp could not create an inference context.";return false;}
