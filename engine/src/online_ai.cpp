@@ -19,7 +19,30 @@ else if(k_==ProviderKind::Anthropic){q.url=base+"/v1/messages";q.headers["x-api-
 else{q.url=base+"/v1beta/models/"+c.model+":generateContent";q.headers["x-goog-api-key"]=key;std::string sys,contents="[";bool f=true;for(const auto&m:r.messages){if(m.role==ChatRole::System){if(!sys.empty())sys+='\n';sys+=m.content;continue;}if(!f)contents+=',';f=false;contents+="{\"role\":\""+std::string(m.role==ChatRole::Assistant?"model":"user")+"\",\"parts\":[{\"text\":\""+esc(m.content)+"\"}]}";}contents+="]";q.body="{\"contents\":"+contents+",\"generationConfig\":{\"maxOutputTokens\":"+std::to_string(r.maxOutputTokens)+",\"temperature\":"+std::to_string(r.temperature)+"}";if(!sys.empty())q.body+=",\"systemInstruction\":{\"parts\":[{\"text\":\""+esc(sys)+"\"}]}";q.body+="}";}
 HttpResponse response;std::string te;if(!t.postJson(q,response,te)){out.error=te.empty()?"Network request failed.":te;return out;}if(response.body.size()>q.maxResponseBytes){out.error="Provider response exceeded the configured size limit.";return out;}if(response.statusCode<200||response.statusCode>=300){out.error="Provider returned HTTP "+std::to_string(response.statusCode)+".";return out;}out.text=extract(response.body);if(out.text.empty()){out.error="Provider response did not contain a supported text candidate.";return out;}if(k_==ProviderKind::OpenAICompatible){out.usage.inputTokens=jnum(response.body,"prompt_tokens");out.usage.outputTokens=jnum(response.body,"completion_tokens");}else if(k_==ProviderKind::Anthropic){out.usage.inputTokens=jnum(response.body,"input_tokens");out.usage.outputTokens=jnum(response.body,"output_tokens");}else{out.usage.inputTokens=jnum(response.body,"promptTokenCount");out.usage.outputTokens=jnum(response.body,"candidatesTokenCount");}out.usage.reportedByProvider=out.usage.inputTokens>0||out.usage.outputTokens>0;out.success=true;return out;}
 };}
-bool isSafeProviderUrl(const ProviderConfig&c,std::string&e){const auto&u=c.baseUrl;bool https=u.rfind("https://",0)==0;bool local=u.rfind("http://localhost",0)==0||u.rfind("http://127.0.0.1",0)==0||u.rfind("http://10.",0)==0||u.rfind("http://192.168.",0)==0;if(u.empty()||u.size()>2048||u.find_first_of("\r\n")!=std::string::npos){e="Provider base URL is empty or invalid.";return false;}if(!https&&!(c.allowInsecureLocalhost&&local)){e="HTTPS is required; cleartext HTTP is allowed only for explicitly enabled local endpoints.";return false;}if(c.model.empty()||c.model.size()>256||c.model.find_first_of("\r\n")!=std::string::npos){e="A valid model identifier is required.";return false;}e.clear();return true;}
+bool isSafeProviderUrl(const ProviderConfig&c,std::string&e){
+ const auto&u=c.baseUrl;
+ if(u.empty()||u.size()>2048||u.find_first_of("\\r\\n\\t ")!=std::string::npos||u.find('#')!=std::string::npos||u.find('?')!=std::string::npos){e="Provider base URL is empty or invalid.";return false;}
+ const bool https=u.rfind("https://",0)==0;
+ const bool http=u.rfind("http://",0)==0;
+ if(!https&&!http){e="Provider URL must use HTTPS, or explicitly approved local HTTP.";return false;}
+ const std::size_t schemeLength=https?8:7;
+ const auto authorityEnd=u.find_first_of("/?#",schemeLength);
+ const std::string authority=u.substr(schemeLength,authorityEnd==std::string::npos?std::string::npos:authorityEnd-schemeLength);
+ if(authority.empty()||authority.find('@')!=std::string::npos){e="Provider URL must contain a host and must not embed credentials.";return false;}
+ std::string host=authority;
+ if(host.front()=='['){const auto close=host.find(']');if(close==std::string::npos){e="Invalid IPv6 provider host.";return false;}host=host.substr(0,close+1);}
+ else {const auto colon=host.find(':');if(colon!=std::string::npos)host.resize(colon);}
+ std::transform(host.begin(),host.end(),host.begin(),[](unsigned char ch){return static_cast<char>(std::tolower(ch));});
+ bool local=host=="localhost"||host=="127.0.0.1"||host=="[::1]"||(host.size()>6&&host.compare(host.size()-6,6,".local")==0);
+ if(!local){
+  std::istringstream ip(host);std::string part;unsigned octets[4]{};int count=0;bool valid=true;
+  while(std::getline(ip,part,'.')){if(count>=4||part.empty()||part.size()>3){valid=false;break;}unsigned value=0;for(char ch:part){if(!std::isdigit(static_cast<unsigned char>(ch))){valid=false;break;}value=value*10U+static_cast<unsigned>(ch-'0');}if(!valid||value>255){valid=false;break;}octets[count++]=value;}
+  if(valid&&count==4)local=octets[0]==10||(octets[0]==192&&octets[1]==168)||(octets[0]==172&&octets[1]>=16&&octets[1]<=31);
+ }
+ if(http&&!(c.allowInsecureLocalhost&&local)){e="HTTPS is required; cleartext HTTP is allowed only for explicitly enabled loopback, private IPv4 or .local hosts.";return false;}
+ if(c.model.empty()||c.model.size()>256||c.model.find_first_of("\\r\\n")!=std::string::npos){e="A valid model identifier is required.";return false;}
+ e.clear();return true;
+}
 bool ProviderRegistry::add(ProviderConfig c,std::string&e){if(c.id.empty()||c.id.size()>96||c.displayName.empty()||c.displayName.size()>128||c.credentialRef.empty()){e="Provider id, display name and credential reference are required.";return false;}if(!isSafeProviderUrl(c,e))return false;if(find(c.id)){e="Provider id already exists.";return false;}providers_.push_back(std::move(c));e.clear();return true;}
 bool ProviderRegistry::remove(const std::string&id){auto i=std::find_if(providers_.begin(),providers_.end(),[&](const auto&p){return p.id==id;});if(i==providers_.end())return false;providers_.erase(i);return true;}
 const ProviderConfig*ProviderRegistry::find(const std::string&id)const noexcept{auto i=std::find_if(providers_.begin(),providers_.end(),[&](const auto&p){return p.id==id;});return i==providers_.end()?nullptr:&*i;}
