@@ -1,4 +1,4 @@
-plugins { id "com.android.application" }
+plugins { id "com.android.application"; id "org.jetbrains.kotlin.android" }
 
 // Third-party mobile runtime SDKs are independently switchable. The full debug
 // workflow opts into all three supported Android SDK packages below.
@@ -7,8 +7,11 @@ def seedxRuntimeSdks = (project.findProperty("seedxRuntimeSdks") ?: "").toString
 
 dependencies {
  implementation "androidx.work:work-runtime:2.10.1"
+ // LiteRT-LM 0.16.1 uses Kotlin metadata compatible with the Kotlin 2.2 toolchain.
+ implementation "com.google.ai.edge.litertlm:litertlm-android:0.16.1"
+ implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
  if (seedxRuntimeSdks.contains("litert")) {
-  implementation "com.google.ai.edge.litertlm:litertlm-android:latest.release"
+  // LiteRT-LM is always included because its concrete adapter is compiled into the app.
  }
  if (seedxRuntimeSdks.contains("executorch")) {
   implementation "org.pytorch:executorch-android:1.0.0"
