@@ -190,3 +190,15 @@ The app now includes Prompt Library (built-in and custom local templates), conve
 
 ## Phase 27 — Complete Debug APK
 The recommended GitHub Actions debug artifact is now the llama.cpp-enabled `seedx-debug-apk`, with a smaller `seedx-debug-apk-stub` fallback. See [docs/PHASE27.md](docs/PHASE27.md) for exactly what is included and which runtime adapters remain pending.
+
+
+## Phase 28 — Modular Android Runtime SDKs
+
+The complete debug build now opts into the LiteRT-LM Android SDK, ExecuTorch Android AAR, and ONNX Runtime Mobile AAR. Individual SDKs can be selected with the `seedxRuntimeSdks` Gradle property. The Runtime Manager probes SDK classes and explicitly distinguishes packaged SDKs from runnable SEED-X adapters.
+
+Example:
+```powershell
+gradle clean assembleDebug -PseedxLlamaCpp=ON -PseedxRuntimeSdks=litert,executorch,onnxruntime
+```
+
+Important: SDK packaging is not the same as an integrated generation adapter. LiteRT-LM and ExecuTorch still need tested SEED-X model lifecycle/generation bridges. ONNX Runtime Mobile is not ONNX Runtime GenAI. MLC LLM requires its generated `mlc4j` project and per-model compiled libraries. See [docs/PHASE28.md](docs/PHASE28.md).
