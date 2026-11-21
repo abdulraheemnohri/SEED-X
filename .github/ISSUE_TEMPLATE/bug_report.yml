@@ -1,0 +1,37 @@
+name: Bug report
+description: Report a reproducible SEED-X problem
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include passwords, API keys, private prompts, personal files, or other secrets."
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: Describe the problem and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open... 2. Tap..."
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: SEED-X version
+  - type: input
+    id: android
+    attributes:
+      label: Android version and device
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Optional diagnostic report
+      description: Review and remove identifying details before pasting.
+    validations:
+      required: false
