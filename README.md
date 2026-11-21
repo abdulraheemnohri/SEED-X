@@ -214,3 +214,24 @@ Important: SDK packaging is not the same as an integrated generation adapter. Li
 - A matching tokenizer is mandatory for ExecuTorch `.pte` models. Model weights are not bundled into the APK. LiteRT-LM defaults to CPU; GPU/NPU selection remains a separate device-capability validation step.
 - CI and physical-device inference verification are required before treating either adapter as release-certified.
 See [docs/PHASE29.md](docs/PHASE29.md).
+
+
+## Phase 30 — Voice, universal AI capabilities and Puter.js
+
+- Voice Studio uses Android SpeechRecognizer with an explicit on-device-only mode when supported and an explicitly selected system recognizer mode. There is no silent network fallback from on-device mode.
+- Microphone permission is declared but requested only when the user starts ASR. Recognition is stopped when leaving the Voice screen or pausing the activity. No background microphone capture or wake-word service is enabled.
+- TTS uses the installed Android TextToSpeech engine with language, speed and pitch controls.
+- Adds voice runtime inventory for Android ASR/TTS, Whisper.cpp, sherpa-onnx, Vosk, Moonshine, Silero VAD, Piper, Kokoro and ML Kit GenAI Speech Recognition. Entries marked catalog-only or alpha are not claimed as integrated.
+- Adds an AI capability catalogue covering text/reasoning, vision-language, ASR, TTS, speech translation, VAD/wake word, diarization, audio understanding, embeddings, reranking, OCR, image/video generation and Guardian-gated agents.
+- Adds an optional Puter.js WebView workspace for chat, model listing, text-to-speech, speech-to-text from a public HTTPS audio URL, image understanding and image generation. It uses the official Puter.js v2 script and does not expose a native JavaScript bridge or store provider API keys.
+- Puter is an online user-pays integration, not an offline runtime. The workspace asks for confirmation before online requests. Verify Puter account terms, current model pricing and privacy before use.
+- Voice preferences are included in the allowlisted settings backup. Provider credentials, conversation history and model files remain excluded.
+- Adds browser AI runtime inventory for WebLLM, Transformers.js, ONNX Runtime Web, MediaPipe Tasks Web and TensorFlow.js.
+
+Runtime status honesty: Android SpeechRecognizer and Android TTS are platform integrations. LiteRT-LM and ExecuTorch adapters from Phase 29 are implemented but still require build/device certification. Whisper.cpp, sherpa-onnx, Vosk, Piper, Kokoro and other catalogue-only entries need concrete adapters and model packaging before they can run in SEED-X.
+
+Official references:
+- [Puter.js AI docs](https://docs.puter.com/AI/)
+- [Android SpeechRecognizer API](https://developer.android.com/reference/android/speech/SpeechRecognizer)
+- [ML Kit GenAI Speech Recognition](https://developers.google.com/ml-kit/genai/speech-recognition/android)
+- [ML Kit GenAI Text-to-Speech](https://developers.google.com/ml-kit/genai/text-to-speech/android)
