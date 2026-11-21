@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "executionMode": "manual-prompt-workflows-only",
+  "workflows": [
+    {
+      "id": "project-blueprint",
+      "name": "Project Blueprint",
+      "description": "Requirements, architecture, phases, acceptance tests and risks."
+    },
+    {
+      "id": "code-audit",
+      "name": "Code Audit",
+      "description": "Review supplied source for defects, security, dependencies and tests."
+    },
+    {
+      "id": "release-preparation",
+      "name": "Release Preparation",
+      "description": "Release notes, changelog, test checklist, rollback and deployment."
+    },
+    {
+      "id": "local-ai-setup",
+      "name": "Local AI Setup",
+      "description": "Device-aware model/runtime setup with RAM and storage budgets."
+    },
+    {
+      "id": "provider-privacy-review",
+      "name": "Provider Privacy Review",
+      "description": "Compare pricing, quotas, privacy, retention and fallback behavior."
+    },
+    {
+      "id": "incident-troubleshooting",
+      "name": "Incident Troubleshooting",
+      "description": "Symptoms, evidence, reproduction, hypotheses and safe remediation."
+    }
+  ]
+}
