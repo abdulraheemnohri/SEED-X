@@ -54,4 +54,4 @@ The loader uses an estimate, not exact RAM consumption. On a 6 GB device, start 
 - GPU/NPU acceleration is not enabled; current llama.cpp configuration is CPU-only.
 
 ## Verification
-CI compiles the Android JNI library with the default stub and runs the C++ host test suite. The optional llama.cpp backend must be built separately. No successful physical-device inference or APK installation should be assumed until tested on target hardware.
+CI compiles the Android JNI library with the default stub, uploads the debug APK as the seedx-debug-apk workflow artifact, and runs the C++ host test suite. Download the artifact from the successful GitHub Actions run. The optional llama.cpp backend must be built separately. No successful physical-device inference or APK installation should be assumed until tested on target hardware.
