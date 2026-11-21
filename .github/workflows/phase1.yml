@@ -1,5 +1,9 @@
 name: SEED-X Core and Inference CI
 
+concurrency:
+  group: seedx-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
