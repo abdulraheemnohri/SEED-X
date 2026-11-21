@@ -26,3 +26,5 @@
 - Settings backup now includes custom prompt templates and dashboard widget preferences, with schema validation. Provider profiles, credentials, chat history and model files remain excluded.
 
 - Expanded chat message controls: long-press a message to copy/delete it, speak assistant messages, or resend user messages; retry the latest user message and copy the full transcript.
+
+- Added Android 15+ foreground-service timeout handling. The user-started dataSync session now clears its running state and stops itself when Android invokes the platform timeout callback.
