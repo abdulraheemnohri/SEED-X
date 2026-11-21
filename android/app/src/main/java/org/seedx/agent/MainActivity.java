@@ -553,7 +553,7 @@ public final class MainActivity extends Activity {
    String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs"};for(String k:booleans)if(data.has(k))e.putBoolean(k,data.getBoolean(k));
    String[] ints={"max_output_tokens","context_tokens","provider_timeout_ms","provider_max_bytes","provider_retries"};int[] mins={16,128,5000,65536,0},maxs={4096,8192,180000,8388608,3};for(int z=0;z<ints.length;z++)if(data.has(ints[z])){int v=data.getInt(ints[z]);if(v<mins[z]||v>maxs[z])throw new IllegalArgumentException("Invalid "+ints[z]);e.putInt(ints[z],v);}
    String[] floats={"temperature","top_p","ui_text_scale"};float[] fmin={0f,0.05f,0.85f},fmax={2f,1f,1.5f};for(int z=0;z<floats.length;z++)if(data.has(floats[z])){double v=data.getDouble(floats[z]);if(!Double.isFinite(v)||v<fmin[z]||v>fmax[z])throw new IllegalArgumentException("Invalid "+floats[z]);e.putFloat(floats[z],(float)v);}
-   e.apply();toast("Settings imported. Provider credentials and chat history were untouched.");render();
+   e.apply();applyTheme();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);toast("Settings imported. Provider credentials and chat history were untouched.");render();
   }catch(Exception e){toast("Import rejected: "+e.getMessage());}
  }
  private void settings(){heading("Settings","Privacy, routing, generation, model memory and network controls.");
