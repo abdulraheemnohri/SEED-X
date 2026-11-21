@@ -13,6 +13,7 @@ CATALOGS = [
     "config/voice_runtime_catalog.json",
     "config/ai_capability_catalog.json",
     "config/web_ai_provider_catalog.json",
+    "config/integration_catalog.json",
     "config/skills.json",
     "config/tools.json",
     "config/workflows.json",
@@ -253,3 +254,23 @@ for marker in ("SpeechRecognizer.createOnDeviceSpeechRecognizer", "isOnDeviceRec
 if '"voice_tts_rate"' not in activity or '"voice_asr_mode"' not in activity:
     raise SystemExit("Voice preferences are missing from settings export")
 print("OK Phase 30 voice/ASR, AI capability catalogs, Puter.js WebView and settings")
+
+
+# Phase 31: universal chat, local chat archive, attachments, voice chat and SEED growth.
+integration_catalog = json.loads((ROOT / "config/integration_catalog.json").read_text(encoding="utf-8"))
+integration_ids = {item.get("id") for item in integration_catalog.get("integrations", [])}
+for required in ("puter-js", "android-saf", "guardian-tools", "seed-skills", "mcp-http", "github", "dropbox", "google-drive", "plugin-sandbox"):
+    if required not in integration_ids:
+        raise SystemExit(f"Integration catalogue is missing: {required}")
+for marker in (
+    "private void pickChatAttachments", "ACTION_OPEN_DOCUMENT", "EXTRA_ALLOW_MULTIPLE",
+    "private void showChatModelPicker", "private void showChatHistory", "private void startNewChat",
+    "private void startVoiceChat", "private void speakAssistantIfEnabled",
+    "private void integrations()", "private void growth()", "private void configureMcpEndpoint",
+    "PICK_CHAT_ATTACHMENTS", "voice_chat_auto_speak", "chat_archive",
+):
+    if marker not in activity:
+        raise SystemExit(f"Phase 31 chat / growth feature is missing: {marker}")
+if "addJavascriptInterface" in activity:
+    raise SystemExit("SEED WebViews must not expose an unrestricted native JavaScript bridge")
+print("OK Phase 31 universal chat, attachments, model selection, chat archive, voice chat, integrations and growth")
