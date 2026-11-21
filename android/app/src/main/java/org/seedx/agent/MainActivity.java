@@ -67,7 +67,7 @@ public final class MainActivity extends Activity {
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
  private static final int VOICE_INPUT=4103;
- @Override public void onCreate(Bundle state){super.onCreate(state);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);migrateProviderProfiles();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();nativeReady=nativeInit(getFilesDir().getAbsolutePath());if(!nativeReady)Toast.makeText(this,"Native Guardian or workspace initialization failed. AI inference and tools are disabled for safety.",Toast.LENGTH_LONG).show();tts=new TextToSpeech(this,status->{if(status==TextToSpeech.SUCCESS){int result=tts.setLanguage(Locale.getDefault());if(result==TextToSpeech.LANG_MISSING_DATA||result==TextToSpeech.LANG_NOT_SUPPORTED)Toast.makeText(this,"Default text-to-speech language is unavailable.",Toast.LENGTH_SHORT).show();}});shell();render();}
+ @Override public void onCreate(Bundle state){super.onCreate(state);CrashReporter.install(this);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);migrateProviderProfiles();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();nativeReady=nativeInit(getFilesDir().getAbsolutePath());if(!nativeReady)Toast.makeText(this,"Native Guardian or workspace initialization failed. AI inference and tools are disabled for safety.",Toast.LENGTH_LONG).show();tts=new TextToSpeech(this,status->{if(status==TextToSpeech.SUCCESS){int result=tts.setLanguage(Locale.getDefault());if(result==TextToSpeech.LANG_MISSING_DATA||result==TextToSpeech.LANG_NOT_SUPPORTED)Toast.makeText(this,"Default text-to-speech language is unavailable.",Toast.LENGTH_SHORT).show();}});shell();render();}
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
  private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
@@ -423,7 +423,28 @@ public final class MainActivity extends Activity {
    if("Settings".equals(page))render();
   }
  }
+ private void showLatestDiagnostic(){
+  String report=CrashReporter.readLatest(this);
+  if(report.isEmpty()){toast("No saved crash report found.");return;}
+  new AlertDialog.Builder(this).setTitle("Latest diagnostic report").setMessage(report)
+   .setPositiveButton("Prepare GitHub report",(d,w)->prepareGitHubReport(report))
+   .setNeutralButton("Copy report",(d,w)->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED-X diagnostic",report));toast("Diagnostic report copied.");})
+   .setNegativeButton("Close",null).show();
+ }
+ private void prepareGitHubReport(String report){
+  String body="## Bug / crash report\n\nPlease review this diagnostic report.\n\n### Diagnostic details\n\n```text\n"+report+"\n```\n\n### User description\n(Add what you were doing before the issue.)\n\n> Review this report before submitting. Remove anything you do not want to share.";
+  if(body.length()>7000)body=body.substring(0,6900)+"\n[Truncated]";
+  Uri uri=Uri.parse("https://github.com/abdulraheemnohri/SEED-X/issues/new").buildUpon().appendQueryParameter("title","[Bug] SEED-X crash or error report").appendQueryParameter("body",body).build();
+  openUrl(uri.toString());
+ }
+ private void recordDiagnosticExample(String area,Throwable error){CrashReporter.recordNonFatal(this,area,error);}
  private void settings(){heading("Settings","Privacy, routing, generation, model memory and network controls.");
+  LinearLayout diagnostics=card();diagnostics.addView(text("CRASH & BUG REPORTING",12,accent,true));
+  File crashFile=CrashReporter.latest(this);diagnostics.addView(text(crashFile==null?"No saved crash report":"Saved report available • "+(crashFile.length()/1024)+" KB",12,muted,false));
+  button("View latest crash / error report",panel,()->showLatestDiagnostic());
+  button("Prepare report for GitHub",accent,()->{String report=CrashReporter.readLatest(this);if(report.isEmpty()){toast("No crash report available yet.");return;}prepareGitHubReport(report);});
+  button("Clear saved diagnostic report",panel,()->new AlertDialog.Builder(this).setTitle("Delete diagnostic report?").setMessage("This deletes the locally saved report only.").setNegativeButton("Cancel",null).setPositiveButton("Delete",(d,w)->{CrashReporter.clear(this);render();}).show());
+  diagnostics.addView(text("Reports stay on this device until you choose to prepare a GitHub issue. Review the text before submitting. No automatic upload or secret collection.",11,muted,false));
   LinearLayout os=card();os.addView(text("ANDROID OS INTEGRATION",12,accent,true));
   os.addView(text("Foreground session: "+(AgentForegroundService.isRunning()?"RUNNING":"STOPPED"),14,Color.WHITE,true));
   os.addView(text("Notifications: "+(notificationPermissionGranted()?"allowed":"not allowed"),12,muted,false));
