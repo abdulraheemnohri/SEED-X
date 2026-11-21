@@ -738,7 +738,12 @@ navigation.addView(text("Four primary tabs stay visible at the bottom. All remai
   button("Open full mobile menu",panel,()->showMobileMenu(root));
   LinearLayout note=card();note.addView(text("Privacy first",14,accent,true));note.addView(text("Local model wins when loaded. Cloud is disabled by default and each cloud request asks before sending. No provider API keys are bundled.",12,muted,false));
  }
- private void runtimes(){heading("Runtime Manager","Live native availability is authoritative. Catalog-only runtimes are shown as unavailable until their adapter is installed.");
+ private void runtimes(){heading("Runtime Manager","Live native availability is authoritative. SDK presence, adapter integration and runnable inference are separate states.");
+  LinearLayout sdkCard=card();sdkCard.addView(text("THIRD-PARTY ANDROID SDK STATUS",12,accent,true));
+  try{org.json.JSONArray sdkRows=new org.json.JSONArray(RuntimeSdkManager.snapshot(this));for(int n=0;n<sdkRows.length();n++){JSONObject sdk=sdkRows.getJSONObject(n);sdkCard.addView(text(sdk.optString("name")+" • "+sdk.optString("status"),13,primaryText,true));sdkCard.addView(text(sdk.optString("detail"),11,muted,false));}}catch(Exception sdkError){sdkCard.addView(text("SDK probe failed: "+sdkError.getMessage(),11,Color.RED,false));}
+  sdkCard.addView(text("An installed SDK does not become a SEED-X inference adapter automatically. Only a tested adapter can be marked runnable.",11,muted,false));
+  content.addView(sdkCard);
+
   try{
    JSONArray live=new JSONArray(nativeRuntimeCatalog());java.util.HashMap<String,JSONObject> actual=new java.util.HashMap<>();
    for(int i=0;i<live.length();i++){JSONObject entry=live.getJSONObject(i);actual.put(entry.optString("id"),entry);}
