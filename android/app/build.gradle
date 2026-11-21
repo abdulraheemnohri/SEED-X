@@ -6,10 +6,10 @@ android {
   applicationId "org.seedx.agent"
   minSdk 31
   targetSdk 35
-  versionCode 1
-  versionName "0.1.0"
+  versionCode 3
+  versionName "0.3.0"
   ndk { abiFilters "arm64-v8a", "x86_64" }
-  externalNativeBuild { cmake { cppFlags "-std=c++20 -Wall -Wextra -Wpedantic"; arguments "-DANDROID_STL=c++_shared" } }
+  externalNativeBuild { cmake { cppFlags "-std=c++20 -Wall -Wextra -Wpedantic"; arguments "-DANDROID_STL=c++_shared", "-DSEEDX_ENABLE_LLAMA_CPP=${project.findProperty('seedxLlamaCpp') ?: 'OFF'}" } }
  }
  externalNativeBuild { cmake { path file("src/main/cpp/CMakeLists.txt"); version "3.22.1" } }
  buildTypes { debug { applicationIdSuffix ".debug"; debuggable true }; release { minifyEnabled false; debuggable false } }
