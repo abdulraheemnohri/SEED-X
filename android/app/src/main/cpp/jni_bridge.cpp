@@ -136,8 +136,10 @@ bool withinRoot(const std::filesystem::path& candidate,const std::filesystem::pa
 }
 bool relativeResource(const std::string& resource,std::string& relative) {
  const std::string prefix="workspace://";
- if(resource.rfind(prefix,0)!=0) return false;
+ if(resource.size()>512||resource.rfind(prefix,0)!=0) return false;
  relative=resource.substr(prefix.size());
+ if(relative.size()>480||relative.find('\\\\')!=std::string::npos) return false;
+ for(unsigned char ch:relative) if(ch==0||ch<0x20) return false;
  std::filesystem::path p(relative);
  if(p.is_absolute()) return false;
  for(const auto& part:p) if(part==".."||part==".") return false;
