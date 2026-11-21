@@ -4,7 +4,7 @@
 - PDF attachments are parsed locally after being copied into app-private storage.
 - Text extraction reads at most the first 40 pages and writes at most 64 KiB of output.
 - Encrypted PDFs are rejected; malformed or unsupported PDFs report an import failure instead of being represented as inspected content.
-- PDF extraction is integrated into the existing attachment prompt. Extracted content remains untrusted user data.
+- PDF extraction is integrated into the existing attachment prompt. Extracted content remains untrusted user data.\n- Settings now includes an opt-out switch for local PDF/Office text extraction. When disabled, documents remain privately stored without their text being parsed or added to chat context.
 - Existing 20 MiB per-file attachment cap still applies.
 
 ## Limitations
