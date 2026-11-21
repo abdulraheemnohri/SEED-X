@@ -1,0 +1,199 @@
+{
+  "schemaVersion": 1,
+  "runtimes": [
+    {
+      "id": "llama.cpp",
+      "name": "llama.cpp",
+      "category": "embedded-native",
+      "platforms": [
+        "Android",
+        "Windows",
+        "Linux",
+        "macOS"
+      ],
+      "formats": [
+        "GGUF"
+      ],
+      "status": "integrated-optional-build",
+      "acceleration": [
+        "CPU"
+      ],
+      "notes": "Current embedded C++ JNI runtime; build with -PseedxLlamaCpp=ON. CPU-only in current SEED-X build.",
+      "url": "https://github.com/ggml-org/llama.cpp"
+    },
+    {
+      "id": "LiteRT-LM",
+      "name": "LiteRT-LM",
+      "category": "embedded-mobile",
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "formats": [
+        "LiteRT-LM supported model packages"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "GPU",
+        "supported NPU"
+      ],
+      "notes": "Google AI Edge mobile LLM runtime. Not yet wired into SEED-X.",
+      "url": "https://ai.google.dev/edge/litert-lm"
+    },
+    {
+      "id": "MLC-LLM",
+      "name": "MLC LLM",
+      "category": "embedded-mobile",
+      "platforms": [
+        "Android",
+        "iOS",
+        "Windows",
+        "Linux",
+        "macOS"
+      ],
+      "formats": [
+        "MLC compiled model packages"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "GPU",
+        "Vulkan/Metal depending on platform"
+      ],
+      "notes": "Requires platform-specific model compilation and packaging.",
+      "url": "https://llm.mlc.ai/"
+    },
+    {
+      "id": "ExecuTorch",
+      "name": "ExecuTorch",
+      "category": "embedded-mobile",
+      "platforms": [
+        "Android",
+        "iOS"
+      ],
+      "formats": [
+        "ExecuTorch .pte"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "GPU/NPU delegates where supported"
+      ],
+      "notes": "Android LLM APIs are experimental; not integrated into SEED-X.",
+      "url": "https://pytorch.org/executorch/"
+    },
+    {
+      "id": "ONNX Runtime GenAI",
+      "name": "ONNX Runtime GenAI",
+      "category": "embedded",
+      "platforms": [
+        "Android",
+        "Windows",
+        "Linux"
+      ],
+      "formats": [
+        "ONNX"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Execution Providers"
+      ],
+      "notes": "Requires model conversion and Android packaging; no SEED-X adapter yet.",
+      "url": "https://onnxruntime.ai/"
+    },
+    {
+      "id": "Ollama",
+      "name": "Ollama",
+      "category": "remote-local-server",
+      "platforms": [
+        "Windows",
+        "Linux",
+        "macOS"
+      ],
+      "formats": [
+        "GGUF and supported model libraries"
+      ],
+      "status": "openai-compatible-provider",
+      "acceleration": [
+        "CPU",
+        "GPU depending on host"
+      ],
+      "notes": "Connect via local/LAN OpenAI-compatible endpoint; Ollama is not embedded in APK.",
+      "url": "https://ollama.com/"
+    },
+    {
+      "id": "LM Studio",
+      "name": "LM Studio",
+      "category": "remote-local-server",
+      "platforms": [
+        "Windows",
+        "Linux",
+        "macOS"
+      ],
+      "formats": [
+        "Supported local model formats"
+      ],
+      "status": "openai-compatible-provider",
+      "acceleration": [
+        "CPU",
+        "GPU depending on host"
+      ],
+      "notes": "Connect using its local server endpoint.",
+      "url": "https://lmstudio.ai/"
+    },
+    {
+      "id": "LocalAI",
+      "name": "LocalAI",
+      "category": "remote-local-server",
+      "platforms": [
+        "Windows",
+        "Linux",
+        "macOS"
+      ],
+      "formats": [
+        "Multiple backends"
+      ],
+      "status": "openai-compatible-provider",
+      "acceleration": [
+        "Backend-dependent"
+      ],
+      "notes": "Connect using OpenAI-compatible API.",
+      "url": "https://localai.io/"
+    },
+    {
+      "id": "vLLM",
+      "name": "vLLM",
+      "category": "remote-server",
+      "platforms": [
+        "Linux"
+      ],
+      "formats": [
+        "Supported Hugging Face models"
+      ],
+      "status": "openai-compatible-provider",
+      "acceleration": [
+        "NVIDIA/AMD accelerators depending on build"
+      ],
+      "notes": "Server deployment, not suitable as an embedded phone runtime.",
+      "url": "https://docs.vllm.ai/"
+    },
+    {
+      "id": "SGLang",
+      "name": "SGLang",
+      "category": "remote-server",
+      "platforms": [
+        "Linux"
+      ],
+      "formats": [
+        "Supported model formats"
+      ],
+      "status": "openai-compatible-provider",
+      "acceleration": [
+        "Accelerator-dependent"
+      ],
+      "notes": "Server deployment, not embedded in APK.",
+      "url": "https://docs.sglang.ai/"
+    }
+  ]
+}
