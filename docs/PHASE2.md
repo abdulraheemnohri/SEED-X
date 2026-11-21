@@ -9,7 +9,7 @@ Rules match exact tool and operation identifiers plus a resource URI prefix. The
 Policies are currently in-memory. Trusted settings and Android Keystore-backed policy storage are later work.
 
 ## Human approval
-A RequireApproval rule returns a pending decision. A ticket is issued only when the native caller supplies explicit operator confirmation. Tickets are bound to one exact tool/operation/resource tuple, expire within 1–300 seconds, and are consumed on the first attempt. A ticket is not an executor; a future tool runner must separately enforce this decision.
+A RequireApproval rule returns a pending decision. A ticket is issued only when the native caller supplies explicit operator confirmation. Tickets are bound to one exact tool/operation/resource tuple, expire within 1–300 seconds, and are consumed on the first attempt. A ticket is not an executor; a future tool runner must separately enforce this decision. The current boolean confirmation argument is a trusted-native-caller placeholder, not cryptographic operator authentication; it must only be wired to a real user-confirmation flow and must never be populated from model output.
 
 ## Emergency stop
 Emergency stop blocks authorization and clears pending tickets. Reset requires explicit operator confirmation. The model must never be allowed to trigger reset. Starting the agent while the emergency stop remains active is blocked.
