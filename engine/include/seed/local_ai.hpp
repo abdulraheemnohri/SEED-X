@@ -6,7 +6,8 @@
 #include <string>
 #include <vector>
 namespace seed {
-enum class ModelFormat : std::uint8_t { GGUF, Unknown };
+enum class ModelFormat : std::uint8_t { GGUF, ONNX, LiteRT, MLC, ExecuTorch, MNN, NCNN, Unknown };
+const char* modelFormatName(ModelFormat format) noexcept;
 enum class RuntimeState : std::uint8_t { Unavailable, Unloaded, Loading, Ready, Generating, Error };
 struct ModelManifest {std::string id,displayName,filePath;ModelFormat format{ModelFormat::Unknown};std::uint64_t fileBytes{0},estimatedRamBytes{0};std::uint32_t contextTokens{2048};std::string sha256;};
 struct DeviceMemory {std::uint64_t availableBytes{0};std::uint64_t reserveBytes{512ULL*1024*1024};};
