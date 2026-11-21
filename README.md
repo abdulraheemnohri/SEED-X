@@ -151,3 +151,7 @@ The Android app now uses a four-tab bottom navigation bar, grouped hamburger men
 
 ### Mobile navigation and settings
 The Android app includes a compact four-tab bottom bar, grouped mobile drawer, screen search, favourites, startup-screen selection and quick-launch dashboard. Settings can be exported/imported as a validated JSON backup through Android's document picker. Provider secrets, provider profiles, chat history and model files are intentionally excluded.
+
+
+### Themes and command palette
+SEED-X supports dark, light and Android-system themes, a searchable command palette with fixed guarded actions, and independently configurable Home dashboard widgets. Theme and dashboard preferences are supported by the validated JSON settings backup.
