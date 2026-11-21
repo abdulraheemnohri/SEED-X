@@ -217,8 +217,7 @@ public final class MainActivity extends Activity {
      byte[] magic=new byte[4];
      if(check.read(magic)!=4||magic[0]!='G'||magic[1]!='G'||magic[2]!='U'||magic[3]!='F')throw new IllegalArgumentException("Selected file does not contain GGUF magic bytes.");
     }
-    if(target.exists()&&!target.delete())throw new IOException("Cannot replace existing model file.");
-    if(!temp.renameTo(target))throw new IOException("Could not finalize imported model file.");
+    if(target.exists()){JSONObject active=new JSONObject(nativeRuntimeStatus());if(name.equals(active.optString("model")))throw new IOException("Unload this model before replacing its file.");File backup=new File(dir,name+".previous");if(backup.exists()&&!backup.delete())throw new IOException("Cannot clear previous model backup.");if(!target.renameTo(backup))throw new IOException("Cannot safely stage existing model for replacement.");if(!temp.renameTo(target)){backup.renameTo(target);throw new IOException("Could not finalize imported model; previous model restored.");}if(backup.exists())backup.delete();}else if(!temp.renameTo(target))throw new IOException("Could not finalize imported model file.");
     message="GGUF model copied to private storage.";
    } catch(Exception e){if(temp!=null&&temp.exists())temp.delete();message="Import failed: "+(e.getMessage()==null?"unknown error":e.getMessage());}
    final String resultMessage=message;
