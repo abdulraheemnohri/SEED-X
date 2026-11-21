@@ -50,7 +50,7 @@ All other tool identifiers and operations are denied because there is no registe
 
 ## Audit
 
-- Every Guardian authorization decision and approval consumption is recorded in the existing bounded hash-linked audit log.
+- Guardian authorization decisions, approval consumption, registered-handler success/failure outcomes and unregistered tool attempts are recorded in the bounded hash-linked audit log where capacity is available.
 - Android can inspect the latest 100 entries from the Guardian screen or Tool Center.
 - Audit-chain verification status is shown alongside emergency-stop status.
 - The existing audit hash is FNV-1a for accidental-change/tamper-evidence within the chain, not a cryptographic signature or remote-proof mechanism.
@@ -62,7 +62,7 @@ All other tool identifiers and operations are denied because there is no registe
 - Offers device/runtime status, workspace listing and bounded text-file reading.
 - Note creation requires a separate explicit approval dialog.
 - Guardian screen shows live policy rules, emergency-stop state and audit integrity.
-- Audit viewer displays recent tool and policy events.
+- Audit viewer displays recent authorization decisions, approval events and registered-handler outcomes.
 
 ## Build on Windows PowerShell
 
