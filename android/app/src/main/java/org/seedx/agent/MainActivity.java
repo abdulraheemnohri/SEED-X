@@ -280,7 +280,9 @@ public final class MainActivity extends Activity {
   button("Copy latest assistant response",panel,()->copyLatestAssistantResponse());
   button("Clear current conversation",panel,()->new AlertDialog.Builder(this).setTitle("Clear conversation?").setMessage("Delete messages and remove this conversation from local chat history?").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->clearCurrentChat()).show());
  }
-private void pickChatAttachments(){
+private void deletePendingChatAttachments(){for(JSONObject item:pendingChatAttachments){if(item!=null){File f=new File(item.optString("path",""));if(f.isFile())f.delete();}}pendingChatAttachments.clear();}
+ private void deleteDirectoryRecursively(File file){if(file==null||!file.exists())return;if(file.isDirectory()){File[] children=file.listFiles();if(children!=null)for(File child:children)deleteDirectoryRecursively(child);}file.delete();}
+ private void pickChatAttachments(){
   Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);startActivityForResult(i,PICK_CHAT_ATTACHMENTS);
  }
  private void importChatAttachment(Uri uri){
@@ -336,11 +338,11 @@ private void pickChatAttachments(){
   toast("No assistant response to speak.");
  }
  private void startNewChat(){
-  saveHistory();activeChatId="chat-"+UUID.randomUUID().toString();activeChatTitle="New chat";history.clear();pendingChatAttachments.clear();prefs.edit().putString("active_chat_id",activeChatId).putString("active_chat_title",activeChatTitle).apply();saveHistory();render();
+  saveHistory();deletePendingChatAttachments();activeChatId="chat-"+UUID.randomUUID().toString();activeChatTitle="New chat";history.clear();pendingChatAttachments.clear();prefs.edit().putString("active_chat_id",activeChatId).putString("active_chat_title",activeChatTitle).apply();saveHistory();render();
  }
  private JSONArray chatArchive(){try{return new JSONArray(prefs.getString("chat_archive","[]"));}catch(Exception e){return new JSONArray();}}
  private void saveChatArchive(JSONArray archive){while(archive.length()>30)archive.remove(archive.length()-1);prefs.edit().putString("chat_archive",archive.toString()).apply();}
- private void clearCurrentChat(){history.clear();pendingChatAttachments.clear();try{JSONArray all=chatArchive(),next=new JSONArray();for(int i=0;i<all.length();i++){JSONObject item=all.optJSONObject(i);if(item!=null&&!activeChatId.equals(item.optString("id")))next.put(item);}saveChatArchive(next);}catch(Exception ignored){}prefs.edit().putString("history","[]").apply();render();}
+ private void clearCurrentChat(){history.clear();deletePendingChatAttachments();deleteDirectoryRecursively(new File(getFilesDir(),"chat-attachments/"+activeChatId));activeChatTitle="New chat";try{JSONArray all=chatArchive(),next=new JSONArray();for(int i=0;i<all.length();i++){JSONObject item=all.optJSONObject(i);if(item!=null&&!activeChatId.equals(item.optString("id")))next.put(item);}saveChatArchive(next);}catch(Exception ignored){}prefs.edit().putString("history","[]").apply();render();}
  private void upsertActiveChat(){
   if(history.isEmpty()||!prefs.getBoolean("retain_history",true))return;
   try{
@@ -357,7 +359,7 @@ private void pickChatAttachments(){
   new AlertDialog.Builder(this).setTitle("Chat history • "+chats.size()).setItems(labels.toArray(new String[0]),(d,which)->switchChat(chats.get(which))).setNegativeButton("Close",null).show();
  }
  private void switchChat(JSONObject selected){
-  saveHistory();
+  saveHistory();deletePendingChatAttachments();
   try{activeChatId=selected.optString("id");activeChatTitle=selected.optString("title","Chat");history.clear();JSONArray messages=selected.optJSONArray("messages");for(int i=0;messages!=null&&i<messages.length();i++)history.add(messages.getJSONObject(i));prefs.edit().putString("active_chat_id",activeChatId).putString("active_chat_title",activeChatTitle).putString("history",new JSONArray(messages.toString()).toString()).apply();pendingChatAttachments.clear();render();}
   catch(Exception e){toast("Could not open chat: "+e.getMessage());}
  }
