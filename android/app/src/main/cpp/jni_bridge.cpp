@@ -229,7 +229,7 @@ void registerTools(const std::filesystem::path& root) {
     if(lower(data).find(query)==std::string::npos)continue;
     const auto relPath=it->path().lexically_relative(root).generic_string();
     if(matches++)json+=",";
-    json+="{\\"path\\":\\""+escapeJson(relPath)+"\\",\\"bytes\\":"+std::to_string(size)+"}";
+    json+="{\"path\":\""+escapeJson(relPath)+"\",\"bytes\":"+std::to_string(size)+"}";
    }
    json+="]";
    return seed::ToolResult{true,seed::Decision::Allow,json};
