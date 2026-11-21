@@ -45,6 +45,16 @@ Twenty built-in skills are searchable and can be individually enabled/disabled. 
 ## Runtime configuration
 The app exposes max output tokens, temperature, top-p, context size, provider timeout, response-size cap, editable system prompt, online fallback, local HTTP, chat retention and memory opt-in. Provider profiles are stored separately; secrets remain in the Keystore vault. The Home dashboard, Voice, Memory, Skills, Workflows, Runtime Manager and Diagnostics screens are included. Values are bounded before use. The defaults are local-first, 512 output tokens, temperature 0.7, top-p 0.9, 2048 context, 768 MiB system reserve and online fallback disabled.
 
+## Catalog files
+- `config/provider_catalog.json` — 25 provider profiles and access notes.
+- `config/runtime_catalog.json` — 14 runtime/server entries with integration status.
+- `config/model_catalog.json` — device-aware model classes and curated GGUF recommendations.
+- `config/skills.json` — 20 prompt skills.
+- `config/workflows.json` — six manual workflows.
+- `config/tools.json` — four registered tools and the explicitly unregistered dangerous tool categories.
+- `config/defaults.json` — privacy, routing, generation, memory and donation defaults.
+- Matching provider, runtime, model, skill and workflow JSON files are bundled under `android/app/src/main/assets/`.
+
 ## Brand
 - Vector source: assets/brand/seedx-logo.svg
 - Android launcher drawable: android/app/src/main/res/drawable/seedx_logo.xml
