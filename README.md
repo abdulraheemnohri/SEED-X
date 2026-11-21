@@ -25,7 +25,7 @@ C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surfa
 - Mock HTTP adapter tests. See docs/PHASE4.md.
 
 ## Phase 5 — Android AI Studio
-- Native Android Java UI: Chat, Models, Providers, Tools, Guardian and Settings.
+- Native Android Java UI: Chat, Models, Providers, Guardian and Settings.
 - OpenAI-compatible, Anthropic and Gemini chat requests.
 - Android Keystore AES-GCM credential encryption; online fallback OFF by default.
 - GGUF document picker and app-private model storage.
