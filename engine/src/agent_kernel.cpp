@@ -15,6 +15,8 @@ bool AgentKernel::consumeApproval(const ToolRequest&r,const std::string&id){retu
 void AgentKernel::emergencyStop(){guardian_.emergencyStop();status_.store(AgentStatus::Paused);events_.publish({"guardian.emergency_stop","Emergency stop engaged; tool authorization is blocked."});}
 bool AgentKernel::resetEmergencyStop(bool c){if(!c||!guardian_.isFrozen())return false;const bool ok=guardian_.resetEmergencyStop(true);if(ok&&status_.load()==AgentStatus::Paused)status_.store(AgentStatus::Ready);if(ok)events_.publish({"guardian.emergency_stop_reset","Emergency stop reset by operator confirmation."});return ok;}
 bool AgentKernel::verifyAudit()const{return guardian_.verifyAudit();}
+std::vector<AuditEntry> AgentKernel::auditSnapshot()const{return guardian_.auditSnapshot();}
+std::vector<PolicyRule> AgentKernel::policies()const{return guardian_.policies();}
 bool AgentKernel::emergencyStopped()const noexcept{return guardian_.isFrozen();}
 EventBus& AgentKernel::events()noexcept{return events_;}
 }
