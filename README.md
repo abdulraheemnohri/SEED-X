@@ -1,6 +1,8 @@
 # SEED-X
 
-**Self-Evolving Android AI Agent** — a local-first native Android AI workspace and Guardian-governed tool platform.\n\n![SEED-X logo](assets/brand/seedx-logo.svg)
+**Self-Evolving Android AI Agent** — a local-first native Android AI workspace and Guardian-governed tool platform.
+
+![SEED-X logo](assets/brand/seedx-logo.svg)
 
 ## Phase 1 — Native foundation
 C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surface, lifecycle kernel, event bus and host-side tests.
