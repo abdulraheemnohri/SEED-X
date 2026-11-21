@@ -62,6 +62,7 @@ public final class MainActivity extends Activity {
  private boolean nativeReady=false;
  private LinearLayout root,content;
  private String page="Home";
+ private String lastBreadcrumbPage="";
  private String pendingSkillPrompt="";
  private static final String[] TABS={"Home","Chat","Voice","Memory","Models","Runtimes","Providers","Skills","Workflows","Tools","Guardian","Diagnostics","Settings"};
  private final ArrayList<JSONObject> history=new ArrayList<>();
@@ -79,7 +80,7 @@ public final class MainActivity extends Activity {
   ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(0,dp(8),0,dp(12));scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
   HorizontalScrollView navScroll=new HorizontalScrollView(this);navScroll.setHorizontalScrollBarEnabled(false);LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER_VERTICAL);
   for(String tab:TABS){Button b=new Button(this);b.setText(tab);b.setTextSize(10);b.setAllCaps(false);b.setMinWidth(dp(66));b.setTextColor(page.equals(tab)?accent:muted);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(v->{page=tab;render();});nav.addView(b,new LinearLayout.LayoutParams(-2,dp(48)));}navScroll.addView(nav);root.addView(navScroll);setContentView(root);}
- private void render(){content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Models":models();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Settings":settings();break;default:home();}}
+ private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Models":models();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Settings":settings();break;default:home();}}
  private void heading(String title,String sub){content.addView(text(title,22,Color.WHITE,true));content.addView(text(sub,12,muted,false));space(10);}
  private void space(int h){View v=new View(this);content.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  private LinearLayout card(){LinearLayout c=new LinearLayout(this);c.setOrientation(1);c.setPadding(dp(14),dp(13),dp(14),dp(13));c.setBackground(rounded(panel,16));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);content.addView(c,p);return c;}
@@ -440,6 +441,7 @@ public final class MainActivity extends Activity {
  private void recordDiagnosticExample(String area,Throwable error){CrashReporter.recordNonFatal(this,area,error);}
  private void settings(){heading("Settings","Privacy, routing, generation, model memory and network controls.");
   LinearLayout diagnostics=card();diagnostics.addView(text("CRASH & BUG REPORTING",12,accent,true));
+  CheckBox breadcrumbs=new CheckBox(this);breadcrumbs.setText("Record screen-navigation breadcrumbs locally");breadcrumbs.setTextColor(Color.WHITE);breadcrumbs.setChecked(prefs.getBoolean("diagnostic_breadcrumbs",true));breadcrumbs.setOnCheckedChangeListener((v,checked)->prefs.edit().putBoolean("diagnostic_breadcrumbs",checked).apply());diagnostics.addView(breadcrumbs);
   File crashFile=CrashReporter.latest(this);diagnostics.addView(text(crashFile==null?"No saved crash report":"Saved report available • "+(crashFile.length()/1024)+" KB",12,muted,false));
   button("View latest crash / error report",panel,()->showLatestDiagnostic());
   button("Prepare report for GitHub",accent,()->{String report=CrashReporter.readLatest(this);if(report.isEmpty()){toast("No crash report available yet.");return;}prepareGitHubReport(report);});
@@ -510,10 +512,31 @@ public final class MainActivity extends Activity {
  private void workflows(){heading("Workflow Studio","Manually started, human-controlled prompt workflows. No hidden background automation.");
   try{JSONArray flows=assetJson("workflows.json").optJSONArray("workflows");for(int i=0;flows!=null&&i<flows.length();i++){JSONObject w=flows.getJSONObject(i);LinearLayout item=card();item.addView(text(w.optString("name"),15,Color.WHITE,true));item.addView(text(w.optString("description"),12,muted,false));button("Start workflow",accent,()->{pendingSkillPrompt="Act as the SEED-X workflow assistant. Execute this workflow as a plan, ask for missing inputs only when essential, and do not claim external actions were performed. Workflow: "+w.optString("name")+". "+w.optString("description")+"\n\n";page="Chat";render();});}}catch(Exception e){card().addView(text("Workflow catalog unavailable: "+e.getMessage(),12,muted,false));}
  }
+ private void showDiagnosticHistory(){
+  File[] files=CrashReporter.history(this);
+  if(files.length==0){toast("No historical reports saved yet.");return;}
+  String[] labels=new String[files.length];
+  for(int i=0;i<files.length;i++)labels[i]=new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss",Locale.US).format(new Date(files[i].lastModified()))+" • "+(files[i].length()/1024)+" KB";
+  new AlertDialog.Builder(this).setTitle("Crash & error history").setItems(labels,(dialog,which)->{
+   String report=CrashReporter.readFile(files[which]);
+   new AlertDialog.Builder(this).setTitle("Diagnostic report").setMessage(report)
+    .setPositiveButton("Prepare GitHub issue",(d,w)->prepareGitHubReport(report))
+    .setNeutralButton("Copy",(d,w)->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED-X report",report));toast("Report copied.");})
+    .setNegativeButton("Close",null).show();
+  }).setNegativeButton("Close",null).show();
+ }
+ private void showEventTimeline(){
+  new AlertDialog.Builder(this).setTitle("Recent app events").setMessage(CrashReporter.readBreadcrumbs(this))
+   .setPositiveButton("Copy",(d,w)->{String value=CrashReporter.readBreadcrumbs(this);((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED-X events",value));toast("Event timeline copied.");})
+   .setNegativeButton("Close",null).show();
+ }
  private void diagnostics(){heading("Diagnostics","Read-only environment checks. Diagnostics are not uploaded automatically.");
   LinearLayout report=card();report.addView(text("APP & DEVICE",12,accent,true));report.addView(text("SEED-X 0.8.0 • "+android.os.Build.MANUFACTURER+" "+android.os.Build.MODEL,12,Color.WHITE,false));report.addView(text("Android "+android.os.Build.VERSION.RELEASE+" • API "+android.os.Build.VERSION.SDK_INT,12,muted,false));report.addView(text("Network: "+(networkAvailable()?"available":"offline"),12,muted,false));
   try{JSONObject rt=new JSONObject(nativeRuntimeStatus());report.addView(text("Native runtime: "+rt.optString("state"),12,Color.WHITE,false));report.addView(text("Backend: "+rt.optString("backend")+" • llama.cpp built: "+rt.optBoolean("llamaAvailable"),12,muted,false));report.addView(text("Available memory: "+(rt.optLong("availableBytes")/1048576)+" MB • reserve: "+(rt.optLong("reserveBytes")/1048576)+" MB",12,muted,false));}catch(Exception e){report.addView(text("Native bridge: error "+e.getMessage(),12,Color.RED,false));}
   JSONObject cfg=config();report.addView(text("Active provider: "+(cfg==null?"none":cfg.optString("name")+" / "+cfg.optString("model")),12,Color.WHITE,false));report.addView(text("Saved provider profiles: "+providerProfiles().length(),12,muted,false));report.addView(text("Saved credential available: "+(cfg!=null&&!decrypt(cfg.optString("credentialRef")).isEmpty()),12,muted,false));report.addView(text("Chat messages in memory: "+history.size(),12,muted,false));
+  button("View crash & error history",panel,()->showDiagnosticHistory());
+  button("View recent app event timeline",panel,()->showEventTimeline());
+  button("View latest crash report",panel,()->showLatestDiagnostic());
   button("Verify Guardian & audit chain",panel,()->{try{JSONObject gs=new JSONObject(nativeGuardianStatus());showTextDialog("Guardian diagnostics","Emergency stop: "+gs.optBoolean("emergencyStop")+"\nAudit integrity: "+gs.optBoolean("auditValid")+"\nKernel status: "+gs.optInt("kernelStatus"));}catch(Exception e){showTextDialog("Guardian diagnostics",e.getMessage());}});
   button("Copy diagnostics report",accent,()->{String value="SEED-X 0.8.0\nDevice: "+android.os.Build.MANUFACTURER+" "+android.os.Build.MODEL+"\nAndroid: "+android.os.Build.VERSION.RELEASE+"\nNetwork: "+networkAvailable()+"\nProvider profiles: "+providerProfiles().length()+"\nNo secrets included.";((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED-X diagnostics",value));toast("Diagnostics copied. No API keys included.");});
  }
