@@ -8,3 +8,8 @@ add_executable(seedx_local_ai_tests local_ai_tests.cpp ../engine/src/local_ai.cp
 target_include_directories(seedx_local_ai_tests PRIVATE ../engine/include)
 target_compile_features(seedx_local_ai_tests PRIVATE cxx_std_20)
 add_test(NAME seedx_local_ai_tests COMMAND seedx_local_ai_tests)
+
+add_executable(seedx_online_ai_tests online_ai_tests.cpp ../engine/src/online_ai.cpp)
+target_include_directories(seedx_online_ai_tests PRIVATE ../engine/include)
+target_compile_features(seedx_online_ai_tests PRIVATE cxx_std_20)
+add_test(NAME seedx_online_ai_tests COMMAND seedx_online_ai_tests)
