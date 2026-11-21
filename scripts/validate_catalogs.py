@@ -183,3 +183,34 @@ print("OK optional LiteRT-LM, ExecuTorch and ONNX Runtime Android SDK packaging"
 
 
 
+
+
+# Phase 29 real local inference adapter guards.
+root_gradle = (ROOT / "build.gradle").read_text(encoding="utf-8")
+app_gradle = (ROOT / "android/app/build.gradle").read_text(encoding="utf-8")
+litert_adapter = (ROOT / "android/app/src/main/java/org/seedx/agent/LiteRtLmAdapter.kt").read_text(encoding="utf-8")
+et_adapter = (ROOT / "android/app/src/main/java/org/seedx/agent/ExecuTorchAdapter.java").read_text(encoding="utf-8")
+adapter_contract = (ROOT / "android/app/src/main/java/org/seedx/agent/InferenceAdapter.java").read_text(encoding="utf-8")
+adapter_manager = (ROOT / "android/app/src/main/java/org/seedx/agent/RuntimeAdapterManager.java").read_text(encoding="utf-8")
+for marker in ("org.jetbrains.kotlin.android",):
+    if marker not in root_gradle or marker not in app_gradle:
+        raise SystemExit("Kotlin Android plugin is required for the LiteRT-LM adapter")
+for marker in ("litertlm-android:0.16.1", "kotlinx-coroutines-android"):
+    if marker not in app_gradle:
+        raise SystemExit(f"LiteRT-LM dependency is missing: {marker}")
+for marker in ("EngineConfig(", "candidate.initialize()", "sendMessageAsync", "cancelProcess()", "oldConversation?.close()", "oldEngine?.close()"):
+    if marker not in litert_adapter:
+        raise SystemExit(f"LiteRT-LM adapter lifecycle is missing: {marker}")
+for marker in ("LlmModule", "LlmCallback", '"load"', '"generate"', '"stop"'):
+    if marker not in et_adapter:
+        raise SystemExit(f"ExecuTorch LLM adapter is missing: {marker}")
+for marker in ("interface InferenceAdapter", "void generate(", "void cancel()", "void unload()"):
+    if marker not in adapter_contract:
+        raise SystemExit(f"Shared inference contract is missing: {marker}")
+for marker in ('endsWith(".litertlm")', 'endsWith(".pte")', "requireMemoryHeadroom", "generationExecutor", "active.unload()"):
+    if marker not in adapter_manager:
+        raise SystemExit(f"Runtime selection or memory management is missing: {marker}")
+for marker in ("PICK_EDGE_MODEL", "PICK_EDGE_TOKENIZER", "sendThirdPartyLocal", "runtimeAdapters.isLoaded()", "Import LiteRT-LM / ExecuTorch model"):
+    if marker not in activity:
+        raise SystemExit(f"Android UI integration for third-party inference is missing: {marker}")
+print("OK Phase 29 LiteRT-LM/ExecuTorch adapters, model import, streaming and runtime selection")
