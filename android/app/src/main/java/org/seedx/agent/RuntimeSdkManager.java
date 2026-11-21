@@ -23,9 +23,9 @@ public final class RuntimeSdkManager {
     public static String snapshot(Context context) {
         JSONArray rows = new JSONArray();
         add(rows, "LiteRT-LM", "com.google.ai.edge.litertlm.Engine",
-            "com.google.ai.edge.litertlm.Engine is visible. SEED-X conversation adapter is not wired yet; use .litertlm model packages.");
-        add(rows, "ExecuTorch", "org.pytorch.executorch.Module",
-            "ExecuTorch Android AAR is visible. LLM Java APIs are experimental; SEED-X LLM adapter is not wired yet.");
+            "LiteRT-LM SDK detected. SEED-X adapter class is compiled; load a compatible .litertlm file to verify runtime readiness.");
+        add(rows, "ExecuTorch", "org.pytorch.executorch.extension.llm.LlmModule",
+            "ExecuTorch LLM SDK probe. SEED-X reflection adapter is compiled; .pte plus matching tokenizer are required. Upstream LLM API is experimental.");
         add(rows, "ONNX Runtime Mobile", "ai.onnxruntime.OrtEnvironment",
             "ONNX Runtime Android API is visible. This confirms ONNX inference SDK only, not ONNX Runtime GenAI.");
         add(rows, "ONNX Runtime GenAI", "ai.onnxruntime.genai.Model",
@@ -43,7 +43,7 @@ public final class RuntimeSdkManager {
         try {
             row.put("name", name);
             row.put("sdkPresent", installed);
-            row.put("status", installed ? "SDK_PRESENT_adapter-pending" : "SDK_NOT_PACKAGED");
+            row.put("status", installed ? (("LiteRT-LM".equals(name) || "ExecuTorch".equals(name)) ? "ADAPTER_AVAILABLE_model-not-loaded" : "SDK_PRESENT_adapter-pending") : "SDK_NOT_PACKAGED");
             row.put("detail", detail);
             row.put("classProbe", className);
             rows.put(row);
