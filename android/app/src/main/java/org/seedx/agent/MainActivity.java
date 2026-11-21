@@ -64,7 +64,7 @@ public final class MainActivity extends Activity {
  private String page="Home";
  private String lastBreadcrumbPage="";
  private String pendingSkillPrompt="";
- private static final String[] TABS={"Home","Chat","Voice","Memory","Models","Runtimes","Providers","Skills","Workflows","Tools","Guardian","Diagnostics","Settings"};
+ private static final String[] TABS={"Home","Chat","Voice","Memory","Models","Downloads","Runtimes","Providers","Skills","Workflows","Tasks","Permissions","Tools","Guardian","Diagnostics","Settings"};
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
  private static final int VOICE_INPUT=4103;
@@ -80,7 +80,7 @@ public final class MainActivity extends Activity {
   ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(0,dp(8),0,dp(12));scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
   HorizontalScrollView navScroll=new HorizontalScrollView(this);navScroll.setHorizontalScrollBarEnabled(false);LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER_VERTICAL);
   for(String tab:TABS){Button b=new Button(this);b.setText(tab);b.setTextSize(10);b.setAllCaps(false);b.setMinWidth(dp(66));b.setTextColor(page.equals(tab)?accent:muted);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(v->{page=tab;render();});nav.addView(b,new LinearLayout.LayoutParams(-2,dp(48)));}navScroll.addView(nav);root.addView(navScroll);setContentView(root);}
- private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Models":models();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Settings":settings();break;default:home();}}
+ private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Settings":settings();break;default:home();}}
  private void heading(String title,String sub){content.addView(text(title,22,Color.WHITE,true));content.addView(text(sub,12,muted,false));space(10);}
  private void space(int h){View v=new View(this);content.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  private LinearLayout card(){LinearLayout c=new LinearLayout(this);c.setOrientation(1);c.setPadding(dp(14),dp(13),dp(14),dp(13));c.setBackground(rounded(panel,16));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);content.addView(c,p);return c;}
@@ -202,7 +202,7 @@ public final class MainActivity extends Activity {
   try{JSONObject cat=assetJson("model_catalog.json");LinearLayout recommendations=card();recommendations.addView(text("DEVICE-AWARE MODEL GUIDE",12,accent,true));recommendations.addView(text(cat.optString("notice"),10,muted,false));JSONArray choices=cat.optJSONArray("recommendations");for(int i=0;choices!=null&&i<choices.length();i++){JSONObject m=choices.getJSONObject(i);recommendations.addView(text(m.optString("name")+"  •  "+m.optString("ramEstimate"),13,Color.WHITE,true));recommendations.addView(text(m.optString("notes")+" Context: "+m.optString("context"),11,muted,false));}JSONArray curated=cat.optJSONArray("models");for(int i=0;curated!=null&&i<curated.length();i++){JSONObject model=curated.getJSONObject(i);recommendations.addView(text(model.optString("name")+" • "+model.optString("quantization")+" • ~"+model.optInt("approximateFileSizeMB")+" MB",13,Color.WHITE,true));recommendations.addView(text(model.optString("recommendation")+" License: "+model.optString("license"),11,muted,false));Button repoButton=new Button(this);repoButton.setText("Open model repository");repoButton.setAllCaps(false);repoButton.setOnClickListener(v->openUrl(model.optString("url")));recommendations.addView(repoButton);}button("Browse GGUF models on Hugging Face",panel,()->openUrl(cat.optString("catalogUrl")));}catch(Exception ignored){}
   LinearLayout c=card();try{JSONObject rt=new JSONObject(nativeRuntimeStatus());c.addView(text("Runtime: "+rt.optString("state"),17,Color.WHITE,true));c.addView(text("Backend: "+(rt.optBoolean("llamaAvailable")?"llama.cpp enabled":"llama.cpp not compiled"),12,muted,false));c.addView(text("Available memory: "+(rt.optLong("availableBytes")/1048576)+" MB",12,muted,false));if(rt.optBoolean("ready"))c.addView(text("Loaded model: "+rt.optString("model"),13,accent,true));}catch(Exception e){c.addView(text("Native runtime unavailable: "+e.getMessage(),12,muted,false));}button("Unload active model",panel,()->worker.execute(()->{nativeUnloadModel();runOnUiThread(this::render);}));
   button("Model configuration & memory settings",panel,()->{page="Settings";render();});
-  button("Import GGUF model",accent,()->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("*/*");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,PICK_MODEL);});
+  button("Open Model Download Manager",panel,()->{page="Downloads";render();});\n  button("Import GGUF model",accent,()->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("*/*");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,PICK_MODEL);});
   File dir=new File(getFilesDir(),"models");File[] files=dir.listFiles();if(files!=null)for(File f:files){if(!f.isFile()||!f.getName().toLowerCase(Locale.ROOT).endsWith(".gguf"))continue;LinearLayout item=card();item.addView(text(f.getName(),14,Color.WHITE,true));item.addView(text((f.length()/1048576)+" MB • app-private storage",11,muted,false));button("Delete imported model",panel,()->new AlertDialog.Builder(this).setTitle("Delete model?").setMessage("Remove "+f.getName()+" from app-private storage?").setNegativeButton("Cancel",null).setPositiveButton("Delete",(d,w)->{try{JSONObject current=new JSONObject(nativeRuntimeStatus());if(f.getName().equals(current.optString("model"))){toast("Unload this model before deleting it.");return;}if(f.delete())toast("Model deleted.");else toast("Could not delete model.");render();}catch(Exception e){toast("Model status unavailable; deletion blocked.");}}).show());
    button("Load this model",accent,()->{if(!nativeReady){toast("Guardian/native runtime unavailable; model loading blocked.");return;}ProgressBar loading=new ProgressBar(this);loading.setIndeterminate(true);content.addView(loading);worker.execute(()->{String result=nativeLoadModel(f.getAbsolutePath(),f.getName(),f.getName(),contextTokens());runOnUiThread(()->{new AlertDialog.Builder(this).setMessage(result).setPositiveButton("OK",null).show();render();});});});}
  }
@@ -517,7 +517,57 @@ public final class MainActivity extends Activity {
   }catch(Exception e){card().addView(text("Runtime registry unavailable: "+e.getMessage(),12,Color.RED,false));}
   button("Import local GGUF model",accent,()->{page="Models";render();});
  }
- private void skills(){heading("Skill Library","Built-in skills are reusable prompt templates. They are not executable plugins and cannot bypass Guardian.");
+
+ private void permissions(){
+  heading("Permission Center","Least-privilege Android access. SEED-X does not request broad device-control permissions.");
+  LinearLayout status=card();status.addView(text("APP PERMISSION STATUS",12,accent,true));
+  status.addView(text("INTERNET: declared • used for explicitly enabled provider requests and model downloads",12,Color.WHITE,false));
+  status.addView(text("ACCESS_NETWORK_STATE: declared • network availability only",12,Color.WHITE,false));
+  status.addView(text("POST_NOTIFICATIONS: "+(notificationPermissionGranted()?"granted":"not granted")+" • needed for foreground-session notification on Android 13+",12,Color.WHITE,false));
+  status.addView(text("Foreground service: declared • user-started session only",12,Color.WHITE,false));
+  status.addView(text("Storage: no broad storage permission • SAF and app-specific storage only",12,Color.WHITE,false));
+  button("Request notification permission",accent,()->requestNotificationPermission());
+  button("Open Android app permission settings",panel,()->openAppPermissionSettings());
+  button("Open battery optimization settings",panel,()->openBatterySettings());
+  LinearLayout boundary=card();boundary.addView(text("NOT REQUESTED",12,accent,true));boundary.addView(text("Accessibility service, overlay, microphone, camera, location, contacts, SMS, call logs, notification listener, all-files access and device-admin are not declared. Voice input is delegated to Android's installed speech recognizer.",12,muted,false));
+ }
+ private void tasks(){
+  heading("Task Manager","Current foreground-session controls. Scheduled WorkManager jobs are not enabled in this build.");
+  LinearLayout c=card();c.addView(text("AGENT SESSION",12,accent,true));c.addView(text("State: "+(AgentForegroundService.isRunning()?"RUNNING":"STOPPED"),16,Color.WHITE,true));c.addView(text("The service is started by the operator and is not an always-on daemon.",11,muted,false));
+  button("Start foreground session",accent,()->startAgentSession());
+  button("Stop foreground session",panel,()->stopAgentSession());
+  LinearLayout safety=card();safety.addView(text("TASK SAFETY",12,accent,true));safety.addView(text("No background tool execution, unattended provider calls, hidden schedules or autonomous device actions are performed. Workflow prompts remain manually started from Workflow Studio.",12,muted,false));
+ }
+ private void downloads(){
+  heading("Model Download Manager","Download catalog GGUF files to app-specific storage, then import and validate them.");
+  File dir=getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
+  LinearLayout info=card();info.addView(text("DOWNLOAD LOCATION",12,accent,true));info.addView(text(dir==null?"App-specific download storage is unavailable.":dir.getAbsolutePath(),11,muted,false));
+  try{JSONArray models=assetJson("model_catalog.json").optJSONArray("models");for(int i=0;models!=null&&i<models.length();i++){JSONObject m=models.getJSONObject(i);LinearLayout item=card();item.addView(text(m.optString("name"),14,Color.WHITE,true));item.addView(text(m.optInt("approximateFileSizeMB")+" MB • "+m.optString("quantization")+" • "+m.optString("license"),11,muted,false));button("Download GGUF",accent,()->downloadCatalogModel(m));}}
+  catch(Exception e){card().addView(text("Model catalog unavailable: "+e.getMessage(),12,Color.RED,false));}
+  if(dir!=null&&dir.isDirectory()){File[] files=dir.listFiles((d,n)->n.toLowerCase(Locale.ROOT).endsWith(".gguf"));if(files!=null)for(File f:files){LinearLayout item=card();item.addView(text("Downloaded: "+f.getName(),13,Color.WHITE,true));item.addView(text((f.length()/1048576)+" MB • app-specific download storage",11,muted,false));button("Import into private model library",panel,()->importDownloadedModel(f));}}
+  button("Open existing model importer",panel,()->{page="Models";render();});
+ }
+ private void downloadCatalogModel(JSONObject model){
+  try{
+   if(!networkAvailable())throw new IOException("Connect to Wi-Fi or mobile data first.");
+   File dir=getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);if(dir==null||(!dir.exists()&&!dir.mkdirs()))throw new IOException("Download directory unavailable.");
+   String repository=model.optString("repository"),file=model.optString("file");
+   if(repository.isEmpty()||file.isEmpty()||repository.contains("..")||file.contains("/")||file.contains("\\\\"))throw new IllegalArgumentException("Catalog download metadata is invalid.");
+   Uri uri=Uri.parse("https://huggingface.co/"+repository+"/resolve/main/"+Uri.encode(file));
+   android.app.DownloadManager.Request request=new android.app.DownloadManager.Request(uri).setTitle("SEED-X • "+file).setDescription("GGUF model download").setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED).setDestinationInExternalFilesDir(this,android.os.Environment.DIRECTORY_DOWNLOADS,file);
+   android.app.DownloadManager manager=(android.app.DownloadManager)getSystemService(DOWNLOAD_SERVICE);if(manager==null)throw new IOException("Android Download Manager unavailable.");
+   long id=manager.enqueue(request);toast("Download queued • ID "+id);
+  }catch(Exception e){toast("Could not queue model download: "+e.getMessage());}
+ }
+ private void importDownloadedModel(File source){
+  if(!source.isFile()||!source.getName().toLowerCase(Locale.ROOT).endsWith(".gguf")){toast("Only completed GGUF files can be imported.");return;}
+  new AlertDialog.Builder(this).setTitle("Import downloaded model?").setMessage("Copy "+source.getName()+" into SEED-X private model storage?").setNegativeButton("Cancel",null).setPositiveButton("Import",(d,w)->worker.execute(()->{
+   String result;File target=new File(new File(getFilesDir(),"models"),source.getName()),temp=new File(target.getParentFile(),source.getName()+".importing");
+   try{if(!target.getParentFile().exists()&&!target.getParentFile().mkdirs())throw new IOException("Cannot create model library.");try(InputStream in=new FileInputStream(source);OutputStream out=new FileOutputStream(temp)){byte[] b=new byte[65536];int n;while((n=in.read(b))>0)out.write(b,0,n);}try(InputStream in=new FileInputStream(temp)){byte[] magic=new byte[4];if(in.read(magic)!=4||magic[0]!='G'||magic[1]!='G'||magic[2]!='U'||magic[3]!='F')throw new IOException("GGUF validation failed.");}if(target.exists())throw new IOException("A model with this filename already exists; remove it first.");if(!temp.renameTo(target))throw new IOException("Could not finalize model import.");result="Imported "+target.getName()+" into private model storage.";}catch(Exception e){temp.delete();result="Import failed: "+e.getMessage();}
+   String finalResult=result;runOnUiThread(()->{toast(finalResult);page="Models";render();});
+  })).show();
+ }
+\n private void skills(){heading("Skill Library","Built-in skills are reusable prompt templates. They are not executable plugins and cannot bypass Guardian.");
   EditText search=field("Search skills by name, category or purpose","",false);LinearLayout list=card();Runnable[] refresh=new Runnable[1];refresh[0]=()->{list.removeAllViews();try{JSONArray all=assetJson("skills.json").optJSONArray("skills");String q=search.getText().toString().toLowerCase(Locale.ROOT);for(int i=0;all!=null&&i<all.length();i++){JSONObject s=all.getJSONObject(i);String hay=(s.optString("name")+" "+s.optString("category")+" "+s.optString("description")).toLowerCase(Locale.ROOT);if(!q.isEmpty()&&!hay.contains(q))continue;list.addView(text(s.optString("name")+"  •  "+s.optString("category"),14,Color.WHITE,true));list.addView(text(s.optString("description"),11,muted,false));String skillId=s.optString("id");CheckBox enabled=new CheckBox(this);enabled.setText("Enable skill");enabled.setTextColor(Color.WHITE);enabled.setChecked(prefs.getBoolean("skill_enabled_"+skillId,true));list.addView(enabled);Button run=new Button(this);run.setText("Use this skill in Chat");run.setAllCaps(false);run.setEnabled(enabled.isChecked());enabled.setOnCheckedChangeListener((v,on)->{prefs.edit().putBoolean("skill_enabled_"+skillId,on).apply();run.setEnabled(on);});run.setOnClickListener(v->{pendingSkillPrompt=s.optString("prompt")+"\n\n";page="Chat";render();});list.addView(run);}}catch(Exception e){list.addView(text("Skill catalog error: "+e.getMessage(),12,muted,false));}};search.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){refresh[0].run();}public void afterTextChanged(android.text.Editable e){}});refresh[0].run();
  }
  private void workflows(){heading("Workflow Studio","Manually started, human-controlled prompt workflows. No hidden background automation.");
