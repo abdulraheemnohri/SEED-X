@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "notice": "Model availability, licenses and GGUF conversions vary. Verify the model card, license and quantization before downloading. RAM figures are rough planning estimates, not guarantees.",
+  "recommendations": [
+    {
+      "id": "small-0.3b",
+      "name": "0.3B–0.5B instruct GGUF",
+      "sizeClass": "small",
+      "ramEstimate": "0.5–1.2 GB",
+      "context": "Start at 2048",
+      "tasks": [
+        "basic chat",
+        "short summaries",
+        "simple extraction"
+      ],
+      "notes": "Best first experiments for 6 GB RAM phones."
+    },
+    {
+      "id": "small-1b",
+      "name": "1B–1.5B instruct GGUF",
+      "sizeClass": "small-medium",
+      "ramEstimate": "1–2.5 GB",
+      "context": "Start at 2048",
+      "tasks": [
+        "chat",
+        "simple coding help",
+        "structured output"
+      ],
+      "notes": "Good balance when enough memory is available."
+    },
+    {
+      "id": "medium-2b",
+      "name": "2B–3B instruct GGUF",
+      "sizeClass": "medium",
+      "ramEstimate": "2–4 GB+",
+      "context": "Start at 1024–2048",
+      "tasks": [
+        "better reasoning",
+        "code assistance",
+        "longer summaries"
+      ],
+      "notes": "May pressure Android memory once app, KV cache and OS are included; use conservative context."
+    },
+    {
+      "id": "large-7b",
+      "name": "7B class GGUF",
+      "sizeClass": "large",
+      "ramEstimate": "4.5–7 GB+",
+      "context": "Not recommended by default",
+      "tasks": [
+        "stronger local chat"
+      ],
+      "notes": "Generally not a sensible default for a 6 GB phone."
+    }
+  ],
+  "catalogUrl": "https://huggingface.co/models?pipeline_tag=text-generation&library=gguf"
+}
