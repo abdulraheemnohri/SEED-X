@@ -13,6 +13,11 @@ import android.net.NetworkCapabilities;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
 import android.speech.RecognizerIntent;
+import android.speech.SpeechRecognizer;
+import android.speech.RecognitionListener;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.webkit.WebSettings;
 import android.speech.tts.TextToSpeech;
 import android.view.Gravity;
 import android.view.View;
@@ -68,7 +73,7 @@ public final class MainActivity extends Activity {
  private String page="Home";
  private String lastBreadcrumbPage="";
  private String pendingSkillPrompt="";
- private static final String[] TABS={"Home","Chat","Voice","Memory","Prompts","Models","Downloads","Runtimes","Providers","Backends","Skills","Workflows","Tasks","Permissions","Device","Tools","Guardian","Diagnostics","Network","Storage","About","Settings"};
+ private static final String[] TABS={"Home","Chat","Voice","Puter.js","AI Capabilities","Memory","Prompts","Models","Downloads","Runtimes","Providers","Backends","Skills","Workflows","Tasks","Permissions","Device","Tools","Guardian","Diagnostics","Network","Storage","About","Settings"};
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
  private static final int EXPORT_SETTINGS=4104;
@@ -191,7 +196,7 @@ public final class MainActivity extends Activity {
   }
  }
 
- private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Prompts":prompts();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Backends":backends();break;case "Device":deviceStatus();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Network":networkDiagnostics();break;case "Storage":storageManager();break;case "About":about();break;case "Settings":settings();break;default:home();}}
+ private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Puter.js":puterWorkspace();break;case "AI Capabilities":aiCapabilities();break;case "Memory":memories();break;case "Prompts":prompts();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Backends":backends();break;case "Device":deviceStatus();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Network":networkDiagnostics();break;case "Storage":storageManager();break;case "About":about();break;case "Settings":settings();break;default:home();}}
  private void heading(String title,String sub){content.addView(text(title,22,Color.WHITE,true));content.addView(text(sub,12,muted,false));space(10);}
  private void space(int h){View v=new View(this);content.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  private LinearLayout card(){LinearLayout c=new LinearLayout(this);c.setOrientation(1);int pad=uiSpace(14,10);c.setPadding(pad,uiSpace(13,9),pad,uiSpace(13,9));c.setBackground(rounded(panel,18));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);content.addView(c,p);return c;}
@@ -307,14 +312,57 @@ public final class MainActivity extends Activity {
   button("Delete all local memories",panel,()->new AlertDialog.Builder(this).setTitle("Delete all memories?").setMessage("This removes all manually saved local memory entries from this app.").setNegativeButton("Cancel",null).setPositiveButton("Delete all",(d,w)->{prefs.edit().remove("memory_items").apply();render();}).show());
   list.addView(text("Memory is OFF until enabled in Settings. When enabled, saved entries are added to prompts sent to the selected local or cloud model.",11,muted,false));
  }
- private void voice(){heading("Voice Workspace","Use the device speech-recognition screen and installed text-to-speech engine. Speech may be processed on-device or by the configured recognition provider; check Android privacy settings.");
-  LinearLayout input=card();input.addView(text("SPEECH TO TEXT",13,accent,true));input.addView(text("SEED-X does not record audio in the background. The Android speech service handles the microphone session.",11,muted,false));
-  button("Start voice input",accent,()->{try{Intent i=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);i.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);i.putExtra(RecognizerIntent.EXTRA_LANGUAGE,Locale.getDefault().toLanguageTag());i.putExtra(RecognizerIntent.EXTRA_PROMPT,"Speak to SEED-X");startActivityForResult(i,VOICE_INPUT);}catch(Exception e){toast("No speech recognition service is available.");}});
-  LinearLayout output=card();output.addView(text("TEXT TO SPEECH",13,accent,true));output.addView(text("Speak the latest assistant response using the installed Android TTS engine.",11,muted,false));
-  button("Speak last assistant reply",panel,()->{String latest="";for(int i=history.size()-1;i>=0;i--){JSONObject m=history.get(i);if("assistant".equals(m.optString("role"))){latest=m.optString("text");break;}}if(latest.isEmpty()){toast("No assistant reply is available.");return;}if(tts==null){toast("Text-to-speech engine is unavailable.");return;}tts.speak(latest,TextToSpeech.QUEUE_FLUSH,null,"seedx-last-reply");});
-  button("Stop speech",panel,()->{if(tts!=null)tts.stop();});
-  button("Open voice settings",panel,()->{try{startActivity(new Intent("com.android.settings.TTS_SETTINGS"));}catch(Exception e){toast("Android TTS settings unavailable.");}});
+ private void voice(){
+  heading("Voice & Speech Studio","ASR, TTS, voice controls and runtime inventory. Microphone is requested only when you start recognition.");
+  LinearLayout asr=card();asr.addView(text("SPEECH RECOGNITION (ASR)",13,accent,true));
+  String mode=prefs.getString("voice_asr_mode","on_device");asr.addView(text("Selected engine: "+("on_device".equals(mode)?"On-device Android SpeechRecognizer":"Android system SpeechRecognizer"),12,primaryText,true));
+  asr.addView(text("On-device availability: "+(SpeechRecognizer.isOnDeviceRecognitionAvailable(this)?"AVAILABLE":"NOT AVAILABLE ON THIS DEVICE"),11,muted,false));
+  voiceStatus=text("Ready. Recognition is user-started and does not run in the background.",12,muted,false);asr.addView(voiceStatus);
+  button("Start microphone recognition",accent,()->startVoiceRecognition());
+  button("Stop microphone recognition",panel,()->stopVoiceRecognition());
+  button("ASR engine: "+("on_device".equals(mode)?"ON-DEVICE":"SYSTEM / MAY USE NETWORK"),panel,()->new AlertDialog.Builder(this).setTitle("Speech recognition engine").setSingleChoiceItems(new String[]{"On-device only (no silent network fallback)","System recognizer (network behavior depends on service)"},"on_device".equals(prefs.getString("voice_asr_mode","on_device"))?0:1,(d,w)->{prefs.edit().putString("voice_asr_mode",w==0?"on_device":"system").apply();d.dismiss();render();}).setNegativeButton("Cancel",null).show());
+  button("Recognition language: "+prefs.getString("voice_language",Locale.getDefault().toLanguageTag()),panel,()->{EditText lang=field("BCP-47 language tag",prefs.getString("voice_language",Locale.getDefault().toLanguageTag()),false);new AlertDialog.Builder(this).setTitle("ASR language").setView(lang).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{String value=lang.getText().toString().trim();if(value.matches("[A-Za-z]{2,8}(-[A-Za-z0-9]{1,8})*"))prefs.edit().putString("voice_language",value).apply();else toast("Enter a valid language tag such as en-US or ur-PK.");render();}).show();});
+  LinearLayout ttsCard=card();ttsCard.addView(text("TEXT TO SPEECH (TTS)",13,accent,true));ttsCard.addView(text("Android installed TTS engine: "+(tts==null?"initializing / unavailable":"available"),11,muted,false));
+  button("Speak last assistant reply",panel,()->{String latest="";for(int i=history.size()-1;i>=0;i--){JSONObject msg=history.get(i);if("assistant".equals(msg.optString("role"))){latest=msg.optString("text");break;}}if(latest.isEmpty()){toast("No assistant reply is available.");return;}if(tts==null){toast("Text-to-speech engine is unavailable.");return;}tts.setSpeechRate(prefs.getFloat("voice_tts_rate",1f));tts.setPitch(prefs.getFloat("voice_tts_pitch",1f));tts.speak(latest,TextToSpeech.QUEUE_FLUSH,null,"seedx-last-reply");});
+  button("TTS speed: "+prefs.getFloat("voice_tts_rate",1f),panel,()->chooseVoiceFloat("voice_tts_rate","Speech speed",0.5f,2f));
+  button("TTS pitch: "+prefs.getFloat("voice_tts_pitch",1f),panel,()->chooseVoiceFloat("voice_tts_pitch","Voice pitch",0.5f,2f));
+  button("Open Android TTS voice & language settings",panel,()->{try{startActivity(new Intent("com.android.settings.TTS_SETTINGS"));}catch(Exception e){toast("Android TTS settings unavailable.");}});
+  button("Stop speech output",panel,()->{if(tts!=null)tts.stop();});
+  LinearLayout inventory=card();inventory.addView(text("VOICE / ASR / AUDIO RUNTIME INVENTORY",13,accent,true));
+  try{JSONObject catalog=assetJson("voice_runtime_catalog.json");JSONArray rows=catalog.optJSONArray("runtimes");for(int n=0;rows!=null&&n<rows.length();n++){JSONObject row=rows.getJSONObject(n);inventory.addView(text(row.optString("name")+" • "+row.optString("status"),12,primaryText,true));inventory.addView(text(row.optString("notes"),10,muted,false));}}catch(Exception e){inventory.addView(text("Voice catalog unavailable: "+e.getMessage(),11,muted,false));}
+  button("Open AI capability inventory",panel,()->navigateTo("AI Capabilities"));
  }
+ private void chooseVoiceFloat(String key,String title,float min,float max){SeekBar seek=new SeekBar(this);seek.setMax(100);float current=prefs.getFloat(key,1f);seek.setProgress(Math.round((current-min)/(max-min)*100));new AlertDialog.Builder(this).setTitle(title).setView(seek).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{float value=min+(max-min)*seek.getProgress()/100f;prefs.edit().putFloat(key,value).apply();render();}).show();}
+ private void startVoiceRecognition(){
+  if(checkSelfPermission(android.Manifest.permission.RECORD_AUDIO)!=android.content.pm.PackageManager.PERMISSION_GRANTED){requestPermissions(new String[]{android.Manifest.permission.RECORD_AUDIO},VOICE_PERMISSION);return;}
+  boolean onDevice="on_device".equals(prefs.getString("voice_asr_mode","on_device"));
+  if(onDevice&&!SpeechRecognizer.isOnDeviceRecognitionAvailable(this)){toast("On-device ASR is unavailable. Choose System recognizer explicitly if you accept its network behavior.");return;}
+  if(!SpeechRecognizer.isRecognitionAvailable(this)){toast("No Android speech recognition service is installed.");return;}
+  stopVoiceRecognition();
+  try{
+   speechRecognizer=onDevice?SpeechRecognizer.createOnDeviceSpeechRecognizer(this):SpeechRecognizer.createSpeechRecognizer(this);
+   speechRecognizer.setRecognitionListener(new RecognitionListener(){
+    public void onReadyForSpeech(Bundle params){runOnUiThread(()->{if(voiceStatus!=null)voiceStatus.setText("Listening… Speak now.");});}
+    public void onBeginningOfSpeech(){ }
+    public void onRmsChanged(float rmsdB){ }
+    public void onBufferReceived(byte[] buffer){ }
+    public void onEndOfSpeech(){runOnUiThread(()->{if(voiceStatus!=null)voiceStatus.setText("Processing speech…");});}
+    public void onError(int error){runOnUiThread(()->{if(voiceStatus!=null)voiceStatus.setText("Recognition error: "+error);toast("Speech recognition stopped (error "+error+").");stopVoiceRecognition();});}
+    public void onResults(Bundle results){ArrayList<String> values=results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);runOnUiThread(()->{if(values!=null&&!values.isEmpty()){pendingChatDraft=values.get(0);if(voiceStatus!=null)voiceStatus.setText("Recognized: "+pendingChatDraft);page="Chat";render();}stopVoiceRecognition();});}
+    public void onPartialResults(Bundle partial){ArrayList<String> values=partial.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);if(values!=null&&!values.isEmpty())runOnUiThread(()->{if(voiceStatus!=null)voiceStatus.setText("Hearing: "+values.get(0));});}
+    public void onEvent(int eventType,Bundle params){ }
+   });
+   Intent intent=new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE,prefs.getString("voice_language",Locale.getDefault().toLanguageTag()));intent.putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS,true);intent.putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE,onDevice);intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS,3);speechRecognizer.startListening(intent);
+  }catch(Exception e){stopVoiceRecognition();toast("Could not start ASR: "+e.getMessage());}
+ }
+ private void stopVoiceRecognition(){if(speechRecognizer!=null){try{speechRecognizer.cancel();speechRecognizer.destroy();}catch(Exception ignored){}speechRecognizer=null;}}
+ private void puterWorkspace(){
+  heading("Puter.js AI Workspace","Optional online AI services inside a sandboxed web workspace. Puter user-pays pricing and model terms apply; this is not local/offline inference.");
+  WebView web=new WebView(this);WebSettings settings=web.getSettings();settings.setJavaScriptEnabled(true);settings.setDomStorageEnabled(true);settings.setAllowFileAccess(true);settings.setAllowContentAccess(false);settings.setAllowFileAccessFromFileURLs(false);settings.setAllowUniversalAccessFromFileURLs(false);settings.setSupportMultipleWindows(false);web.setWebViewClient(new WebViewClient(){@Override public boolean shouldOverrideUrlLoading(WebView view,String url){Uri u=Uri.parse(url);String host=u.getHost()==null?"":u.getHost().toLowerCase(Locale.ROOT);if("https".equalsIgnoreCase(u.getScheme())&&(host.equals("puter.com")||host.endsWith(".puter.com")||host.equals("puter.site")||host.endsWith(".puter.site"))){return false;}openUrl(url);return true;}});web.loadUrl("file:///android_asset/puter/index.html");content.addView(web,new LinearLayout.LayoutParams(-1,dp(620)));
+  button("Open Puter.js official documentation",panel,()->openUrl("https://docs.puter.com/AI/"));
+ }
+ private void aiCapabilities(){heading("Universal AI Capability Inventory","SEED-X separates capability types from runtime adapters. Entries marked catalog-only are not yet executable in this APK.");try{JSONObject catalog=assetJson("ai_capability_catalog.json");JSONArray rows=catalog.optJSONArray("capabilities");for(int i=0;rows!=null&&i<rows.length();i++){JSONObject item=rows.getJSONObject(i);LinearLayout card=card();card.addView(text(item.optString("label"),14,accent,true));card.addView(text("Status: "+item.optString("status")+" • Formats: "+item.optJSONArray("formats"),11,muted,false));card.addView(text("Model families: "+item.optJSONArray("models"),11,primaryText,false));}}catch(Exception e){showTextDialog("AI capability inventory",e.getMessage());}}
+
  private void models(){heading("Local Models","Import, validate, load, unload and remove GGUF files using the native C++ runtime.");
   try{JSONObject cat=assetJson("model_catalog.json");LinearLayout recommendations=card();recommendations.addView(text("DEVICE-AWARE MODEL GUIDE",12,accent,true));recommendations.addView(text(cat.optString("notice"),10,muted,false));JSONArray choices=cat.optJSONArray("recommendations");for(int i=0;choices!=null&&i<choices.length();i++){JSONObject m=choices.getJSONObject(i);recommendations.addView(text(m.optString("name")+"  •  "+m.optString("ramEstimate"),13,Color.WHITE,true));recommendations.addView(text(m.optString("notes")+" Context: "+m.optString("context"),11,muted,false));}JSONArray curated=cat.optJSONArray("models");for(int i=0;curated!=null&&i<curated.length();i++){JSONObject model=curated.getJSONObject(i);recommendations.addView(text(model.optString("name")+" • "+model.optString("quantization")+" • ~"+model.optInt("approximateFileSizeMB")+" MB",13,Color.WHITE,true));recommendations.addView(text(model.optString("recommendation")+" License: "+model.optString("license"),11,muted,false));Button repoButton=new Button(this);repoButton.setText("Open model repository");repoButton.setAllCaps(false);repoButton.setOnClickListener(v->openUrl(model.optString("url")));recommendations.addView(repoButton);}button("Browse GGUF models on Hugging Face",panel,()->openUrl(cat.optString("catalogUrl")));}catch(Exception ignored){}
   LinearLayout c=card();try{JSONObject rt=new JSONObject(nativeRuntimeStatus());c.addView(text("Runtime: "+rt.optString("state"),17,Color.WHITE,true));c.addView(text("Backend: "+(rt.optBoolean("llamaAvailable")?"llama.cpp enabled":"llama.cpp not compiled"),12,muted,false));c.addView(text("Available memory: "+(rt.optLong("availableBytes")/1048576)+" MB",12,muted,false));if(rt.optBoolean("ready"))c.addView(text("Loaded model: "+rt.optString("model"),13,accent,true));}catch(Exception e){c.addView(text("Native runtime unavailable: "+e.getMessage(),12,muted,false));}button("Unload active model",panel,()->worker.execute(()->{nativeUnloadModel();runOnUiThread(this::render);}));
@@ -550,7 +598,7 @@ public final class MainActivity extends Activity {
  }
  @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){
   super.onRequestPermissionsResult(requestCode,permissions,grantResults);
-  if(requestCode==4201){
+  if(requestCode==VOICE_PERMISSION){if(grantResults.length>0&&grantResults[0]==android.content.pm.PackageManager.PERMISSION_GRANTED)startVoiceRecognition();else toast("Microphone permission denied. Voice input remains disabled.");}else if(requestCode==4201){
    if(notificationPermissionGranted())startAgentSession();
    else toast("Notification permission denied. Enable it in Android App Settings before starting the background session.");
    if("Settings".equals(page))render();
@@ -580,10 +628,10 @@ public final class MainActivity extends Activity {
  private void chooseStartupScreen(){new AlertDialog.Builder(this).setTitle("Choose startup screen").setItems(TABS,(d,which)->{String selected=TABS[which];prefs.edit().putString("startup_screen",selected).apply();toast("Startup screen set to "+selected);}).show();}
  private void manageFavourites(){Set<String> current=new HashSet<>(prefs.getStringSet("favorite_screens",Collections.<String>emptySet()));String[] labels=TABS.clone();boolean[] checked=new boolean[labels.length];for(int i=0;i<labels.length;i++)checked[i]=current.contains(labels[i]);new AlertDialog.Builder(this).setTitle("Favourite screens").setMultiChoiceItems(labels,checked,(d,which,on)->{if(on)current.add(labels[which]);else current.remove(labels[which]);}).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{prefs.edit().putStringSet("favorite_screens",new HashSet<>(current)).apply();toast("Favourite shortcuts saved.");render();}).show();}
  private JSONObject exportableSettings(){
-  JSONObject out=new JSONObject();String[] strings={"startup_screen","system_prompt","custom_workflows","prompt_templates","ui_theme","ui_navigation_mode","ui_density"};
+  JSONObject out=new JSONObject();String[] strings={"startup_screen","system_prompt","custom_workflows","prompt_templates","ui_theme","ui_navigation_mode","ui_density","voice_asr_mode","voice_language"};
   String[] booleans={"online_allowed","allow_local_http","memory_enabled","retain_history","ui_high_contrast","diagnostic_breadcrumbs","dashboard_overview","dashboard_quick_launch","dashboard_favourites"};
   String[] integers={"max_output_tokens","context_tokens","provider_timeout_ms","provider_max_bytes","provider_retries"};
-  String[] floats={"temperature","top_p","ui_text_scale"};
+  String[] floats={"temperature","top_p","ui_text_scale","voice_tts_rate","voice_tts_pitch"};
   try{out.put("schema","seedx-settings-v1").put("appVersion","0.8.0").put("exportedAt",System.currentTimeMillis());
    for(String k:strings)if(prefs.contains(k))out.put(k,prefs.getString(k,""));
    for(String k:booleans)if(prefs.contains(k))out.put(k,prefs.getBoolean(k,false));
@@ -1017,5 +1065,5 @@ navigation.addView(text("Four primary tabs stay visible at the bottom. All remai
  private SecretKey key()throws Exception{KeyStore ks=KeyStore.getInstance("AndroidKeyStore");ks.load(null);if(ks.containsAlias("seedx.provider.aesgcm.v1"))return(SecretKey)ks.getKey("seedx.provider.aesgcm.v1",null);KeyGenerator g=KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore");g.init(new KeyGenParameterSpec.Builder("seedx.provider.aesgcm.v1",KeyProperties.PURPOSE_ENCRYPT|KeyProperties.PURPOSE_DECRYPT).setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).setRandomizedEncryptionRequired(true).build());return g.generateKey();}
  private void encrypt(String ref,String value)throws Exception{Cipher c=Cipher.getInstance("AES/GCM/NoPadding");c.init(Cipher.ENCRYPT_MODE,key());byte[] encrypted=c.doFinal(value.getBytes("UTF-8")),iv=c.getIV(),packed=new byte[iv.length+encrypted.length];System.arraycopy(iv,0,packed,0,iv.length);System.arraycopy(encrypted,0,packed,iv.length,encrypted.length);secrets.edit().putString(ref,Base64.getEncoder().encodeToString(packed)).apply();}
  private String decrypt(String ref){try{byte[] p=Base64.getDecoder().decode(secrets.getString(ref,""));byte[] iv=Arrays.copyOfRange(p,0,12);Cipher c=Cipher.getInstance("AES/GCM/NoPadding");c.init(Cipher.DECRYPT_MODE,key(),new GCMParameterSpec(128,iv));return new String(c.doFinal(Arrays.copyOfRange(p,12,p.length)),"UTF-8");}catch(Exception e){return "";}}
- @Override protected void onDestroy(){nativeCancel();if(runtimeAdapters!=null)new Thread(()->runtimeAdapters.shutdown(),"seedx-runtime-shutdown").start();if(tts!=null){tts.stop();tts.shutdown();}worker.shutdownNow();super.onDestroy();}
+ @Override protected void onDestroy(){nativeCancel();if(runtimeAdapters!=null)new Thread(()->runtimeAdapters.shutdown(),"seedx-runtime-shutdown").start();stopVoiceRecognition();if(tts!=null){tts.stop();tts.shutdown();}worker.shutdownNow();super.onDestroy();}
 }
