@@ -127,3 +127,13 @@ Expanded Diagnostics with crash/error history, recent screen-navigation breadcru
 ## Phase 16 — Error Intelligence & CI Evidence
 
 Added heuristic error categories, normalized duplicate-crash fingerprints, a duplicate grouping view, complete local diagnostic clearing, and GitHub Actions core-job summaries. Native signal crash dumps and ANR capture remain explicitly unsupported. See [docs/PHASE16.md](docs/PHASE16.md).
+
+
+## Phase 21 — AI Provider Expansion
+Added bounded retry handling for transient provider/network failures, configurable retry limits, and privacy-safe local attempt/success/failure counters. Provider secrets remain in Android Keystore and remote fallback remains opt-in. See [docs/PHASE21.md](docs/PHASE21.md).
+
+## Phase 22 — Android Operations UI
+Added Permission Center, foreground-session Task Manager, curated GGUF Model Download Manager, high-contrast text and adjustable text sizing. The download flow uses app-specific storage and validates GGUF magic bytes before private-library import. Scheduled WorkManager queues, full theme switching and visual workflow editing are still pending. See [docs/PHASE22.md](docs/PHASE22.md).
+
+## Phase 23 — Release Engineering
+CI now validates JSON catalogs and the declared Android permission boundary, builds debug APK plus unsigned release APK/AAB artifacts, and uploads release artifacts. Added a security policy. Release signing and physical-device validation remain maintainer actions. See [docs/PHASE23.md](docs/PHASE23.md) and [SECURITY.md](SECURITY.md).
