@@ -123,5 +123,12 @@ for marker in ("showMessageActions", "retryLastUserMessage", "copyFullConversati
         raise SystemExit(f"Chat message action is missing: {marker}")
 print("OK prompt library, chat search/export, storage, network and about screens")
 
+# Adaptive Android workspace: phone bottom bar, large-screen navigation rail and density settings.
+for marker in ("private boolean useSideNavigation()", "private void addSidebar(", "private void shell()", "onConfigurationChanged(android.content.res.Configuration", "ui_navigation_mode", "ui_density", "screenWidthDp()>=900?4:screenWidthDp()>=600?3:2", "android:resizeableActivity=\"true\""):
+    if marker not in activity and marker not in (ROOT / "android/app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
+        raise SystemExit(f"Adaptive UI feature is missing: {marker}")
+print("OK adaptive navigation, responsive dashboard and display preferences")
+
+
 
 
