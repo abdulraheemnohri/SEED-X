@@ -37,10 +37,10 @@ Free-access labels are indicative, not guarantees:
 - Provider terms and privacy differ. Do not send sensitive/private data to cloud free tiers without reviewing retention/training terms.
 
 ## Skills and workflows
-Built-in skills are prompt templates, not executable plugins. They cannot bypass Guardian. Tools remain a separate native allowlist. Workflow templates are manually started and do not create hidden background automation.
+Twenty built-in skills are searchable and can be individually enabled/disabled. They are prompt templates, not executable plugins. A manually managed memory screen stores up to 100 user-approved text entries locally; memory is disabled in prompts until the operator opts in. Voice uses Android's speech-recognition activity and TTS engine; there is no background microphone service. Six workflow templates are manually started and do not create hidden background automation. Tools remain a separate native allowlist.
 
 ## Runtime configuration
-The app exposes max output tokens, temperature, top-p, context size, online fallback, local HTTP, and privacy settings. Values are bounded before use. The defaults are local-first, 512 output tokens, temperature 0.7, top-p 0.9, 2048 context, 768 MiB system reserve and online fallback disabled.
+The app exposes max output tokens, temperature, top-p, context size, provider timeout, response-size cap, editable system prompt, online fallback, local HTTP, chat retention and memory opt-in. Provider profiles are stored separately; secrets remain in the Keystore vault. The Home dashboard, Voice, Memory, Skills, Workflows, Runtime Manager and Diagnostics screens are included. Values are bounded before use. The defaults are local-first, 512 output tokens, temperature 0.7, top-p 0.9, 2048 context, 768 MiB system reserve and online fallback disabled.
 
 ## Brand
 - Vector source: assets/brand/seedx-logo.svg
@@ -58,4 +58,4 @@ The app exposes max output tokens, temperature, top-p, context size, online fall
 - Provider model IDs and free tiers change. Catalog metadata must be reviewed and updated over time.
 - Cloud provider requests are not automatically routed to a "free" model; the operator selects the provider and model.
 - Skills are prompt templates, not independently sandboxed code packages.
-- No physical device benchmark is claimed.
+- Voice recognition and speech synthesis depend on installed Android system services and language packs.\n- No physical device benchmark is claimed.
