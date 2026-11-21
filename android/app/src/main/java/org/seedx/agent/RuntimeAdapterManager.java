@@ -25,7 +25,7 @@ public final class RuntimeAdapterManager {
         } else {
             throw new IllegalArgumentException("No Phase 29 adapter for this format. Supported here: .litertlm and .pte. GGUF continues through the existing llama.cpp native path.");
         }
-        if (active != null) { active.unload(); active = null; }
+        if (active != null) unload();
         requireMemoryHeadroom(model);
         next.load(model, tokenizer);
         active = next;
@@ -52,7 +52,8 @@ public final class RuntimeAdapterManager {
         generationExecutor.execute(() -> selected.generate(prompt, maxTokens, temperature, listener));
     }
     public synchronized void cancel() { if (active != null) active.cancel(); }
-    public synchronized void unload() { if (active != null) { active.cancel(); active.unload(); active = null; } }
+    public synchronized void unload() { if (active != null) { active.cancel(); try { generationExecutor.submit(() -> { }).get(); } catch (Exception ignored) { } active.unload(); active = null; } }
+    public synchronized void shutdown() { unload(); generationExecutor.shutdownNow(); }
     public synchronized String activeRuntime() { return active == null ? "none" : active.id(); }
     public synchronized boolean isLoaded() { return active != null && active.isLoaded(); }
 }
