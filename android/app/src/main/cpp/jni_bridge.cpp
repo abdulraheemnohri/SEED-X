@@ -138,7 +138,7 @@ bool relativeResource(const std::string& resource,std::string& relative) {
  const std::string prefix="workspace://";
  if(resource.size()>512||resource.rfind(prefix,0)!=0) return false;
  relative=resource.substr(prefix.size());
- if(relative.size()>480||relative.find('\\\\')!=std::string::npos) return false;
+ if(relative.size()>480||relative.find('\\')!=std::string::npos) return false;
  for(unsigned char ch:relative) if(ch==0||ch<0x20) return false;
  std::filesystem::path p(relative);
  if(p.is_absolute()) return false;
