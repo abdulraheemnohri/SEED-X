@@ -22,20 +22,26 @@ ToolResult ToolRegistry::execute(AgentKernel& kernel,const ToolRequest& request,
  }
  if(!selected) {
   kernel.authorize(request);
+  kernel.recordToolOutcome(request,false);
   return {false,Decision::Deny,"Tool is not registered. No handler was executed."};
  }
+ bool handlerStarted=false;
  try {
   ToolResult result;
   const auto authorization=kernel.authorizeAndRun(request,approvalTicket,[&]{
+   handlerStarted=true;
    result=selected->handler(request,payload);
   });
   if(authorization.decision!=Decision::Allow)
    return {false,authorization.decision,authorization.explanation};
   result.decision=result.success?Decision::Allow:Decision::Deny;
+  kernel.recordToolOutcome(request,result.success);
   return result;
  } catch(const std::exception& e) {
+  if(handlerStarted)kernel.recordToolOutcome(request,false);
   return {false,Decision::Deny,std::string("Tool handler failed safely: ")+e.what()};
  } catch(...) {
+  if(handlerStarted)kernel.recordToolOutcome(request,false);
   return {false,Decision::Deny,"Tool handler failed with an unknown error."};
  }
 }
