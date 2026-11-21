@@ -17,7 +17,10 @@ public final class AgentForegroundService extends Service {
     public static final String ACTION_START = "org.seedx.agent.action.START_AGENT";
     public static final String ACTION_STOP = "org.seedx.agent.action.STOP_AGENT";
     private static final String CHANNEL_ID = "seedx_agent_status";
-    private static final int NOTIFICATION_ID = 1201;\n    private static volatile boolean running = false;\n\n    public static boolean isRunning() { return running; }
+    private static final int NOTIFICATION_ID = 1201;
+    private static volatile boolean running = false;
+
+    public static boolean isRunning() { return running; }
 
     @Override public void onCreate() {
         super.onCreate();
@@ -36,7 +39,8 @@ public final class AgentForegroundService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
-        running = true;\n        if (Build.VERSION.SDK_INT >= 34) {
+        running = true;
+        if (Build.VERSION.SDK_INT >= 34) {
             startForeground(NOTIFICATION_ID, buildNotification(),
                 android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         } else {
