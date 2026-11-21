@@ -21,7 +21,7 @@ HttpResponse response;std::string te;if(!t.postJson(q,response,te)){out.error=te
 };}
 bool isSafeProviderUrl(const ProviderConfig&c,std::string&e){
  const auto&u=c.baseUrl;
- if(u.empty()||u.size()>2048||u.find_first_of("\\r\\n\\t ")!=std::string::npos||u.find('#')!=std::string::npos||u.find('?')!=std::string::npos){e="Provider base URL is empty or invalid.";return false;}
+ if(u.empty()||u.size()>2048||u.find_first_of("\r\n\t ")!=std::string::npos||u.find('#')!=std::string::npos||u.find('?')!=std::string::npos){e="Provider base URL is empty or invalid.";return false;}
  const bool https=u.rfind("https://",0)==0;
  const bool http=u.rfind("http://",0)==0;
  if(!https&&!http){e="Provider URL must use HTTPS, or explicitly approved local HTTP.";return false;}
@@ -40,7 +40,7 @@ bool isSafeProviderUrl(const ProviderConfig&c,std::string&e){
   if(valid&&count==4)local=octets[0]==10||(octets[0]==192&&octets[1]==168)||(octets[0]==172&&octets[1]>=16&&octets[1]<=31);
  }
  if(http&&!(c.allowInsecureLocalhost&&local)){e="HTTPS is required; cleartext HTTP is allowed only for explicitly enabled loopback, private IPv4 or .local hosts.";return false;}
- if(c.model.empty()||c.model.size()>256||c.model.find_first_of("\\r\\n")!=std::string::npos){e="A valid model identifier is required.";return false;}
+ if(c.model.empty()||c.model.size()>256||c.model.find_first_of("\r\n")!=std::string::npos){e="A valid model identifier is required.";return false;}
  e.clear();return true;
 }
 bool ProviderRegistry::add(ProviderConfig c,std::string&e){if(c.id.empty()||c.id.size()>96||c.displayName.empty()||c.displayName.size()>128||c.credentialRef.empty()){e="Provider id, display name and credential reference are required.";return false;}if(!isSafeProviderUrl(c,e))return false;if(find(c.id)){e="Provider id already exists.";return false;}providers_.push_back(std::move(c));e.clear();return true;}
