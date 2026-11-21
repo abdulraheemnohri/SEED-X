@@ -20,6 +20,23 @@ for relative in CATALOGS:
         data = json.load(handle)
     if not isinstance(data, dict):
         raise SystemExit(f"{relative}: root must be an object")
+    if relative.startswith("config/"):
+        bundled = ROOT / "android/app/src/main/assets" / pathlib.Path(relative).name
+        if bundled.exists() and json.loads(bundled.read_text(encoding="utf-8")) != data:
+            raise SystemExit(f"{relative}: Android asset catalog is out of sync")
+    if relative.endswith("provider_catalog.json"):
+        providers = data.get("providers", [])
+        ids = [item.get("id") for item in providers]
+        if not providers or len(ids) != len(set(ids)):
+            raise SystemExit("provider_catalog.json: provider list is empty or has duplicate IDs")
+        for item in providers:
+            for key in ("id", "name", "kind", "baseUrl", "defaultModel"):
+                if not item.get(key):
+                    raise SystemExit(f"provider_catalog.json: provider missing {key}")
+    if relative.endswith("model_catalog.json"):
+        for item in data.get("models", []):
+            if not item.get("repository") or not item.get("file", "").lower().endswith(".gguf"):
+                raise SystemExit("model_catalog.json: downloadable model must define a repository and GGUF filename")
     print(f"OK JSON {relative}")
 
 manifest = ET.parse(ROOT / "android/app/src/main/AndroidManifest.xml").getroot()
