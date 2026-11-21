@@ -13,7 +13,8 @@ int main(){
  assert(!r.add({"fake","Fake","embedded",{},seed::RuntimeAvailability::Available,true,""}));
  assert(r.add({"fake","Fake","embedded",{seed::ModelFormat::GGUF},seed::RuntimeAvailability::Available,true,"test"},[]{return std::make_unique<Dummy>();}));
  assert(!r.add({"fake","Duplicate","embedded",{},seed::RuntimeAvailability::AdapterMissing,true,""}));
- assert(r.canRun("fake"));auto backend=r.create("fake");assert(backend&&backend->name()=="dummy");\n seed::RuntimeRegistry mismatch;assert(mismatch.add({"bad-factory","Bad factory","embedded",{seed::ModelFormat::ONNX},seed::RuntimeAvailability::Available,true,"test"},[]{return std::make_unique<Dummy>();}));assert(!mismatch.create("bad-factory"));
+ assert(r.canRun("fake"));auto backend=r.create("fake");assert(backend&&backend->name()=="dummy");
+ seed::RuntimeRegistry mismatch;assert(mismatch.add({"bad-factory","Bad factory","embedded",{seed::ModelFormat::ONNX},seed::RuntimeAvailability::Available,true,"test"},[]{return std::make_unique<Dummy>();}));assert(!mismatch.create("bad-factory"));
  assert(r.add({"planned","Planned","embedded",{},seed::RuntimeAvailability::AdapterMissing,true,"not integrated"}));
  assert(!r.canRun("planned")&&!r.create("planned"));assert(!r.canRun("missing"));
  auto builtins=seed::RuntimeRegistry::builtins();assert(builtins.find("llama.cpp"));
@@ -21,5 +22,6 @@ int main(){
  assert(builtins.find("Ollama")&&!builtins.canRun("Ollama"));
  const auto llama=builtins.find("llama.cpp");
  assert(llama->descriptor.availability==(seed::llamaCppBackendAvailable()?seed::RuntimeAvailability::Available:seed::RuntimeAvailability::OptionalBuildDisabled));
- std::cout<<"SEED-X runtime registry tests passed\n";
+ std::cout<<"SEED-X runtime registry tests passed
+";
 }
