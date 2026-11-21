@@ -3,7 +3,7 @@
 **Self-Evolving Android AI Agent** — a local-first native Android AI agent foundation.
 
 ## Phase 1 — Native foundation
-C++20 engine, Android NDK NativeActivity shell, OpenGL ES 3 rendering surface, lifecycle kernel, event bus and host-side tests.
+C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surface, lifecycle kernel, event bus and host-side tests.
 
 ## Phase 2 — Guardian security & governance
 - Independent default-deny policy engine with scoped tool/operation/resource rules.
@@ -13,60 +13,59 @@ C++20 engine, Android NDK NativeActivity shell, OpenGL ES 3 rendering surface, l
 
 ## Phase 3 — Local AI Brain
 - Backend-neutral C++20 inference interface and model lifecycle manager.
-- Optional real llama.cpp backend pinned to upstream b4514; GGUF model loading and autoregressive token generation.
-- Token streaming and cooperative cancellation callback.
-- Sampling controls (temperature, top-p), context limits and prompt bounds.
-- /proc/meminfo device-memory probe and RAM budget admission.
-- GGUF magic, file type, size, path and context validation.
-- Host-side deterministic fake-backend tests; llama.cpp integration is an opt-in build.
-- Default build stays lightweight and has no network dependency.
+- Optional real llama.cpp backend pinned to upstream b4514; GGUF loading and autoregressive token generation.
+- Token callback streaming, cooperative cancellation, temperature/top-p sampling and context limits.
+- Device memory probe, RAM admission and GGUF file validation.
+- Host-side fake-backend tests; llama.cpp is opt-in.
 
 ## Phase 4 — Online AI Provider Layer
-- Provider registry and normalized chat contract for OpenAI-compatible, Anthropic and Gemini APIs.
-- DeepSeek, Qwen-compatible gateways and OpenRouter can use the OpenAI-compatible adapter where the service supports chat-completions.
-- API keys are resolved by opaque credential references through CredentialVault; keys are never stored in provider configuration.
-- HTTPS-by-default endpoint validation, bounded request settings and provider-reported usage accounting.
-- Local-first routing; online fallback requires both explicit operator permission and network availability.
-- Mock HTTP tests for provider payloads, auth headers, response parsing, usage, errors and routing.
-- See docs/PHASE4.md for integration boundaries and limitations.
+- C++ provider-neutral contract for OpenAI-compatible, Anthropic and Gemini.
+- DeepSeek, Qwen-compatible gateways and OpenRouter can use OpenAI-compatible chat-completions where supported.
+- Credential references, HTTPS-by-default validation, request bounds and provider-reported usage.
+- Local-first routing; online fallback requires explicit permission and network availability.
+- Mock HTTP adapter tests. See docs/PHASE4.md.
 
-## Enable real local inference
+## Phase 5 — Android AI Studio
+- Native Android Java activity and five screens: Chat, Models, Providers, Guardian and Settings.
+- OpenAI-compatible, Anthropic and Gemini chat requests from Android.
+- API keys encrypted with AES-GCM using Android Keystore; only opaque key references live in provider configuration.
+- Online fallback is OFF by default and must be enabled by the operator.
+- HTTPS-only endpoints, connection/read timeouts and 2 MB response cap.
+- GGUF document picker copies files into app-private storage without broad storage permissions.
+- Chat history stored locally and capped at 100 messages.
+- See docs/PHASE5.md for build steps and integration gaps.
 
-The default build uses a no-backend stub so CI and the Android shell can compile without downloading a large inference dependency. To build with llama.cpp, allow CMake to fetch the pinned upstream source.
+## Build on Windows PowerShell
 
-Windows PowerShell (host build):
-```powershell
-cmake -S . -B build-llama -DSEEDX_ENABLE_LLAMA_CPP=ON
-cmake --build build-llama --config Release --parallel
-ctest --test-dir build-llama -C Release --output-on-failure
-```
-
-Android ARM64 / emulator:
-```powershell
-gradle assembleDebug -PseedxLlamaCpp=ON
-```
-
-This fetches llama.cpp during CMake configuration and can take time. Android builds target arm64-v8a and x86_64. Keep model files in app-private storage and provide their absolute path to ModelManifest. The application must request model-storage access through Android's Storage Access Framework; do not hardcode shared-storage paths.
-
-## Model sizing guidance
-
-On a 6 GB RAM phone, begin with small quantized GGUF models and conservative context sizes (e.g. 2K–4K). The memory estimator is only an admission guard; it cannot guarantee that Android will not kill the process. Reserve RAM for Android, UI, KV cache, tokenizer and backend workspace. Do not load multiple models concurrently.
-
-## Run host tests without llama.cpp
-
+Host tests:
 ```powershell
 cmake -S . -B build
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-## Security boundary
+Android debug APK:
+```powershell
+gradle assembleDebug
+```
 
-Local and online model output is untrusted text. No model/provider output is executed as a shell command or tool action. Guardian policy changes and emergency-stop reset are never model-controlled. Future tool proposals must pass Phase 2 Guardian authorization and the one-use operator approval flow.
+Optional llama.cpp backend:
+```powershell
+gradle assembleDebug -PseedxLlamaCpp=ON
+```
+
+Install:
+```powershell
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+On a 6 GB RAM phone, begin with small quantized GGUF models and 2K–4K context. The Phase 5 model picker imports files but does not yet connect them to Android inference.
+
+## Security boundary
+Local and online model output is untrusted text. No model/provider output is executed as a shell command or tool action. Guardian policy changes and emergency-stop reset are never model-controlled. The Android chat UI is deliberately chat-only and does not expose device-control actions.
 
 ## Current limitations
-
-Phase 4 supplies tested provider adapters and routing contracts, but does not yet include a production Android HTTP transport, Android Keystore CredentialVault implementation, app settings/chat UI, SSE streaming, retry/backoff or provider-native tool calling. No live provider request or APK network test is claimed. Phase 3 limitations also remain: SHA-256 model-file verification, signed model provenance, model downloader/catalog, Android model picker, GPU/Vulkan/NNAPI acceleration, persistent chat history and concurrent inference. The llama.cpp backend is real when explicitly enabled; default CI uses a deterministic test backend and stub factory.
+Phase 5's Android provider client is not yet wired to the C++ Phase 4 provider adapter. SSE streaming, request cancellation, retries, provider health checks and persistent usage ledger are pending. The Android GGUF picker does not yet connect to C++ LocalAiRuntime through JNI; the Guardian page does not query the live C++ Guardian object. No live provider API, APK build or physical-device test is claimed by this repository update. Phase 3 still needs model SHA-256 verification, signed model provenance, downloader/catalog and GPU acceleration.
 
 ## License
 MIT. See LICENSE.
