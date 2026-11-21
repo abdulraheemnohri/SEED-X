@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "executionBoundary": "Only the native Guardian-gated registry entries below are executable. Unknown tools are denied.",
+  "registered": [
+    {
+      "id": "system.status",
+      "operation": "read",
+      "resourcePrefix": "system://",
+      "policy": "allow",
+      "description": "Read native runtime and memory status."
+    },
+    {
+      "id": "files.list",
+      "operation": "read",
+      "resourcePrefix": "workspace://",
+      "policy": "allow",
+      "description": "List at most 500 entries inside app-private workspace."
+    },
+    {
+      "id": "files.read",
+      "operation": "read",
+      "resourcePrefix": "workspace://",
+      "policy": "allow",
+      "limits": {
+        "maxBytes": 1048576
+      },
+      "description": "Read a regular file inside the app-private workspace."
+    },
+    {
+      "id": "files.write",
+      "operation": "create",
+      "resourcePrefix": "workspace://",
+      "policy": "require-approval",
+      "approval": {
+        "ttlSeconds": 60,
+        "oneUse": true,
+        "requestBound": true
+      },
+      "limits": {
+        "maxBytes": 65536
+      },
+      "description": "Create a new workspace note without overwriting existing files."
+    }
+  ],
+  "notRegistered": [
+    "shell.exec",
+    "process.exec",
+    "adb",
+    "accessibility.click",
+    "sms.send",
+    "contacts.read",
+    "call.place",
+    "notification.read",
+    "device.settings.write",
+    "arbitrary.filesystem.write"
+  ],
+  "principle": "AI text is never executed. The operator chooses a typed tool; System 1 checks registration, resource scope, policy, approval and audit before execution."
+}
