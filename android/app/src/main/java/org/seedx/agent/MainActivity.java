@@ -58,7 +58,7 @@ public final class MainActivity extends Activity {
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
  private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
  private void shell(){root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(16),dp(12),dp(16),dp(8));root.setBackgroundColor(bg);
-  LinearLayout head=new LinearLayout(this);head.setOrientation(1);head.addView(text("SEED-X",25,accent,true));head.addView(text("LOCAL-FIRST AI WORKSPACE  •  v0.6.0",10,muted,true));root.addView(head,new LinearLayout.LayoutParams(-1,dp(58)));
+  LinearLayout head=new LinearLayout(this);head.setOrientation(1);head.addView(text("SEED-X",25,accent,true));head.addView(text("LOCAL-FIRST AI WORKSPACE  •  v0.7.0",10,muted,true));root.addView(head,new LinearLayout.LayoutParams(-1,dp(58)));
   ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(0,dp(8),0,dp(12));scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
   LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER);String[] tabs={"Chat","Models","Providers","Tools","Guardian","Settings"};for(String tab:tabs){Button b=new Button(this);b.setText(tab);b.setTextSize(10);b.setAllCaps(false);b.setTextColor(page.equals(tab)?accent:muted);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(v->{page=tab;render();});nav.addView(b,new LinearLayout.LayoutParams(0,dp(48),1));}root.addView(nav);setContentView(root);}
  private void render(){content.removeAllViews();switch(page){case "Models":models();break;case "Providers":providers();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Settings":settings();break;default:chat();}}
@@ -202,7 +202,7 @@ public final class MainActivity extends Activity {
   worker.execute(()->{
    String result;
    try{result=nativeExecuteTool(tool,operation,resource,payload,ticket);}
-   catch(Exception e){result="{\\"success\\":false,\\"decision\\":\\"deny\\",\\"output\\":\\""+e.getMessage()+"\\"}";}
+   catch(Exception e){result="Tool bridge error: "+e.getMessage();}
    final String output=result;
    runOnUiThread(()->showToolMessage(output));
   });
@@ -222,7 +222,7 @@ public final class MainActivity extends Activity {
   CheckBox online=new CheckBox(this);online.setText("Allow online provider fallback");online.setTextColor(Color.WHITE);online.setButtonTintList(android.content.res.ColorStateList.valueOf(accent));online.setChecked(prefs.getBoolean("online_allowed",false));online.setOnCheckedChangeListener((v,checked)->prefs.edit().putBoolean("online_allowed",checked).apply());LinearLayout c=card();c.addView(online);c.addView(text("OFF by default. When disabled, prompts are not sent to cloud providers.",12,muted,false));
   LinearLayout privacy=card();privacy.addView(text("API keys: Android Keystore AES-GCM",13,Color.WHITE,false));privacy.addView(text("Chat history: app-private preferences",13,Color.WHITE,false));privacy.addView(text("Models: app-private files/models",13,Color.WHITE,false));privacy.addView(text("Android backup: disabled",13,Color.WHITE,false));
   button("Clear chat history",panel,()->{history.clear();saveHistory();render();});button("Delete provider key",panel,()->{JSONObject cfg=config();if(cfg!=null)secrets.edit().remove(cfg.optString("credentialRef")).apply();Toast.makeText(this,"Provider key deleted.",Toast.LENGTH_SHORT).show();});
-  button("About SEED-X",panel,()->new AlertDialog.Builder(this).setTitle("SEED-X 0.6.0").setMessage("Local-first AI workspace. Optional donations; no subscription in this build.").setPositiveButton("Close",null).show());
+  button("About SEED-X",panel,()->new AlertDialog.Builder(this).setTitle("SEED-X 0.7.0").setMessage("Local-first AI workspace. Optional donations; no subscription in this build.").setPositiveButton("Close",null).show());
  }
  private void engageEmergencyStop(){
   stopRequested=true;
