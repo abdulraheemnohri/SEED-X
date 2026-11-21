@@ -163,6 +163,22 @@ for marker in (
         raise SystemExit(f"Android debug packaging contract is missing: {marker}")
 print("OK complete llama.cpp debug APK and lightweight stub fallback artifacts")
 
+# Verify optional third-party Android runtime SDK packaging and the runtime screen probe.
+gradle_app = (ROOT / "android/app/build.gradle").read_text(encoding="utf-8")
+runtime_probe = (ROOT / "android/app/src/main/java/org/seedx/agent/RuntimeSdkManager.java").read_text(encoding="utf-8")
+for marker in (
+    'com.google.ai.edge.litertlm:litertlm-android',
+    'org.pytorch:executorch-android',
+    'com.microsoft.onnxruntime:onnxruntime-android',
+):
+    if marker not in gradle_app:
+        raise SystemExit(f"Android runtime SDK dependency is missing: {marker}")
+for marker in ("LiteRT-LM", "ExecuTorch", "ONNX Runtime Mobile", "Class.forName", "adapter-pending"):
+    if marker not in runtime_probe:
+        raise SystemExit(f"Runtime SDK probe is missing: {marker}")
+print("OK optional LiteRT-LM, ExecuTorch and ONNX Runtime Android SDK packaging")
+
+
 
 
 
