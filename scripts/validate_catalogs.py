@@ -84,3 +84,20 @@ for screen in ("Home", "Chat", "Voice", "Memory", "Models", "Downloads", "Runtim
         raise SystemExit(f"MainActivity is missing registered screen: {screen}")
 print("OK mobile navigation and screen entry points")
 
+# Guard safe reminder scheduling and the structured workflow builder.
+gradle = (ROOT / "android/app/build.gradle").read_text(encoding="utf-8")
+worker = (ROOT / "android/app/src/main/java/org/seedx/agent/SessionReminderWorker.java").read_text(encoding="utf-8")
+for marker in ("androidx.work:work-runtime",):
+    if marker not in gradle:
+        raise SystemExit(f"Android build is missing required dependency: {marker}")
+for marker in ("class SessionReminderWorker", "POST_NOTIFICATIONS", "No work was run automatically", "return Result.success()"):
+    if marker not in worker:
+        raise SystemExit(f"Reminder worker is missing safety behavior: {marker}")
+for forbidden in ("startAgentSession(", "nativeExecuteTool(", "requestProvider("):
+    if forbidden in worker:
+        raise SystemExit(f"Reminder worker must not perform autonomous actions: {forbidden}")
+for marker in ("scheduleTaskReminder", "recordTaskEvent", "openVisualWorkflowBuilder", "showWorkflowGraph", "showRuntimeDiagnostics", "provider_last_test_time"):
+    if marker not in activity:
+        raise SystemExit(f"MainActivity is missing phase feature: {marker}")
+print("OK task reminders, workflow builder and runtime/provider diagnostics")
+
