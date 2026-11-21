@@ -230,21 +230,56 @@ public final class MainActivity extends Activity {
  private int providerTimeout(){return boundedInt("provider_timeout_ms",60000,5000,180000);}
  private int providerMaxBytes(){return boundedInt("provider_max_bytes",2097152,65536,8388608);}
  private int providerRetries(){return boundedInt("provider_retries",2,0,3);}
- private void chat(){heading("AI Workspace","Local-first inference through JNI, with optional online fallback.");
-  JSONObject cfg=config();LinearLayout status=card();status.addView(text("ACTIVE ROUTE",10,muted,true));status.addView(text("Third-party local runtime: "+(runtimeAdapters==null?"unavailable":runtimeAdapters.activeRuntime())+(runtimeAdapters!=null&&runtimeAdapters.isLoaded()?" • loaded":" • not loaded"),12,accent,false));status.addView(text(prefs.getBoolean("online_allowed",false)?"Online fallback enabled":"Online fallback disabled",17,Color.WHITE,true));status.addView(text(cfg==null?"No provider configured":cfg.optString("name")+"  •  "+cfg.optString("model"),12,muted,false));try{JSONObject rt=new JSONObject(nativeRuntimeStatus());status.addView(text("Local runtime: "+rt.optString("state")+"  •  "+(rt.optBoolean("llamaAvailable")?"llama.cpp available":"llama.cpp disabled"),12,accent,false));if(rt.optBoolean("ready"))status.addView(text("Loaded: "+rt.optString("model"),12,Color.WHITE,false));}catch(Exception ignored){}
-  for(JSONObject m:history){LinearLayout messageCard=card();String role=m.optString("role");messageCard.addView(text(role.toUpperCase(Locale.ROOT),10,"assistant".equals(role)?accent:muted,true));messageCard.addView(text(m.optString("text"),14,Color.WHITE,false));messageCard.setOnLongClickListener(v->{showMessageActions(m);return true;});}
+ private void chat(){
+  heading("Universal Chat","One workspace for local models, online providers, files, voice, tools and skills. Check model capabilities before sending attachments.");
+  JSONObject cfg=config();
+  LinearLayout route=card();route.addView(text("ACTIVE MODEL / ROUTE",11,accent,true));
+  route.addView(text(cfg==null?(runtimeAdapters!=null&&runtimeAdapters.isLoaded()?runtimeAdapters.activeRuntime():"Local runtime / no cloud provider selected"):cfg.optString("name")+" • "+cfg.optString("model"),14,Color.WHITE,true));
+  route.addView(text("Chat: "+activeChatTitle+" • "+history.size()+" messages",11,muted,false));
+  button("Select model / provider",panel,()->showChatModelPicker());
+  button("Chat history • switch conversations",panel,()->showChatHistory());
+  button("New chat",accent,()->startNewChat());
+  LinearLayout capabilities=card();capabilities.addView(text("CHAT TOOLS & WORKSPACE",11,accent,true));
+  button("Attach documents, images, audio, video or any file",panel,()->pickChatAttachments());
+  button("Voice chat • speak then send",panel,()->startVoiceChat());
+  button("Speak latest assistant answer",panel,()->speakLatestAssistant());
+  button("Open Skills",panel,()->navigateTo("Skills"));
+  button("Open Guardian Tools",panel,()->navigateTo("Tools"));
+  button("Providers & connectors",panel,()->navigateTo("Providers"));
+  button("Plugins / integrations",panel,()->navigateTo("Integrations"));
+  button("Workflows & tasks",panel,()->navigateTo("Workflows"));
+  if(!pendingChatAttachments.isEmpty()){
+   LinearLayout attached=card();attached.addView(text("READY TO ATTACH • "+pendingChatAttachments.size(),11,accent,true));
+   for(JSONObject a:pendingChatAttachments){attached.addView(text(a.optString("name")+" • "+a.optString("mime")+" • "+(a.optLong("size")/1024)+" KB",12,primaryText,false));}
+   button("Clear pending attachments",panel,()->{pendingChatAttachments.clear();render();});
+  }
+  for(JSONObject m:history){
+   LinearLayout messageCard=card();String role=m.optString("role");
+   messageCard.addView(text(role.toUpperCase(Locale.ROOT),10,"assistant".equals(role)?accent:muted,true));
+   messageCard.addView(text(m.optString("text"),14,Color.WHITE,false));
+   JSONArray files=m.optJSONArray("attachments");
+   for(int n=0;files!=null&&n<files.length();n++){JSONObject a=files.optJSONObject(n);if(a!=null)messageCard.addView(text("📎 "+a.optString("name")+" • "+a.optString("mime")+" • "+(a.optLong("size")/1024)+" KB",11,muted,false));}
+   messageCard.setOnLongClickListener(v->{showMessageActions(m);return true;});
+  }
   if(!pendingSkillPrompt.isEmpty()){LinearLayout skill=card();skill.addView(text("ACTIVE SKILL / WORKFLOW",10,accent,true));skill.addView(text("Instructions will be prepended to your next message.",11,muted,false));}
-  EditText input=new EditText(this);if(!pendingChatDraft.isEmpty())input.setText(pendingChatDraft);input.setHint("Message SEED-X...");input.setHintTextColor(muted);input.setTextColor(primaryText);input.setTextSize(15);input.setMinLines(2);input.setMaxLines(5);input.setPadding(dp(12),dp(10),dp(12),dp(10));input.setBackground(rounded(panel,14));content.addView(input,new LinearLayout.LayoutParams(-1,-2));
-  button("Send message",accent,()->{String prompt=input.getText().toString().trim();if(!prompt.isEmpty()){String composed=pendingSkillPrompt+prompt;pendingSkillPrompt="";pendingChatDraft="";addMessage("user",composed);render();send(composed);}});
+  EditText input=new EditText(this);if(!pendingChatDraft.isEmpty())input.setText(pendingChatDraft);input.setHint("Message SEED-X…");input.setHintTextColor(muted);input.setTextColor(primaryText);input.setTextSize(15);input.setMinLines(2);input.setMaxLines(6);input.setPadding(dp(12),dp(10),dp(12),dp(10));input.setBackground(rounded(panel,14));content.addView(input,new LinearLayout.LayoutParams(-1,-2));
+  button("Send message",accent,()->{
+   String prompt=input.getText().toString().trim();
+   if(prompt.isEmpty()&&pendingChatAttachments.isEmpty()){toast("Write a message or attach a file first.");return;}
+   String composed=pendingSkillPrompt+prompt+buildAttachmentPrompt(pendingChatAttachments);
+   JSONArray files=new JSONArray();for(JSONObject a:pendingChatAttachments)files.put(a);
+   pendingSkillPrompt="";pendingChatDraft="";pendingChatAttachments.clear();
+   addMessage("user",composed,files);render();send(composed);
+  });
   button("Stop current generation",panel,()->{if(runtimeAdapters!=null)runtimeAdapters.cancel();nativeCancel();if(activeConnection!=null)activeConnection.disconnect();});
   button("Search conversation",panel,()->searchConversation());
   button("Retry last user message",panel,()->retryLastUserMessage());
   button("Copy full conversation",panel,()->copyFullConversation());
   button("Export conversation (Markdown)",panel,()->startChatExport());
   button("Copy latest assistant response",panel,()->copyLatestAssistantResponse());
-  button("Clear conversation",panel,()->new AlertDialog.Builder(this).setTitle("Clear conversation?").setMessage("Delete the locally retained chat messages? This cannot be undone.").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->{history.clear();saveHistory();render();}).show());
+  button("Clear current conversation",panel,()->new AlertDialog.Builder(this).setTitle("Clear conversation?").setMessage("Delete messages in this chat? Saved chat history remains available only if archived separately.").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->{history.clear();saveHistory();render();}).show());
  }
- private void send(String prompt){if(!nativeReady){addMessage("assistant","Native Guardian is unavailable. Inference is disabled until System 1 initializes successfully.");render();return;}try{JSONObject gs=new JSONObject(nativeGuardianStatus());if(gs.optBoolean("emergencyStop")){addMessage("assistant","Guardian emergency stop is active. Reset it from the Guardian screen before sending new requests.");render();return;}}catch(Exception e){addMessage("assistant","Guardian status could not be verified. Request blocked (fail-closed).");render();return;}try{JSONObject rt=new JSONObject(nativeRuntimeStatus());if(rt.optBoolean("ready")){sendLocal(prompt);return;}}catch(Exception ignored){}if(runtimeAdapters!=null&&runtimeAdapters.isLoaded()){sendThirdPartyLocal(prompt);return;}if(!prefs.getBoolean("online_allowed",false)){addMessage("assistant","Online fallback is disabled. Enable it in Settings.");render();return;}JSONObject cfg=config();if(cfg==null){addMessage("assistant","No provider configured. Open Providers to add one.");render();return;}
+private void send(String prompt){if(!nativeReady){addMessage("assistant","Native Guardian is unavailable. Inference is disabled until System 1 initializes successfully.");render();return;}try{JSONObject gs=new JSONObject(nativeGuardianStatus());if(gs.optBoolean("emergencyStop")){addMessage("assistant","Guardian emergency stop is active. Reset it from the Guardian screen before sending new requests.");render();return;}}catch(Exception e){addMessage("assistant","Guardian status could not be verified. Request blocked (fail-closed).");render();return;}try{JSONObject rt=new JSONObject(nativeRuntimeStatus());if(rt.optBoolean("ready")){sendLocal(prompt);return;}}catch(Exception ignored){}if(runtimeAdapters!=null&&runtimeAdapters.isLoaded()){sendThirdPartyLocal(prompt);return;}if(!prefs.getBoolean("online_allowed",false)){addMessage("assistant","Online fallback is disabled. Enable it in Settings.");render();return;}JSONObject cfg=config();if(cfg==null){addMessage("assistant","No provider configured. Open Providers to add one.");render();return;}
   new AlertDialog.Builder(this).setTitle("Send to selected provider?")
    .setMessage("This prompt and recent chat context will be sent to "+cfg.optString("name")+" at "+cfg.optString("base")+". Review the endpoint and provider privacy terms before continuing.")
    .setNegativeButton("Cancel",null).setPositiveButton("Send",(dialog,which)->sendCloud(cfg)).show();
