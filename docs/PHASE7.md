@@ -16,7 +16,7 @@ The Guardian holds its authorization mutex across each short registered handler.
 
 | Tool | Operation | Resource | Default policy | Behavior |
 |---|---|---|---|---|
-| system.status | read | system:// | Allow | Reports kernel stop state and whether a local model is loaded |
+| system.status | read | system:// | Allow | Reports kernel stop state, local-model state and available-memory estimate |
 | files.list | read | workspace:// | Allow | Lists up to 500 entries in the private workspace |
 | files.read | read | workspace://relative/path | Allow | Reads regular files up to 1 MiB |
 | files.write | create | workspace://relative/path | RequireApproval | Creates a new note up to 64 KiB; never overwrites |
@@ -58,7 +58,7 @@ All other tool identifiers and operations are denied because there is no registe
 ## Android UI
 
 - Adds a Tools bottom tab.
-- Shows the registered tool catalog.
+- Shows Android manufacturer/model, Android release/API level and the registered tool catalog.
 - Offers device/runtime status, workspace listing and bounded text-file reading.
 - Note creation requires a separate explicit approval dialog.
 - Guardian screen shows live policy rules, emergency-stop state and audit integrity.
