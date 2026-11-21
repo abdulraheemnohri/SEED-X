@@ -5,7 +5,7 @@ bool AgentKernel::initialize(){AgentStatus expected=AgentStatus::Stopped;if(!sta
 bool AgentKernel::start(){if(guardian_.isFrozen())return false;auto current=status_.load();if(current==AgentStatus::Stopped&&!initialize())return false;current=status_.load();if(guardian_.isFrozen()||(current!=AgentStatus::Ready&&current!=AgentStatus::Paused))return false;status_.store(AgentStatus::Running);events_.publish({"kernel.started","Agent kernel started."});return true;}
 void AgentKernel::pause(){AgentStatus expected=AgentStatus::Running;if(status_.compare_exchange_strong(expected,AgentStatus::Paused))events_.publish({"kernel.paused","Agent kernel paused."});}
 void AgentKernel::stop(){status_.store(AgentStatus::Stopped);events_.publish({"kernel.stopped","Agent kernel stopped."});}
-AgentStatus AgentKernel::status()const noexcept{return status_.load();}
+AgentStatus AgentKernel::status()const noexcept{return status_.load();}\nLocalAiRuntime& AgentKernel::localAi()noexcept{return localAi_;}
 PolicyResult AgentKernel::authorize(const ToolRequest&r){return guardian_.authorize(r);}
 PolicyValidation AgentKernel::replacePolicies(std::vector<PolicyRule> r,bool confirmed){return guardian_.replacePolicies(std::move(r),confirmed);}
 ApprovalTicket AgentKernel::requestApproval(const ToolRequest&r,bool c){return guardian_.requestApproval(r,c);}
