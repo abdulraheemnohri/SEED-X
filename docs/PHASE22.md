@@ -31,3 +31,15 @@
 - High-contrast text uses a theme-aware muted text color.
 
 Limitations: this is a native Android command palette, not an arbitrary shell. It only exposes the listed fixed actions and screen routes. System theme changes are applied when Android recreates the Activity; manual theme selection is applied immediately.
+
+
+## Phase 25 — Task scheduling, workflow structure and diagnostics
+- Added WorkManager periodic reminders with operator-selected 1–24 hour intervals. The worker only posts a reminder notification; it never starts the agent, contacts a provider, or executes tools.
+- Added local task event history for foreground-session start/stop requests and reminder schedule changes. History is bounded to 50 events and does not store prompts, responses or credentials.
+- Added a linear visual workflow builder: create up to 20 named steps, inspect the saved step graph, and launch the workflow as a planning prompt in Chat. No workflow is autonomously executed.
+- Workflow step lists are preserved when editing and validated during JSON backup import.
+- Provider connection test time, result and elapsed milliseconds are displayed as local diagnostics; request counters remain local and do not represent provider billing.
+- Added a runtime status probe showing native bridge response time, runtime catalog count, backend state and available-memory estimates. This is not an inference benchmark.
+- CI now checks reminder-worker safety boundaries, workflow entry points and diagnostics hooks.
+
+Limitations: Android WorkManager periodic delivery is inexact and may be delayed by battery optimization. Reminders require notification permission to be visible. The workflow builder is a linear step editor, not a drag-and-drop graph canvas. Provider latency measures the connection test request only, not model token throughput.
