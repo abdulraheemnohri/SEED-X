@@ -162,3 +162,6 @@ SEED-X supports dark, light and Android-system themes, a searchable command pale
 
 ### Task reminders and workflow plans
 SEED-X can schedule periodic local reminders through Android WorkManager, keep a bounded local task event history, and create structured linear workflow plans. Reminder workers only show notifications; they do not invoke providers or execute tools. Provider connection diagnostics and native runtime status probes are available in the app.
+
+## Additional mobile workspace screens
+The app now includes Prompt Library (built-in and custom local templates), conversation search and Markdown export, Storage Manager, read-only Network Diagnostics, and About/Support. Prompt selection only fills the composer; no prompt is sent automatically. Storage tools operate only on SEED-X app-owned data. Settings backup includes custom prompts and dashboard visibility preferences, but never exports provider credentials, chat history or model files.
