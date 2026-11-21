@@ -165,6 +165,7 @@ public final class MainActivity extends Activity {
  }
  private void tools(){
   heading("Tool Center","Typed, allowlisted actions. Every request is checked by the native C++ Guardian.");
+  LinearLayout device=card();device.addView(text("ANDROID DEVICE",11,accent,true));device.addView(text(android.os.Build.MANUFACTURER+" "+android.os.Build.MODEL,14,Color.WHITE,true));device.addView(text("Android "+android.os.Build.VERSION.RELEASE+" • API "+android.os.Build.VERSION.SDK_INT,11,muted,false));
   LinearLayout catalog=card();
   catalog.addView(text("AVAILABLE TOOLS",11,accent,true));
   try{
