@@ -7,7 +7,7 @@ void AgentKernel::pause(){AgentStatus expected=AgentStatus::Running;if(status_.c
 void AgentKernel::stop(){status_.store(AgentStatus::Stopped);events_.publish({"kernel.stopped","Agent kernel stopped."});}
 AgentStatus AgentKernel::status()const noexcept{return status_.load();}
 PolicyResult AgentKernel::authorize(const ToolRequest&r){return guardian_.authorize(r);}
-PolicyValidation AgentKernel::replacePolicies(std::vector<PolicyRule> r){return guardian_.replacePolicies(std::move(r));}
+PolicyValidation AgentKernel::replacePolicies(std::vector<PolicyRule> r,bool confirmed){return guardian_.replacePolicies(std::move(r),confirmed);}
 ApprovalTicket AgentKernel::requestApproval(const ToolRequest&r,bool c){return guardian_.requestApproval(r,c);}
 bool AgentKernel::consumeApproval(const ToolRequest&r,const std::string&id){return guardian_.consumeApproval(r,id);}
 void AgentKernel::emergencyStop(){guardian_.emergencyStop();status_.store(AgentStatus::Paused);events_.publish({"guardian.emergency_stop","Emergency stop engaged; tool authorization is blocked."});}
