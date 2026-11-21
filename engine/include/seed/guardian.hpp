@@ -14,7 +14,7 @@ public:
  Guardian();
  PolicyResult evaluate(const ToolRequest&) const;
  PolicyResult authorize(const ToolRequest&);
- PolicyValidation replacePolicies(std::vector<PolicyRule>);
+ PolicyValidation replacePolicies(std::vector<PolicyRule>,bool operatorConfirmed);
  std::vector<PolicyRule> policies() const;
  ApprovalTicket requestApproval(const ToolRequest&,bool operatorConfirmed,std::chrono::seconds lifetime=std::chrono::seconds(60));
  bool consumeApproval(const ToolRequest&,const std::string& ticketId);
