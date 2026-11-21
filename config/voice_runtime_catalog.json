@@ -1,0 +1,152 @@
+{
+  "schemaVersion": 1,
+  "notice": "Catalog entries are not all bundled or integrated. Verify model license, language coverage, model format, device RAM, and Android support before download.",
+  "capabilities": [
+    "ASR",
+    "Streaming ASR",
+    "Speech translation",
+    "TTS",
+    "Voice cloning (consent-only)",
+    "Voice conversion (consent-only)",
+    "VAD",
+    "Wake word / keyword spotting",
+    "Speaker diarization",
+    "Noise suppression",
+    "Audio event classification",
+    "Speech enhancement"
+  ],
+  "runtimes": [
+    {
+      "id": "android-speech-recognizer",
+      "name": "Android SpeechRecognizer",
+      "kind": "platform-asr",
+      "status": "platform-integrated",
+      "offline": "On-device mode is requested when supported; system service may use network otherwise",
+      "streaming": true,
+      "formats": [
+        "Microphone"
+      ],
+      "notes": "Android system recognizer. Must check isOnDeviceRecognitionAvailable before creating an on-device recognizer."
+    },
+    {
+      "id": "android-tts",
+      "name": "Android TextToSpeech",
+      "kind": "platform-tts",
+      "status": "platform-integrated",
+      "offline": "Depends on installed voice data",
+      "streaming": false,
+      "formats": [
+        "Text"
+      ],
+      "notes": "Uses installed engines and voice packs; language and network behavior vary by engine."
+    },
+    {
+      "id": "whisper-cpp",
+      "name": "whisper.cpp",
+      "kind": "local-asr",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Yes",
+      "streaming": true,
+      "formats": [
+        "GGML/GGUF Whisper model"
+      ],
+      "notes": "Local multilingual transcription; separate model files and JNI integration required."
+    },
+    {
+      "id": "sherpa-onnx",
+      "name": "sherpa-onnx",
+      "kind": "local-speech-suite",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Yes",
+      "streaming": true,
+      "formats": [
+        "ONNX"
+      ],
+      "notes": "ASR, TTS, VAD, keyword spotting, speaker ID and diarization depending on model."
+    },
+    {
+      "id": "vosk",
+      "name": "Vosk",
+      "kind": "local-asr",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Yes",
+      "streaming": true,
+      "formats": [
+        "Vosk model directories"
+      ],
+      "notes": "Small offline ASR model packs; language support varies."
+    },
+    {
+      "id": "moonshine",
+      "name": "Moonshine",
+      "kind": "local-asr",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Yes",
+      "streaming": false,
+      "formats": [
+        "ONNX/TFLite export"
+      ],
+      "notes": "Compact ASR model family; validate Android export and licenses."
+    },
+    {
+      "id": "silero-vad",
+      "name": "Silero VAD",
+      "kind": "local-vad",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Yes",
+      "streaming": true,
+      "formats": [
+        "ONNX"
+      ],
+      "notes": "Detects speech segments; does not transcribe."
+    },
+    {
+      "id": "piper",
+      "name": "Piper TTS",
+      "kind": "local-tts",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Yes",
+      "streaming": false,
+      "formats": [
+        "ONNX voice + config"
+      ],
+      "notes": "Offline TTS with per-voice model licensing."
+    },
+    {
+      "id": "kokoro",
+      "name": "Kokoro TTS",
+      "kind": "local-tts",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Yes",
+      "streaming": false,
+      "formats": [
+        "Supported ONNX export"
+      ],
+      "notes": "Compact TTS model family; model/export compatibility must be validated."
+    },
+    {
+      "id": "mlkit-genai-asr",
+      "name": "ML Kit GenAI Speech Recognition",
+      "kind": "device-genai-asr",
+      "status": "platform-alpha",
+      "offline": "On-device where supported",
+      "streaming": true,
+      "formats": [
+        "Microphone/audio file"
+      ],
+      "notes": "Alpha API; advanced mode is limited to selected hardware."
+    },
+    {
+      "id": "puter-js",
+      "name": "Puter.js Speech APIs",
+      "kind": "online-speech",
+      "status": "optional-web-integration",
+      "offline": "No",
+      "streaming": false,
+      "formats": [
+        "Browser audio/file URL"
+      ],
+      "notes": "Optional user-authorized web services for speech2txt, txt2speech and realtime beta. User-pays terms apply."
+    }
+  ]
+}
