@@ -16,6 +16,6 @@ int main(){
  std::vector<std::string>streamed;auto result=runtime.generate("hello",{32,0.7F,0.9F},[&](const std::string&t){streamed.push_back(t);return true;});assert(result.success&&result.text=="Test response: hello"&&streamed.size()==1);
  assert(!runtime.generate("hello",{0,0.7F,0.9F}).success);assert(!runtime.generate("hello",{32,0.7F,0.9F},[](const std::string&){return false;}).success);
  runtime.unload();assert(runtime.state()==seed::RuntimeState::Unavailable);
- auto invalid=file;{std::ofstream out(invalid,std::ios::binary|std::ios::trunc);out<<"NOPE";}assert(!seed::ModelManager::validate(model).valid);
+ auto invalid=file;{std::ofstream out(invalid,std::ios::binary|std::ios::trunc);out<<"NOPEFAIL";}assert(!seed::ModelManager::validate(model).valid);
  std::error_code ec;std::filesystem::remove(file,ec);std::cout<<"SEED-X Phase 3 runtime tests passed\n";
 }
