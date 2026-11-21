@@ -235,3 +235,8 @@ Official references:
 - [Android SpeechRecognizer API](https://developer.android.com/reference/android/speech/SpeechRecognizer)
 - [ML Kit GenAI Speech Recognition](https://developers.google.com/ml-kit/genai/speech-recognition/android)
 - [ML Kit GenAI Text-to-Speech](https://developers.google.com/ml-kit/genai/text-to-speech/android)
+
+
+## Phase 31 — Universal Chat and SEED Growth
+
+See [docs/PHASE31.md](docs/PHASE31.md) for the full feature list, attachment limits, connector status and remaining multimodal integration work. The Chat screen now supports local/provider model selection, multiple local conversations, file attachments, push-to-talk voice chat, optional spoken replies, and shortcuts to skills, Guardian tools, workflows and integrations. The new Growth screen records human-reviewed improvement proposals without allowing the model to modify trusted System 1 code.
