@@ -64,7 +64,9 @@ The app exposes max output tokens, temperature, top-p, context size, provider ti
     gradle assembleDebug -PseedxLlamaCpp=ON
     adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
-CI always publishes the default debug APK and attempts a second NDK build with embedded llama.cpp. If that optional build succeeds, it publishes a separate `seedx-debug-apk-llama` artifact. The optional build is non-blocking so a device/toolchain-specific llama.cpp issue does not hide the default app APK.\n\n## Known limitations
+CI always publishes the default debug APK and attempts a second NDK build with embedded llama.cpp. If that optional build succeeds, it publishes a separate `seedx-debug-apk-llama` artifact. The optional build is non-blocking so a device/toolchain-specific llama.cpp issue does not hide the default app APK.
+
+## Known limitations
 - LiteRT-LM, MLC LLM, ExecuTorch and ONNX Runtime GenAI still need native runtime adapters, dependency pinning, model-format support, device tests and CI.
 - Generic OpenAI-compatible endpoints are not guaranteed to support identical models, tool calling, multimodal input, streaming or structured outputs.
 - The Android app currently sends non-streaming cloud chat completions; native local llama.cpp token streaming remains available.
