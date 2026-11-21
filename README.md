@@ -240,3 +240,8 @@ Official references:
 ## Phase 31 — Universal Chat and SEED Growth
 
 See [docs/PHASE31.md](docs/PHASE31.md) for the full feature list, attachment limits, connector status and remaining multimodal integration work. The Chat screen now supports local/provider model selection, multiple local conversations, file attachments, push-to-talk voice chat, optional spoken replies, and shortcuts to skills, Guardian tools, workflows and integrations. The new Growth screen records human-reviewed improvement proposals without allowing the model to modify trusted System 1 code.
+
+
+## Phase 32 — Build repair and Office attachment extraction
+
+Fixed the duplicate Java helper that blocked Android debug/release compilation. Chat attachments now receive bounded best-effort text extraction for DOCX, PPTX, XLSX, ODT, ODS and ODP files. Extraction is capped by ZIP entry count, expanded byte limits and 64 KiB output; macros and external relationships are not executed. PDF text extraction, audio transcription, video frame extraction and live MCP remain separate implementation tasks. See [docs/PHASE32.md](docs/PHASE32.md).
