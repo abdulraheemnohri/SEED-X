@@ -84,6 +84,9 @@ public final class MainActivity extends Activity {
  private int pendingAttachmentImports=0;
  private String activeChatId="chat-default",activeChatTitle="New chat",activeChatRoute="auto",activeChatProviderId="";
  private boolean voiceChatArmed=false;
+ private SpeechRecognizer speechRecognizer;
+ private TextView voiceStatus;
+ private static final int VOICE_PERMISSION=4108;
  private static final int PICK_MODEL=4102;
  private static final int EXPORT_SETTINGS=4104;
  private static final int IMPORT_SETTINGS=4105;
