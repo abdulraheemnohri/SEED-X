@@ -118,6 +118,9 @@ if "private static final int EXPORT_CHAT=4106;" not in activity:
     raise SystemExit("Conversation export activity result code is missing")
 if "Clear conversation" not in activity or "Search conversation" not in activity or "Copy latest assistant response" not in activity:
     raise SystemExit("Chat history controls are incomplete")
+for marker in ("showMessageActions", "retryLastUserMessage", "copyFullConversation", "Resend this message"):
+    if marker not in activity:
+        raise SystemExit(f"Chat message action is missing: {marker}")
 print("OK prompt library, chat search/export, storage, network and about screens")
 
 
