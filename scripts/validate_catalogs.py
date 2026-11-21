@@ -280,3 +280,15 @@ print("OK Phase 31 universal chat, attachments, model selection, chat archive, v
 if "sourceCompatibility JavaVersion.VERSION_17" not in app_gradle or "targetCompatibility JavaVersion.VERSION_17" not in app_gradle or 'jvmTarget = "17"' not in app_gradle:
     raise SystemExit("Android Java/Kotlin JVM targets must both be 17")
 print("OK Android Java/Kotlin JVM 17 target alignment")
+
+
+# Phase 32: bounded Office attachment extraction and duplicate-helper regression.
+extractor = (ROOT / "android/app/src/main/java/org/seedx/agent/AttachmentTextExtractor.java").read_text(encoding="utf-8")
+for marker in ("extractOfficeText", "MAX_ENTRIES = 128", "MAX_ENTRY_BYTES = 256 * 1024", "MAX_TOTAL_BYTES = 2 * 1024 * 1024", "MAX_OUTPUT_CHARS = 64 * 1024", "word/document.xml", "ppt/slides/slide", "xl/sharedStrings.xml", "content.xml", "ZipInputStream"):
+    if marker not in extractor:
+        raise SystemExit(f"Bounded Office attachment extractor is missing: {marker}")
+if "AttachmentTextExtractor.extractOfficeText(temp,name)" not in activity:
+    raise SystemExit("Chat attachment import is not connected to the bounded Office extractor")
+if activity.count("private long directoryBytes(") != 1:
+    raise SystemExit("MainActivity must contain exactly one directoryBytes helper")
+print("OK Phase 32 bounded DOCX/PPTX/XLSX/ODT/ODS/ODP extraction and duplicate-helper regression")
