@@ -55,7 +55,7 @@ public final class MainActivity extends Activity {
  private String page="Chat";
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
- @Override public void onCreate(Bundle state){super.onCreate(state);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();nativeInit(getFilesDir().getAbsolutePath());shell();render();}
+ @Override public void onCreate(Bundle state){super.onCreate(state);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();if(!nativeInit(getFilesDir().getAbsolutePath()))Toast.makeText(this,"Native Guardian or workspace initialization failed. Tool execution is unavailable.",Toast.LENGTH_LONG).show();shell();render();}
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
  private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
