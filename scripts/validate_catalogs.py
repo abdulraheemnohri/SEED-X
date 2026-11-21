@@ -151,6 +151,19 @@ for marker in ("private boolean useSideNavigation()", "private void addSidebar("
         raise SystemExit(f"Adaptive UI feature is missing: {marker}")
 print("OK adaptive navigation, responsive dashboard and display preferences")
 
+# Keep the primary debug artifact aligned with the all-in-one build contract.
+workflow = (ROOT / ".github/workflows/phase1.yml").read_text(encoding="utf-8")
+for marker in (
+    "gradle clean assembleDebug -PseedxLlamaCpp=ON",
+    "name: seedx-debug-apk",
+    "gradle clean assembleDebug -PseedxLlamaCpp=OFF",
+    "name: seedx-debug-apk-stub",
+):
+    if marker not in workflow:
+        raise SystemExit(f"Android debug packaging contract is missing: {marker}")
+print("OK complete llama.cpp debug APK and lightweight stub fallback artifacts")
+
+
 
 
 
