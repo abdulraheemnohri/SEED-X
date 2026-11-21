@@ -297,7 +297,8 @@ private void pickChatAttachments(){
     }
     String extractedText=textFile?new String(extracted.toByteArray(),"UTF-8"):"";
     JSONObject item=new JSONObject().put("id",UUID.randomUUID().toString()).put("name",name).put("mime",mime).put("size",size).put("path",temp.getAbsolutePath()).put("text",extractedText).put("status",textFile?"text-extracted":"stored-attachment");
-    runOnUiThread(()->{if(!activeChatId.equals(targetChatId)){temp.delete();toast("Chat changed while importing. Attach the file again in the active chat.");return;}pendingChatAttachments.add(item);toast("Attached "+item.optString("name"));render();});
+    File storedFile=temp;
+    runOnUiThread(()->{if(!activeChatId.equals(targetChatId)){storedFile.delete();toast("Chat changed while importing. Attach the file again in the active chat.");return;}pendingChatAttachments.add(item);toast("Attached "+item.optString("name"));render();});
    }catch(Exception e){if(temp!=null)temp.delete();runOnUiThread(()->toast("Attachment failed: "+e.getMessage()));}
   });
  }
