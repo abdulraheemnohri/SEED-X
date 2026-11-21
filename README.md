@@ -55,7 +55,7 @@ C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surfa
 - Multi-profile provider hub with presets for Gemini, Groq, OpenRouter, Cloudflare Workers AI, NVIDIA NIM, Z.AI, SambaNova, Cohere, Cerebras, OpenAI, Anthropic, DeepSeek, Mistral, Qwen, Together, Fireworks, Perplexity, xAI, Hugging Face Router, Ollama, LM Studio, llama.cpp server, LocalAI, vLLM and SGLang.
 - Free-tier labels are qualified and limited; the app bundles no API keys and never promises unlimited free inference. Cloud prompts require explicit per-send confirmation.
 - Local HTTP is opt-in and restricted in app code to loopback/private IPv4/.local endpoints. HTTPS remains required for public providers. Keyless local OpenAI-compatible servers are supported.
-- Runtime catalogue covers llama.cpp, LiteRT-LM, MLC LLM, ExecuTorch, ONNX Runtime GenAI, MNN-LLM, ncnn, Ollama, LM Studio, LocalAI, vLLM, SGLang, OpenVINO and TensorRT-LLM. Only llama.cpp is currently embedded/integrated; other embedded runtimes need adapters.
+- Runtime catalogue covers llama.cpp, LiteRT-LM, MLC LLM, ExecuTorch, ONNX Runtime GenAI, MNN-LLM, ncnn, Ollama, LM Studio, LocalAI, vLLM, SGLang, OpenVINO and TensorRT-LLM. llama.cpp is the embedded GGUF path; LiteRT-LM and ExecuTorch have Phase 29 adapters that still require build/device certification. Android SpeechRecognizer/TTS and the optional Puter.js WebView are integrated. Other audio, vision and multimodal runtimes remain catalogue entries until their adapters are implemented and tested.
 - Twenty built-in prompt skills with search and enable/disable, six manual workflows, user-managed opt-in local memory, speech-to-text handoff and Android text-to-speech.
 - Configurable system prompt, output tokens, temperature, top-p, context, provider timeout and response-size bounds.
 - Device-aware model guide for constrained phones, imported GGUF model management, model deletion, runtime diagnostics and copyable privacy-safe diagnostics.
@@ -70,7 +70,7 @@ Host tests:
     ctest --test-dir build -C Release --output-on-failure
 
 Complete Android debug APK with embedded llama.cpp GGUF inference (recommended):
-    gradle clean assembleDebug -PseedxLlamaCpp=ON
+    gradle clean assembleDebug -PseedxLlamaCpp=ON -PseedxRuntimeSdks=litert,executorch,onnxruntime
 
 Lightweight debug APK with JNI stub backend (no embedded inference):
     gradle clean assembleDebug -PseedxLlamaCpp=OFF
@@ -78,7 +78,7 @@ Lightweight debug APK with JNI stub backend (no embedded inference):
 Install the APK produced by the selected build:
     adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
-GitHub Actions publishes the llama.cpp-enabled build as `seedx-debug-apk` and the smaller stub build as `seedx-debug-apk-stub`. The complete APK includes the app UI, catalogs, provider/backend management, device status and the compiled CPU llama.cpp adapter. It does not bundle provider API keys or large model weights; import a licensed GGUF model separately. Other catalog runtimes still require their own SDK-backed adapters.
+GitHub Actions publishes the llama.cpp-enabled build as `seedx-debug-apk` and the smaller stub build as `seedx-debug-apk-stub`. The complete APK includes the app UI, AI/voice runtime catalogs, provider/backend management, device status, Android system ASR/TTS, optional Puter.js WebView, the compiled CPU llama.cpp adapter, and optional LiteRT-LM/ExecuTorch/ONNX SDK packages when selected. It does not bundle provider API keys or large model weights; import a licensed GGUF model separately. Other catalog runtimes still require their own SDK-backed adapters.
 
 For a 6 GB RAM phone, start with small quantized GGUF models and a 2K context. The app estimates memory conservatively, but real device testing is still required.
 
