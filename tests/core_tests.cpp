@@ -40,6 +40,8 @@ int main(){
  assert(!replay.success&&writes==1);
  const seed::ToolRequest unknown{"shell","execute","system://root","never run shell"};
  assert(!tools.execute(k,unknown).success);
+ bool sawCompleted=false,sawFailure=false;for(const auto& entry:k.auditSnapshot()){if(entry.reason=="Registered tool handler completed successfully.")sawCompleted=true;if(entry.reason=="Registered tool handler failed.")sawFailure=true;}
+ assert(sawCompleted&&sawFailure);
  assert(k.verifyAudit());
  k.emergencyStop();auto stopped=tools.execute(k,note,"must not run");assert(!stopped.success&&writes==1);assert(k.resetEmergencyStop(true));
  assert(k.verifyAudit());
