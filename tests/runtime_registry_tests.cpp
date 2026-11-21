@@ -22,6 +22,5 @@ int main(){
  assert(builtins.find("Ollama")&&!builtins.canRun("Ollama"));
  const auto llama=builtins.find("llama.cpp");
  assert(llama->descriptor.availability==(seed::llamaCppBackendAvailable()?seed::RuntimeAvailability::Available:seed::RuntimeAvailability::OptionalBuildDisabled));
- std::cout<<"SEED-X runtime registry tests passed
-";
+ std::cout<<"SEED-X runtime registry tests passed\\n";
 }
