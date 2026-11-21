@@ -18,9 +18,9 @@ Chat archive is local-only and is not included in settings backup. If history re
 - Uses Android ACTION_OPEN_DOCUMENT with multiple selection and any MIME type.
 - Each selected file is copied into app-private storage; no broad storage permission is requested.
 - Per-file import limit: 20 MB.
-- Text-like formats (TXT, Markdown, CSV, JSON, XML, YAML, HTML and logs) are extracted up to 64 KiB per file and included as untrusted prompt context.
+- Text-like formats (TXT, Markdown, CSV, JSON, XML, YAML, HTML and logs) are extracted up to 64 KiB per file and included as untrusted prompt context.\n- Common OOXML / OpenDocument formats (DOCX, PPTX, XLSX, ODT, ODP and ODS) receive bounded best-effort text extraction from selected XML parts. ZIP entry count, per-entry expanded bytes, total expanded bytes and output length are capped; macros and external relationships are never executed or followed.
 - Images are retained privately and sent as base64 image payloads to compatible Gemini, Anthropic and OpenAI-compatible cloud transports. Image payloads are capped at 6 MB each. The selected model must support vision; local text-only models cannot inspect them.
-- Audio, video, PDF, Office documents, archives and other binary files are retained as attachment metadata and private files, but their contents are not yet decoded or sent as model payloads.
+- Audio, video, PDF, archives and other unsupported binary files are retained as attachment metadata and private files, but their contents are not yet decoded or sent as model payloads. Office extraction is text-only and may omit layout, images, charts, formulas, comments and embedded objects.
 
 **Important capability boundary:** attaching a binary file does not mean every model can inspect it. This phase does not yet add PDF/Office parsing, audio-file transcription, video frame extraction or archive decompression. A model/runtime adapter must explicitly support the modality and payload format before SEED-X can analyze those contents. The chat UI must not claim it has read an unsupported attachment.
 
@@ -58,7 +58,7 @@ The CI static guard checks the new integration catalogue, screen registration, c
 
 Still needed:
 - Android build and device testing.
-- PDF and Office document text extraction.
+- PDF text extraction (Android's standard PdfRenderer is image-oriented; add a separately reviewed text parser before claiming searchable PDF support).
 - Native audio payload / transcription support and additional image provider adapters.
 - Audio file transcription and video frame extraction.
 - MCP HTTP client, auth and Guardian-scoped tool execution.
