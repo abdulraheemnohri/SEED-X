@@ -84,11 +84,11 @@ public final class MainActivity extends Activity {
  }
  private void updateSystemBars(){boolean light="light".equals(prefs.getString("ui_theme","dark"));if("system".equals(prefs.getString("ui_theme","dark")))light=(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_NO;getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);getWindow().getDecorView().setSystemUiVisibility(light?(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR):0);}
  private void chooseTheme(){String[] labels={"Dark","Light","Follow Android system"};String[] values={"dark","light","system"};String current=prefs.getString("ui_theme","dark");int selected=Arrays.asList(values).indexOf(current);new AlertDialog.Builder(this).setTitle("Appearance theme").setSingleChoiceItems(labels,Math.max(0,selected),(d,which)->{prefs.edit().putString("ui_theme",values[which]).apply();d.dismiss();applyTheme();updateSystemBars();render();}).setNegativeButton("Cancel",null).show();}
- private int lightenMuted(){return "light".equals(prefs.getString("ui_theme","dark"))?Color.rgb(65,77,90):Color.LTGRAY;}
+ private int lightenMuted(){return primaryText;}
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
  private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);float scale=prefs==null?1f:prefs.getFloat("ui_text_scale",1f);t.setTextSize(size*scale);if(color==Color.WHITE)color=primaryText;if(prefs!=null&&prefs.getBoolean("ui_high_contrast",false)&&color==muted)color=lightenMuted();t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
- private int screenWidthDp(){return (int)(getResources().getDisplayMetrics().widthPixels/getResources().getDisplayMetrics().density);}
+ private int screenWidthDp(){return getResources().getConfiguration().screenWidthDp;}
  private boolean useSideNavigation(){String mode=prefs==null?"auto":prefs.getString("ui_navigation_mode","auto");return "rail".equals(mode)||("auto".equals(mode)&&screenWidthDp()>=640);}
  private int uiSpace(int comfortable,int compact){return dp("compact".equals(prefs==null?"comfortable":prefs.getString("ui_density","comfortable"))?compact:comfortable);}
  private Button navButton(String label,String description,boolean selected,Runnable action){
