@@ -47,7 +47,7 @@ public:
  LocalAiRuntime& operator=(const LocalAiRuntime&)=delete;
  bool load(const ModelManifest&,std::unique_ptr<InferenceBackend>,const DeviceMemory&,std::string& error);
  void unload() noexcept;
- GenerationResult generate(const std::string&,const GenerationConfig&,const TokenCallback&={});
+ GenerationResult generate(const std::string&,const GenerationConfig&,const TokenCallback& callback = {});
  RuntimeState state() const noexcept;
  std::string backendName() const;
  std::string loadedModelId() const;
