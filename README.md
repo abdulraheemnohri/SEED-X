@@ -174,3 +174,13 @@ The app now includes Prompt Library (built-in and custom local templates), conve
 - Improved light-theme system-bar icon contrast, card spacing, control contrast and screen-reader content descriptions for navigation actions.
 - Navigation mode and density are included in the validated settings backup.
 - Device screenshots, TalkBack traversal and multi-device manual verification remain outstanding; the current implementation is native Android Views, not a Compose redesign.
+
+
+## Phase 26 — Device Status & Backend Management
+- Added a Device Status screen for Android identity/API level, ABI and CPU-core information, battery percentage/charging source/health/temperature/voltage, battery saver, battery-optimization exemption, thermal status where supported, system RAM pressure, internal storage, SEED-X model/download storage usage, and reported hardware features.
+- Added a Backend Manager screen that separates embedded runtime state from remote/local provider profile state, shows active endpoint and profile inventory, and exposes explicit online-fallback and private-LAN HTTP controls.
+- Added navigation and Home quick-launch entries for Device Status and Backend Manager.
+- No additional Android permissions were added. Device information is read through Android public status APIs; radio toggles, privileged controls, private sensor streams and other-app access are not provided.
+- Provider templates remain compatibility presets. The current catalog includes 24 known provider profiles, with custom OpenAI-compatible endpoints supported; account availability, model aliases, pricing, regional support and free quotas must be verified with each provider.
+- Runtime catalog entries remain distinct from runnable adapters. llama.cpp is the embedded engine available in the optional build; other listed runtimes must not be treated as installed or executable until their adapters are integrated and verified.
+- Device-specific hardware readings, thermal reporting and power behavior require validation on physical Android devices.
