@@ -315,7 +315,7 @@ public final class MainActivity extends Activity {
    String tool=p.optString("tool"),op=p.optString("operation"),resource=p.optString("resource"),payload=p.optString("payload","");
    if(tool.length()>128||op.length()>64||resource.length()>512||payload.length()>65536)throw new IllegalArgumentException("A proposal field exceeds its safety limit.");
    boolean valid=("system.status".equals(tool)&&"read".equals(op)&&resource.startsWith("system://"))||
-    ((("files.list".equals(tool)||"files.read".equals(tool))&&"read".equals(op)&&resource.startsWith("workspace://"))||
+    (("files.list".equals(tool)||"files.read".equals(tool))&&"read".equals(op)&&resource.startsWith("workspace://"))||
     ("workspace.search".equals(tool)&&"search".equals(op)&&resource.startsWith("workspace://")&&!payload.isEmpty())||
     ("files.write".equals(tool)&&"create".equals(op)&&resource.startsWith("workspace://")&&!payload.isEmpty());
    if(!valid)throw new IllegalArgumentException("Only registered read tools and approval-gated files.write/create are accepted. Unknown tools, operations and resource schemes are denied.");
