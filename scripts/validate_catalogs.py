@@ -62,3 +62,25 @@ for forbidden in (
     if forbidden in permissions:
         raise SystemExit(f"High-risk permission requires security review: {forbidden}")
 print("OK Android manifest permission boundary")
+
+# Guard the mobile navigation shell against accidental removal of entry points.
+activity = (ROOT / "android/app/src/main/java/org/seedx/agent/MainActivity.java").read_text(encoding="utf-8")
+required_ui = (
+    "private void showMobileMenu",
+    "private void showScreenSearch",
+    "private void chooseStartupScreen",
+    "private void manageFavourites",
+    "Guardian emergency stop",
+    "Stop current generation",
+    "Open full mobile menu",
+)
+for marker in required_ui:
+    if marker not in activity:
+        raise SystemExit(f"MainActivity is missing mobile UI entry point: {marker}")
+for screen in ("Home", "Chat", "Voice", "Memory", "Models", "Downloads", "Runtimes",
+               "Providers", "Skills", "Workflows", "Tasks", "Permissions", "Tools",
+               "Guardian", "Diagnostics", "Settings"):
+    if f'"{screen}"' not in activity:
+        raise SystemExit(f"MainActivity is missing registered screen: {screen}")
+print("OK mobile navigation and screen entry points")
+
