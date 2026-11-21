@@ -743,18 +743,26 @@ navigation.addView(text("Four primary tabs stay visible at the bottom. All remai
    JSONArray live=new JSONArray(nativeRuntimeCatalog());java.util.HashMap<String,JSONObject> actual=new java.util.HashMap<>();
    for(int i=0;i<live.length();i++){JSONObject entry=live.getJSONObject(i);actual.put(entry.optString("id"),entry);}
    JSONArray list=assetJson("runtime_catalog.json").optJSONArray("runtimes");
+   int runnableCount=0;for(JSONObject entry:actual.values())if(entry.optBoolean("canRun",false))runnableCount++;
+   LinearLayout summary=card();summary.addView(text("RUNTIME INVENTORY",12,accent,true));
+   summary.addView(text((list==null?0:list.length())+" catalog entries • "+runnableCount+" runnable native adapter(s)",14,primaryText,true));
+   summary.addView(text("Catalog presence is not installation. Only the live native registry can mark an embedded backend runnable.",11,muted,false));
    if(list!=null)for(int i=0;i<list.length();i++){
     JSONObject r=list.getJSONObject(i);JSONObject state=actual.get(r.optString("id"));
     LinearLayout item=card();item.addView(text(r.optString("name"),15,Color.WHITE,true));
+    item.addView(text("Category: "+r.optString("category","unspecified")+" • Acceleration: "+r.optJSONArray("acceleration"),10,muted,false));
     boolean canRun=state!=null&&state.optBoolean("canRun",false);
     String status=state==null?r.optString("status","catalog-only"):state.optString("status");
     item.addView(text((canRun?"AVAILABLE NOW • ":status.replace('-',' ').toUpperCase(Locale.ROOT)+" • NOT RUNNABLE"),10,canRun?accent:Color.rgb(245,190,75),true));
     item.addView(text(state==null?r.optString("notes"):state.optString("detail"),12,muted,false));
     item.addView(text("Platforms: "+r.optJSONArray("platforms")+" • Formats: "+r.optJSONArray("formats"),10,muted,false));
     Button open=new Button(this);open.setText("Runtime documentation");open.setAllCaps(false);open.setOnClickListener(v->openUrl(r.optString("url")));item.addView(open);
+    Button details=new Button(this);details.setText("Copy runtime details");details.setAllCaps(false);details.setOnClickListener(v->{String report=r.optString("name")+"\\nCategory: "+r.optString("category")+"\\nStatus: "+status+"\\nPlatforms: "+r.optJSONArray("platforms")+"\\nFormats: "+r.optJSONArray("formats")+"\\nAcceleration: "+r.optJSONArray("acceleration")+"\\n"+r.optString("notes");((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED-X runtime",report));toast("Runtime details copied.");});item.addView(details);
    }
   }catch(Exception e){card().addView(text("Runtime registry unavailable: "+e.getMessage(),12,Color.RED,false));}
+  button("Refresh runtime inventory",panel,()->render());
   button("Run runtime diagnostics",panel,()->showRuntimeDiagnostics());
+  button("Manage backend connections",panel,()->navigateTo("Backends"));
   button("Import local GGUF model",accent,()->{page="Models";render();});
  }
 
