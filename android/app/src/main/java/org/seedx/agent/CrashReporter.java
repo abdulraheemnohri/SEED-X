@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Arrays;
+import java.security.MessageDigest;
 
 /** Local-only crash recorder. Reports are never transmitted automatically. */
 public final class CrashReporter {
@@ -48,8 +49,11 @@ public final class CrashReporter {
         File target = new File(dir, FILE_NAME);
         StringWriter stack = new StringWriter();
         if (error != null) error.printStackTrace(new PrintWriter(stack));
+        String stackText = stack.toString();
         String report = "SEED-X Diagnostic Report\n"
             + "Type: " + kind + "\n"
+            + "Category: " + classify(kind + " " + stackText) + "\n"
+            + "Fingerprint: " + fingerprint(stackText) + "\n"
             + "Time: " + new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", Locale.US).format(new Date()) + "\n"
             + "App: " + appVersion(context) + "\n"
             + "Android: " + Build.VERSION.RELEASE + " (API " + Build.VERSION.SDK_INT + ")\n"
@@ -66,6 +70,37 @@ public final class CrashReporter {
         File history = new File(dir, stamp + "-" + System.currentTimeMillis() + ".txt");
         try (FileOutputStream out = new FileOutputStream(history, false)) { out.write(bytes); out.getFD().sync(); }
         pruneHistory(dir);
+    }
+
+
+    public static String classify(String input) {
+        String value = input == null ? "" : input.toLowerCase(Locale.US);
+        if (value.contains("outofmemoryerror") || value.contains("failed to allocate")) return "MEMORY";
+        if (value.contains("securityexception") || value.contains("permission denied")) return "PERMISSION_OR_SECURITY";
+        if (value.contains("sockettimeoutexception") || value.contains("unknownhostexception") || value.contains("connectexception")) return "NETWORK";
+        if (value.contains("jsonexception") || value.contains("parse")) return "DATA_OR_PARSING";
+        if (value.contains("unsatisfiedlinkerror") || value.contains("jni") || value.contains("native")) return "NATIVE_BRIDGE";
+        if (value.contains("illegalstateexception") || value.contains("nullpointerexception") || value.contains("indexoutofboundsexception")) return "APPLICATION_LOGIC";
+        return "UNCLASSIFIED";
+    }
+
+    private static String fingerprint(String stack) {
+        try {
+            StringBuilder normalized = new StringBuilder();
+            String[] lines = stack.split("\\n");
+            int count = 0;
+            for (String line : lines) {
+                String trimmed = line.trim();
+                if (trimmed.startsWith("at ") || trimmed.endsWith("Exception") || trimmed.endsWith("Error")) {
+                    normalized.append(trimmed.replaceAll(":\\d+\\)", ":#)")).append('\\n');
+                    if (++count >= 10) break;
+                }
+            }
+            byte[] hash = MessageDigest.getInstance("SHA-256").digest(normalized.toString().getBytes(StandardCharsets.UTF_8));
+            StringBuilder hex = new StringBuilder();
+            for (int i = 0; i < 8; i++) hex.append(String.format(Locale.US, "%02x", hash[i]));
+            return hex.toString();
+        } catch (Exception e) { return "unavailable"; }
     }
 
     public static synchronized void breadcrumb(Context context, String event) {
@@ -142,8 +177,9 @@ public final class CrashReporter {
     }
 
     public static void clear(Context context) {
-        File file = latest(context);
-        if (file != null) file.delete();
+        File dir = new File(context.getFilesDir(), DIRECTORY);
+        File[] files = dir.listFiles();
+        if (files != null) for (File file : files) if (file.isFile()) file.delete();
     }
 
     private static String appVersion(Context context) {
