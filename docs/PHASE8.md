@@ -11,7 +11,7 @@ The existing live chat transports support:
 - Anthropic Messages API.
 - OpenAI-compatible chat completions.
 
-Provider presets using the OpenAI-compatible protocol include Groq, OpenRouter, Cloudflare Workers AI, NVIDIA NIM, Z.AI, SambaNova, Cohere compatibility, Cerebras, OpenAI, Anthropic, DeepSeek, Mistral, Qwen DashScope, Together AI, Fireworks AI, Perplexity, xAI, Hugging Face Router, Ollama, LM Studio, llama.cpp server, LocalAI, vLLM and SGLang. Each provider may require its own endpoint, model identifier, account, API key, headers or model-specific settings. Cloudflare requires replacing the account-ID placeholder. Always verify provider documentation before use.
+Provider profiles include Gemini, Anthropic, Groq, OpenRouter, Cloudflare Workers AI, NVIDIA NIM, Z.AI, SambaNova, Cohere compatibility, Cerebras, OpenAI, DeepSeek, Mistral, Qwen DashScope, Together AI, Fireworks AI, Perplexity, xAI, Hugging Face Router, Ollama, LM Studio, llama.cpp server, LocalAI, vLLM and SGLang. Gemini uses its native generateContent transport; Anthropic uses Messages; the other profiles use OpenAI-compatible chat completions where supported by the provider. Each provider may require its own endpoint, model identifier, account, API key, headers or model-specific settings. Cloudflare requires replacing the account-ID placeholder. Always verify provider documentation before use.
 
 Free-access labels are indicative, not guarantees:
 - Gemini offers a free tier for selected models; free-tier data may be used to improve Google products.
