@@ -32,6 +32,7 @@ bool Guardian::consumeApproval(const ToolRequest&r,const std::string&id){if(id.e
 void Guardian::emergencyStop()noexcept{frozen_.store(true);std::lock_guard<std::mutex> lock(mutex_);approvals_.clear();}
 bool Guardian::resetEmergencyStop(bool confirmed)noexcept{if(!confirmed)return false;std::lock_guard<std::mutex> lock(mutex_);approvals_.clear();frozen_.store(false);return true;}
 bool Guardian::isFrozen()const noexcept{return frozen_.load();}
+void Guardian::recordToolOutcome(const ToolRequest&r,bool success){std::lock_guard<std::mutex> lock(mutex_);record(r,{success?Decision::Allow:Decision::Deny,success?"Registered tool handler completed successfully.":"Registered tool handler failed."});}
 bool Guardian::verifyAudit()const{return audit_.verify();}
 std::vector<AuditEntry> Guardian::auditSnapshot()const{return audit_.snapshot();}
 }
