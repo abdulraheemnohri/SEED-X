@@ -107,3 +107,8 @@ Added a native runtime registry and live JNI availability reporting. Runtime Man
 ## Phase 11 — Model format contracts
 
 Added explicit model package format identifiers and hardened runtime factory validation. A runtime cannot be instantiated unless its factory returns a backend compatible with its declared formats. GGUF remains the only currently validated local model format; ONNX, LiteRT, MLC, ExecuTorch, MNN and ncnn are recognized but not yet executable. See [docs/PHASE11.md](docs/PHASE11.md).
+
+
+## Phase 12 — Android OS integration
+
+Added a user-started Android foreground-session service, notification permission flow, Android app-permission settings shortcuts, and battery-optimization settings access. The service is a lifecycle foundation only: it does not execute tools or access privileged device APIs. It remains subject to Android background-start and foreground-service limits. See [docs/PHASE12.md](docs/PHASE12.md).
