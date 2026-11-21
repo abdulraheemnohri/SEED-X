@@ -275,6 +275,258 @@
       ],
       "notes": "High-throughput NVIDIA server runtime; not an embedded Android runtime.",
       "url": "https://nvidia.github.io/TensorRT-LLM/"
+    },
+    {
+      "id": "whisper-cpp",
+      "name": "whisper.cpp",
+      "category": "audio-asr",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "GGML Whisper models"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Offline multilingual ASR; native C/C++ port and model files required.",
+      "url": "https://github.com/ggml-org/whisper.cpp"
+    },
+    {
+      "id": "sherpa-onnx",
+      "name": "sherpa-onnx",
+      "category": "audio-unified",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "ONNX ASR/TTS/VAD/KWS"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Offline speech toolkit: ASR, TTS, VAD, speaker ID and keyword spotting.",
+      "url": "https://github.com/k2-fsa/sherpa-onnx"
+    },
+    {
+      "id": "vosk",
+      "name": "Vosk",
+      "category": "audio-asr",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "Vosk acoustic model directories"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Offline streaming ASR; model language packs are separate.",
+      "url": "https://alphacephei.com/vosk/"
+    },
+    {
+      "id": "moonshine",
+      "name": "Moonshine",
+      "category": "audio-asr",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "ONNX / TFLite exports"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Compact ASR family; validate supported Android export.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "silero-vad",
+      "name": "Silero VAD",
+      "category": "audio-vad",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "ONNX"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Voice activity detection only; it does not transcribe speech.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "piper-tts",
+      "name": "Piper TTS",
+      "category": "audio-tts",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "ONNX voice models"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Offline neural TTS; individual voice models have separate licenses.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "kokoro-tts",
+      "name": "Kokoro TTS",
+      "category": "audio-tts",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "ONNX / supported export"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Compact expressive TTS family; Android export compatibility must be verified.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "ml-kit-genai-speech-recognition",
+      "name": "ML Kit GenAI Speech Recognition",
+      "category": "audio-asr",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "On-device AICore model"
+      ],
+      "status": "platform-alpha",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Google ML Kit GenAI speech recognition; alpha and supported-device dependent.",
+      "url": "https://developers.google.com/ml-kit/genai/speech-recognition/android"
+    },
+    {
+      "id": "android-speechrecognizer",
+      "name": "Android SpeechRecognizer",
+      "category": "audio-asr",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "Android system recognition service"
+      ],
+      "status": "platform-integrated",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "System ASR; on-device mode is available only when the device reports support.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "android-texttospeech",
+      "name": "Android TextToSpeech",
+      "category": "audio-tts",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "Installed Android TTS voices"
+      ],
+      "status": "platform-integrated",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "System TTS; offline capability depends on installed voice data.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "ml-kit-genai-text-to-speech",
+      "name": "ML Kit GenAI Text-to-Speech",
+      "category": "audio-tts",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "On-device AICore model"
+      ],
+      "status": "platform-alpha",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Generative TTS alpha on a limited set of supported devices.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "mnn",
+      "name": "MNN",
+      "category": "multimodal-runtime",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "MNN model packages"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Cross-platform neural network inference runtime.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "mediapipe",
+      "name": "MediaPipe",
+      "category": "vision-audio",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "Task bundles"
+      ],
+      "status": "catalog-only-adapter-needed",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "On-device vision and audio task runtime.",
+      "url": "https://developer.android.com/"
+    },
+    {
+      "id": "diffusers",
+      "name": "Diffusers",
+      "category": "image-generation",
+      "platforms": [
+        "Android"
+      ],
+      "formats": [
+        "Diffusers pipelines"
+      ],
+      "status": "server-desktop-runtime",
+      "acceleration": [
+        "CPU",
+        "Delegates only where validated"
+      ],
+      "notes": "Diffusion pipelines; mobile deployment requires specialized model exports.",
+      "url": "https://developer.android.com/"
     }
   ]
 }
