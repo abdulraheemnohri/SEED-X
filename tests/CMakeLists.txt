@@ -13,3 +13,8 @@ add_executable(seedx_online_ai_tests online_ai_tests.cpp ../engine/src/online_ai
 target_include_directories(seedx_online_ai_tests PRIVATE ../engine/include)
 target_compile_features(seedx_online_ai_tests PRIVATE cxx_std_20)
 add_test(NAME seedx_online_ai_tests COMMAND seedx_online_ai_tests)
+
+add_executable(seedx_runtime_registry_tests runtime_registry_tests.cpp ../engine/src/runtime_registry.cpp ../engine/src/llama_backend_stub.cpp)
+target_include_directories(seedx_runtime_registry_tests PRIVATE ../engine/include)
+target_compile_features(seedx_runtime_registry_tests PRIVATE cxx_std_20)
+add_test(NAME seedx_runtime_registry_tests COMMAND seedx_runtime_registry_tests)
