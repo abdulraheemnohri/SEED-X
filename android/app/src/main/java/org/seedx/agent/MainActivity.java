@@ -388,7 +388,51 @@ public final class MainActivity extends Activity {
    new AlertDialog.Builder(this).setTitle("Recent Guardian Audit").setView(scroll).setPositiveButton("Close",null).show();
   }catch(Exception e){showToolMessage("Audit history unavailable: "+e.getMessage());}
  }
+ private boolean notificationPermissionGranted(){
+  return android.os.Build.VERSION.SDK_INT<33 || checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)==android.content.pm.PackageManager.PERMISSION_GRANTED;
+ }
+ private void startAgentSession(){
+  if(android.os.Build.VERSION.SDK_INT>=33&&!notificationPermissionGranted()){
+   requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS},4201);
+   return;
+  }
+  try{
+   Intent intent=new Intent(this,AgentForegroundService.class);
+   intent.setAction(AgentForegroundService.ACTION_START);
+   if(android.os.Build.VERSION.SDK_INT>=26)startForegroundService(intent);else startService(intent);
+   toast("Background session start requested. Check the persistent notification.");
+  }catch(Exception e){toast("Android blocked background session: "+e.getMessage());}
+ }
+ private void stopAgentSession(){
+  try{Intent intent=new Intent(this,AgentForegroundService.class);intent.setAction(AgentForegroundService.ACTION_STOP);startService(intent);toast("Stop requested.");}
+  catch(Exception e){stopService(new Intent(this,AgentForegroundService.class));toast("Background session stopped.");}
+ }
+ private void openAppPermissionSettings(){
+  try{Intent i=new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS,Uri.parse("package:"+getPackageName()));startActivity(i);}
+  catch(Exception e){toast("Cannot open Android app settings.");}
+ }
+ private void openBatterySettings(){
+  try{startActivity(new Intent(android.provider.Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS));}
+  catch(Exception e){toast("Battery settings are unavailable on this device.");}
+ }
+ @Override public void onRequestPermissionsResult(int requestCode,String[] permissions,int[] grantResults){
+  super.onRequestPermissionsResult(requestCode,permissions,grantResults);
+  if(requestCode==4201){
+   if(notificationPermissionGranted())startAgentSession();
+   else toast("Notification permission denied. Enable it in Android App Settings before starting the background session.");
+   if("Settings".equals(page))render();
+  }
+ }
  private void settings(){heading("Settings","Privacy, routing, generation, model memory and network controls.");
+  LinearLayout os=card();os.addView(text("ANDROID OS INTEGRATION",12,accent,true));
+  os.addView(text("Foreground session: "+(AgentForegroundService.isRunning()?"RUNNING":"STOPPED"),14,Color.WHITE,true));
+  os.addView(text("Notifications: "+(notificationPermissionGranted()?"allowed":"not allowed"),12,muted,false));
+  os.addView(text("Android API "+android.os.Build.VERSION.SDK_INT+" • service is user-started and subject to OS limits",11,muted,false));
+  button("Start background session",accent,()->startAgentSession());
+  button("Stop background session",panel,()->stopAgentSession());
+  button("Open Android app permissions",panel,()->openAppPermissionSettings());
+  button("Open battery optimization settings",panel,()->openBatterySettings());
+  os.addView(text("SEED-X requests notification permission only when you start this session. No Accessibility, overlay, microphone, camera, location, contacts, SMS, notification-listener, all-files, or device-admin access is requested.",11,muted,false));
   LinearLayout privacy=card();privacy.addView(text("PRIVACY & ROUTING",12,accent,true));
   CheckBox online=new CheckBox(this);online.setText("Allow network provider fallback (cloud or local server)");online.setTextColor(Color.WHITE);online.setChecked(prefs.getBoolean("online_allowed",false));online.setOnCheckedChangeListener((v,x)->prefs.edit().putBoolean("online_allowed",x).apply());privacy.addView(online);
   CheckBox localHttp=new CheckBox(this);localHttp.setText("Allow cleartext HTTP to loopback/private LAN only");localHttp.setTextColor(Color.WHITE);localHttp.setChecked(prefs.getBoolean("allow_local_http",false));localHttp.setOnCheckedChangeListener((v,x)->prefs.edit().putBoolean("allow_local_http",x).apply());privacy.addView(localHttp);
