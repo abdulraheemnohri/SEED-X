@@ -1,6 +1,6 @@
 # SEED-X
 
-**Self-Evolving Android AI Agent** — a local-first native Android AI agent foundation.
+**Self-Evolving Android AI Agent** — a local-first native Android AI workspace and Guardian-governed tool platform.\n\n![SEED-X logo](assets/brand/seedx-logo.svg)
 
 ## Phase 1 — Native foundation
 C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surface, lifecycle kernel, event bus and host-side tests.
@@ -25,7 +25,7 @@ C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surfa
 - Mock HTTP adapter tests. See docs/PHASE4.md.
 
 ## Phase 5 — Android AI Studio
-- Native Android Java UI: Chat, Models, Providers, Guardian and Settings.
+- Native Android Java UI: Home, Chat, Voice, Memory, Models, Runtimes, Providers, Skills, Workflows, Tools, Guardian, Diagnostics and Settings.
 - OpenAI-compatible, Anthropic and Gemini chat requests.
 - Android Keystore AES-GCM credential encryption; online fallback OFF by default.
 - GGUF document picker and app-private model storage.
@@ -47,6 +47,18 @@ C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surfa
 - Workspace path traversal protection, 1 MiB read cap, 64 KiB write cap, exclusive no-overwrite note creation.
 - Host tests cover tool registration, approvals, replay rejection and emergency-stop blocking.
 - See docs/PHASE7.md.
+
+## Phase 8 — Universal AI Control Center (0.8.0)
+- Dashboard, Chat, Voice, Memory, Models, Runtimes, Providers, Skills, Workflows, Tools, Guardian, Diagnostics and Settings screens.
+- Multi-profile provider hub with presets for Gemini, Groq, OpenRouter, Cloudflare Workers AI, NVIDIA NIM, Z.AI, SambaNova, Cohere, Cerebras, OpenAI, Anthropic, DeepSeek, Mistral, Qwen, Together, Fireworks, Perplexity, xAI, Hugging Face Router, Ollama, LM Studio, llama.cpp server, LocalAI, vLLM and SGLang.
+- Free-tier labels are qualified and limited; the app bundles no API keys and never promises unlimited free inference. Cloud prompts require explicit per-send confirmation.
+- Local HTTP is opt-in and restricted in app code to loopback/private IPv4/.local endpoints. HTTPS remains required for public providers. Keyless local OpenAI-compatible servers are supported.
+- Runtime catalogue covers llama.cpp, LiteRT-LM, MLC LLM, ExecuTorch, ONNX Runtime GenAI, MNN-LLM, ncnn, Ollama, LM Studio, LocalAI, vLLM, SGLang, OpenVINO and TensorRT-LLM. Only llama.cpp is currently embedded/integrated; other embedded runtimes need adapters.
+- Twenty built-in prompt skills with search and enable/disable, six manual workflows, user-managed opt-in local memory, speech-to-text handoff and Android text-to-speech.
+- Configurable system prompt, output tokens, temperature, top-p, context, provider timeout and response-size bounds.
+- Device-aware model guide for constrained phones, imported GGUF model management, model deletion, runtime diagnostics and copyable privacy-safe diagnostics.
+- Android launcher logo: assets/brand/seedx-logo.svg and android/app/src/main/res/drawable/seedx_logo.xml.
+- Provider/runtime/skill/model catalogs are in config/ and bundled Android assets. See docs/PHASE8.md.
 
 ## Build on Windows PowerShell
 
@@ -71,7 +83,7 @@ System 1 (Guardian) owns policy and authorization. System 2 model output is untr
 
 ## Current limitations
 - Android local inference requires -PseedxLlamaCpp=ON; default CI compiles the JNI bridge with a stub backend.
-- The online Java provider client and C++ Phase 4 provider adapter are not yet unified.
+- The Android Java provider transport and C++ Phase 4 provider adapter remain separate implementations.
 - Policy dashboard is read-only; a visual policy editor and third-party dynamic plugin loading are pending.
 - Model-initiated autonomous tool planning is not enabled; operators launch tools from the Tool Center. No GPU/NPU acceleration or physical-device benchmark is claimed.
 - SHA-256 model verification, signed model provenance and model catalog/downloader remain pending.
