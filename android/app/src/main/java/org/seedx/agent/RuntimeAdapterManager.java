@@ -8,6 +8,7 @@ import java.io.File;
 public final class RuntimeAdapterManager {
     private final Context context;
     private InferenceAdapter active;
+    private final java.util.concurrent.ExecutorService generationExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
 
     public RuntimeAdapterManager(Context context) { this.context = context.getApplicationContext(); }
 
@@ -24,8 +25,8 @@ public final class RuntimeAdapterManager {
         } else {
             throw new IllegalArgumentException("No Phase 29 adapter for this format. Supported here: .litertlm and .pte. GGUF continues through the existing llama.cpp native path.");
         }
-        requireMemoryHeadroom(model);
         if (active != null) { active.unload(); active = null; }
+        requireMemoryHeadroom(model);
         next.load(model, tokenizer);
         active = next;
         return "Loaded " + next.id() + " model: " + model.getName();
@@ -47,10 +48,11 @@ public final class RuntimeAdapterManager {
 
     public synchronized void generate(String prompt, int maxTokens, float temperature, InferenceAdapter.Listener listener) {
         if (active == null || !active.isLoaded()) { listener.onError("No local adapter/model is loaded."); return; }
-        active.generate(prompt, maxTokens, temperature, listener);
+        final InferenceAdapter selected = active;
+        generationExecutor.execute(() -> selected.generate(prompt, maxTokens, temperature, listener));
     }
     public synchronized void cancel() { if (active != null) active.cancel(); }
-    public synchronized void unload() { if (active != null) { active.unload(); active = null; } }
+    public synchronized void unload() { if (active != null) { active.cancel(); active.unload(); active = null; } }
     public synchronized String activeRuntime() { return active == null ? "none" : active.id(); }
     public synchronized boolean isLoaded() { return active != null && active.isLoaded(); }
 }
