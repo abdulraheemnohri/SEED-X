@@ -324,6 +324,7 @@ private void pickChatAttachments(){
   }).setNegativeButton("Cancel",null).show();
  }
  private void startVoiceChat(){voiceChatArmed=true;page="Chat";render();startVoiceRecognition();}
+ private void speakAssistantIfEnabled(String value){if(prefs.getBoolean("voice_chat_auto_speak",false)&&tts!=null&&ttsReady)tts.speak(value,TextToSpeech.QUEUE_FLUSH,null,"seedx-voice-chat");}
  private void speakLatestAssistant(){
   if(tts==null||!ttsReady){toast("Text-to-speech engine is unavailable.");return;}
   for(int i=history.size()-1;i>=0;i--){JSONObject m=history.get(i);if("assistant".equals(m.optString("role"))){tts.speak(m.optString("text"),TextToSpeech.QUEUE_FLUSH,null,"seedx-voice-chat");return;}}
@@ -360,7 +361,7 @@ private void send(String prompt){if(!nativeReady){addMessage("assistant","Native
    .setNegativeButton("Cancel",null).setPositiveButton("Send",(dialog,which)->sendCloud(cfg)).show();
  }
  private void sendCloud(JSONObject cfg){ProgressBar progress=new ProgressBar(this);progress.setIndeterminate(true);content.addView(progress);
-  worker.execute(()->{String answer;try{answer=requestProvider(cfg);}catch(Exception e){CrashReporter.recordNonFatal(MainActivity.this,"cloud provider request",e);answer="Request failed: "+(e.getMessage()==null?"network error":e.getMessage());}final String result=answer;runOnUiThread(()->{addMessage("assistant",result);render();});});
+  worker.execute(()->{String answer;try{answer=requestProvider(cfg);}catch(Exception e){CrashReporter.recordNonFatal(MainActivity.this,"cloud provider request",e);answer="Request failed: "+(e.getMessage()==null?"network error":e.getMessage());}final String result=answer;runOnUiThread(()->{addMessage("assistant",result);speakAssistantIfEnabled(result);render();});});
  }
  private void sendThirdPartyLocal(String prompt){
   ProgressBar progress=new ProgressBar(this);progress.setIndeterminate(true);content.addView(progress);StringBuilder reply=new StringBuilder();
@@ -382,7 +383,7 @@ private void send(String prompt){if(!nativeReady){addMessage("assistant","Native
     if(result.startsWith("ERROR:")) result=result.substring(7);
    } catch(Exception e) { result="Local inference failed: "+e.getMessage(); }
    final String answer=result;
-   runOnUiThread(()->{addMessage("assistant",answer);render();});
+   runOnUiThread(()->{addMessage("assistant",answer);speakAssistantIfEnabled(answer);render();});
   });
   button("Stop generation",panel,()->nativeCancel());
  }
