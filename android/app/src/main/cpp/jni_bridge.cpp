@@ -15,6 +15,7 @@
 #include <vector>
 #include "seed/agent_kernel.hpp"
 #include "seed/llama_backend.hpp"
+#include "seed/runtime_registry.hpp"
 #include "seed/tool_registry.hpp"
 
 namespace {
@@ -279,6 +280,25 @@ Java_org_seedx_agent_MainActivity_nativeRuntimeStatus(JNIEnv* env,jobject) {
  json+=",\"availableBytes\":"+std::to_string(hasMemory?mem.availableBytes:0);
  json+=",\"reserveBytes\":"+std::to_string(kReserveBytes);
  json+=",\"memoryError\":\""+escapeJson(memError)+"\"}";
+ return toJava(env,json);
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_seedx_agent_MainActivity_nativeRuntimeCatalog(JNIEnv* env,jobject) {
+ const auto registry=seed::RuntimeRegistry::builtins();
+ const auto entries=registry.snapshot();
+ std::string json="[";
+ for(std::size_t i=0;i<entries.size();++i){
+  const auto& d=entries[i];if(i)json+=",";
+  const char* status=d.availability==seed::RuntimeAvailability::Available?"available":
+   d.availability==seed::RuntimeAvailability::OptionalBuildDisabled?"optional-build-disabled":
+   d.availability==seed::RuntimeAvailability::RemoteService?"remote-service":"adapter-missing";
+  json+="{\\"id\\":\\""+escapeJson(d.id)+"\\",\\"name\\":\\""+escapeJson(d.displayName)+"\\",\\"category\\":\\""+escapeJson(d.category)+"\\",\\"status\\":\\""+status+"\\",\\"embedded\\":";
+  json+=d.embedded?"true":"false";
+  json+=",\\"canRun\\":";json+=registry.canRun(d.id)?"true":"false";
+  json+=",\\"detail\\":\\""+escapeJson(d.detail)+"\\"}";
+ }
+ json+="]";
  return toJava(env,json);
 }
 
