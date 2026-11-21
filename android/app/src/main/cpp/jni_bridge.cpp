@@ -146,8 +146,8 @@ void registerTools(const std::filesystem::path& root) {
  gTools.add({"system.status","read","system://","Read SEED-X runtime status"},
   [](const seed::ToolRequest&,const std::string&) {
    return seed::ToolResult{true,seed::Decision::Allow,
-    std::string("{\\"kernelReady\\":true,\\"emergencyStop\\":")+
-    (gKernel.emergencyStopped()?"true":"false")+",\\"modelReady\\":"+
+    std::string("{\"kernelReady\":true,\"emergencyStop\":")+
+    (gKernel.emergencyStopped()?"true":"false")+",\"modelReady\":"+
     (gModelReady.load()?"true":"false")+"}"};
   });
  gTools.add({"files.list","read","workspace://","List files in the private SEED-X workspace"},
@@ -161,7 +161,7 @@ void registerTools(const std::filesystem::path& root) {
     if(item.is_symlink(ec))continue;
     if(count++)json+=",";
     const auto name=item.path().filename().string();
-    json+="{\\"name\\":\\""+escapeJson(name)+"\\",\\"type\\":\\""+(item.is_directory(ec)?std::string("directory"):std::string("file"))+"\\",\\"bytes\\":"+std::to_string(item.is_regular_file(ec)?item.file_size(ec):0)+"}";
+    json+="{\"name\":\""+escapeJson(name)+"\",\"type\":\""+(item.is_directory(ec)?std::string("directory"):std::string("file"))+"\",\"bytes\":"+std::to_string(item.is_regular_file(ec)?item.file_size(ec):0)+"}";
    }
    json+="]";return seed::ToolResult{true,seed::Decision::Allow,json};
   });
@@ -347,7 +347,7 @@ Java_org_seedx_agent_MainActivity_nativeResetEmergencyStop(JNIEnv*,jobject,jbool
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_org_seedx_agent_MainActivity_nativeToolCatalog(JNIEnv* env,jobject) {
- return toJava(env,"[{\\"tool\\":\\"system.status\\",\\"operation\\":\\"read\\",\\"resource\\":\\"system://status\\",\\"description\\":\\"Read device and runtime status\\"},{\\"tool\\":\\"files.list\\",\\"operation\\":\\"read\\",\\"resource\\":\\"workspace://\\",\\"description\\":\\"List private workspace files\\"},{\\"tool\\":\\"files.read\\",\\"operation\\":\\"read\\",\\"resource\\":\\"workspace://relative/path.txt\\",\\"description\\":\\"Read a workspace text file up to 1 MiB\\"},{\\"tool\\":\\"files.write\\",\\"operation\\":\\"create\\",\\"resource\\":\\"workspace://notes/new.txt\\",\\"description\\":\\"Create a new note; operator approval required\\"}]");
+ return toJava(env,"[{\"tool\":\"system.status\",\"operation\":\"read\",\"resource\":\"system://status\",\"description\":\"Read device and runtime status\"},{\"tool\":\"files.list\",\"operation\":\"read\",\"resource\":\"workspace://\",\"description\":\"List private workspace files\"},{\"tool\":\"files.read\",\"operation\":\"read\",\"resource\":\"workspace://relative/path.txt\",\"description\":\"Read a workspace text file up to 1 MiB\"},{\"tool\":\"files.write\",\"operation\":\"create\",\"resource\":\"workspace://notes/new.txt\",\"description\":\"Create a new note; operator approval required\"}]");
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_org_seedx_agent_MainActivity_nativeRequestApproval(JNIEnv* env,jobject,jstring toolValue,jstring operationValue,jstring resourceValue,jboolean confirmed) {
@@ -358,9 +358,9 @@ Java_org_seedx_agent_MainActivity_nativeRequestApproval(JNIEnv* env,jobject,jstr
 }
 extern "C" JNIEXPORT jstring JNICALL
 Java_org_seedx_agent_MainActivity_nativeExecuteTool(JNIEnv* env,jobject,jstring toolValue,jstring operationValue,jstring resourceValue,jstring payloadValue,jstring ticketValue) {
- if(gKernel.emergencyStopped()) return toJava(env,"{\\"success\\":false,\\"decision\\":\\"deny\\",\\"output\\":\\"Guardian emergency stop is active.\\"}");
+ if(gKernel.emergencyStopped()) return toJava(env,"{\"success\":false,\"decision\":\"deny\",\"output\":\"Guardian emergency stop is active.\"}");
  seed::ToolRequest request{fromJava(env,toolValue),fromJava(env,operationValue),fromJava(env,resourceValue),"SEED-X Android Tools screen request"};
  const auto result=gTools.execute(gKernel,request,fromJava(env,payloadValue),fromJava(env,ticketValue));
  const std::string decision=result.decision==seed::Decision::Allow?"allow":result.decision==seed::Decision::RequireApproval?"approval":"deny";
- return toJava(env,std::string("{\\"success\\":")+(result.success?"true":"false")+",\\"decision\\":\\""+decision+"\\",\\"output\\":\\""+escapeJson(result.output)+"\\"}");
+ return toJava(env,std::string("{\"success\":")+(result.success?"true":"false")+",\"decision\":\""+decision+"\",\"output\":\""+escapeJson(result.output)+"\"}");
 }
