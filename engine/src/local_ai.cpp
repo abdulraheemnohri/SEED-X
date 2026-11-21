@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <filesystem>
+#include <exception>
 #include <utility>
 namespace seed {
 ModelCheck ModelManager::validate(const ModelManifest&m){
@@ -38,7 +39,10 @@ GenerationResult LocalAiRuntime::generate(const std::string&prompt,const Generat
  if(config.maxTokens==0||config.maxTokens>model_.contextTokens)return {false,{},"maxTokens is outside the model context limit."};
  if(!std::isfinite(config.temperature)||config.temperature<0.0F||config.temperature>2.0F)return {false,{},"Temperature must be between 0 and 2."};
  if(!std::isfinite(config.topP)||config.topP<=0.0F||config.topP>1.0F)return {false,{},"topP must be greater than 0 and at most 1."};
- state_=RuntimeState::Generating;auto result=backend_->generate(prompt,config,callback);state_=backend_?RuntimeState::Ready:RuntimeState::Unavailable;return result;
+ state_=RuntimeState::Generating;
+ try{auto result=backend_->generate(prompt,config,callback);state_=backend_?RuntimeState::Ready:RuntimeState::Unavailable;return result;}
+ catch(const std::exception& e){state_=RuntimeState::Error;return {false,{},std::string("Inference backend exception: ")+e.what()};}
+ catch(...){state_=RuntimeState::Error;return {false,{},"Inference backend failed with an unknown exception."};}
 }
 RuntimeState LocalAiRuntime::state()const noexcept{return state_;}
 std::string LocalAiRuntime::backendName()const{return backend_?backend_->name():std::string{};}
