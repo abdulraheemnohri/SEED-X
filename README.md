@@ -186,3 +186,7 @@ The app now includes Prompt Library (built-in and custom local templates), conve
 - Provider templates remain compatibility presets. The current catalog includes 24 known provider profiles, with custom OpenAI-compatible endpoints supported; account availability, model aliases, pricing, regional support and free quotas must be verified with each provider.
 - Runtime catalog entries remain distinct from runnable adapters. llama.cpp is the embedded engine available in the optional build; other listed runtimes must not be treated as installed or executable until their adapters are integrated and verified.
 - Device-specific hardware readings, thermal reporting and power behavior require validation on physical Android devices. See [docs/PHASE26.md](docs/PHASE26.md).
+
+
+## Phase 27 — Complete Debug APK
+The recommended GitHub Actions debug artifact is now the llama.cpp-enabled `seedx-debug-apk`, with a smaller `seedx-debug-apk-stub` fallback. See [docs/PHASE27.md](docs/PHASE27.md) for exactly what is included and which runtime adapters remain pending.
