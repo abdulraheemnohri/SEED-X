@@ -1,0 +1,17 @@
+build/
+.gradle/
+.idea/
+local.properties
+.cxx/
+.externalNativeBuild/
+*.apk
+*.aab
+*.so
+*.o
+*.a
+.env
+*.keystore
+*.jks
+*.db
+*.sqlite
+cmake-build-*/
