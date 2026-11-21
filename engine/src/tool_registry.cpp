@@ -21,8 +21,8 @@ ToolResult ToolRegistry::execute(AgentKernel& kernel,const ToolRequest& request,
   }
  }
  if(!selected) {
-  const auto denied=kernel.authorize(request);
-  return {false,denied.decision,"Tool is not registered. No handler was executed."};
+  kernel.authorize(request);
+  return {false,Decision::Deny,"Tool is not registered. No handler was executed."};
  }
  try {
   ToolResult result;
