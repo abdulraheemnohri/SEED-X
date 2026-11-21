@@ -35,17 +35,18 @@ public final class AgentForegroundService extends Service {
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent != null && ACTION_STOP.equals(intent.getAction())) {
+            running = false;
             stopForeground(STOP_FOREGROUND_REMOVE);
             stopSelf();
             return START_NOT_STICKY;
         }
-        running = true;
         if (Build.VERSION.SDK_INT >= 34) {
             startForeground(NOTIFICATION_ID, buildNotification(),
                 android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         } else {
             startForeground(NOTIFICATION_ID, buildNotification());
         }
+        running = true;
         return START_NOT_STICKY;
     }
 
@@ -71,6 +72,7 @@ public final class AgentForegroundService extends Service {
     }
 
     @Override public void onDestroy() {
+        running = false;
         stopForeground(STOP_FOREGROUND_REMOVE);
         super.onDestroy();
     }
