@@ -375,3 +375,23 @@ Java_org_seedx_agent_MainActivity_nativeExecuteTool(JNIEnv* env,jobject,jstring 
  const std::string decision=result.decision==seed::Decision::Allow?"allow":result.decision==seed::Decision::RequireApproval?"approval":"deny";
  return toJava(env,std::string("{\"success\":")+(result.success?"true":"false")+",\"decision\":\""+decision+"\",\"output\":\""+escapeJson(result.output)+"\"}");
 }
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_seedx_agent_MainActivity_nativePolicySnapshot(JNIEnv* env,jobject) {
+ const auto rules=gKernel.policies();std::string json="[";
+ for(std::size_t i=0;i<rules.size();++i){const auto& r=rules[i];if(i)json+=",";
+  const char* effect=r.effect==seed::PolicyEffect::Allow?"allow":r.effect==seed::PolicyEffect::RequireApproval?"approval":"deny";
+  json+="{\\"tool\\":\\""+escapeJson(r.tool)+"\\",\\"operation\\":\\""+escapeJson(r.operation)+"\\",\\"resourcePrefix\\":\\""+escapeJson(r.resourcePrefix)+"\\",\\"effect\\":\\""+effect+"\\",\\"enabled\\":"+(r.enabled?"true":"false")+"}";
+ }
+ json+="]";return toJava(env,json);
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_seedx_agent_MainActivity_nativeAuditLog(JNIEnv* env,jobject) {
+ const auto entries=gKernel.auditSnapshot();const std::size_t begin=entries.size()>100?entries.size()-100:0;
+ std::string json="[";
+ for(std::size_t i=begin;i<entries.size();++i){const auto& e=entries[i];if(i>begin)json+=",";
+  const char* decision=e.decision==seed::Decision::Allow?"allow":e.decision==seed::Decision::RequireApproval?"approval":"deny";
+  json+="{\\"sequence\\":"+std::to_string(e.sequence)+",\\"timestampMs\\":"+std::to_string(e.timestampMs)+",\\"tool\\":\\""+escapeJson(e.tool)+"\\",\\"operation\\":\\""+escapeJson(e.operation)+"\\",\\"resource\\":\\""+escapeJson(e.resource)+"\\",\\"decision\\":\\""+decision+"\\",\\"reason\\":\\""+escapeJson(e.reason)+"\\"}";
+ }
+ json+="]";return toJava(env,json);
+}
