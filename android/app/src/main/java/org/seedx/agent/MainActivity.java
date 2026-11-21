@@ -150,15 +150,17 @@ public final class MainActivity extends Activity {
  }
  private String requestProviderTest(JSONObject c)throws Exception{
   String kind=c.optString("kind","openai"),base=c.optString("base").replaceAll("/+$",""),model=c.optString("model"),secret=decrypt(c.optString("credentialRef"));
+  if(!nativeReady||stopRequested)throw new IllegalStateException("Guardian is unavailable or emergency stop is active.");
+  try{if(new JSONObject(nativeGuardianStatus()).optBoolean("emergencyStop"))throw new IllegalStateException("Guardian emergency stop is active.");}catch(IllegalStateException e){throw e;}catch(Exception e){throw new IllegalStateException("Guardian status could not be verified.");}
   if(secret.isEmpty())throw new IllegalStateException("Provider API key is missing.");
   if(!localEndpointAllowed(base))throw new IllegalArgumentException("Endpoint rejected by HTTPS/local-network policy.");
   String endpoint;JSONObject body=new JSONObject();Map<String,String> headers=new HashMap<>();headers.put("Content-Type","application/json");
   if(kind.equals("anthropic")){endpoint=base+"/v1/messages";headers.put("x-api-key",secret);headers.put("anthropic-version","2023-06-01");body.put("model",model).put("max_tokens",32).put("messages",new JSONArray().put(new JSONObject().put("role","user").put("content","Reply only: SEED-X provider test OK.")));}
   else if(kind.equals("gemini")){endpoint=base+"/v1beta/models/"+model+":generateContent";headers.put("x-goog-api-key",secret);body.put("contents",new JSONArray().put(new JSONObject().put("role","user").put("parts",new JSONArray().put(new JSONObject().put("text","Reply only: SEED-X provider test OK."))))).put("generationConfig",new JSONObject().put("maxOutputTokens",32));}
   else{endpoint=base+"/chat/completions";headers.put("Authorization","Bearer "+secret);body.put("model",model).put("messages",new JSONArray().put(new JSONObject().put("role","user").put("content","Reply only: SEED-X provider test OK."))).put("max_tokens",32);}
-  HttpURLConnection conn=(HttpURLConnection)new URL(endpoint).openConnection();conn.setInstanceFollowRedirects(false);conn.setRequestMethod("POST");conn.setConnectTimeout(Math.min(30000,providerTimeout()));conn.setReadTimeout(providerTimeout());conn.setDoOutput(true);for(Map.Entry<String,String> h:headers.entrySet())conn.setRequestProperty(h.getKey(),h.getValue());
-  try{conn.getOutputStream().write(body.toString().getBytes("UTF-8"));int code=conn.getResponseCode();if(code<200||code>=300)return "Provider returned HTTP "+code+". Verify model ID, key, quota and endpoint.";InputStream in=conn.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[4096];int n;while((n=in.read(b))>0){if(out.size()+n>65536)throw new IOException("Test response too large.");out.write(b,0,n);}return "Provider connection succeeded. Response received ("+out.size()+" bytes).";}
-  finally{conn.disconnect();}
+  HttpURLConnection conn=(HttpURLConnection)new URL(endpoint).openConnection();activeConnection=conn;conn.setInstanceFollowRedirects(false);conn.setRequestMethod("POST");conn.setConnectTimeout(Math.min(30000,providerTimeout()));conn.setReadTimeout(providerTimeout());conn.setDoOutput(true);for(Map.Entry<String,String> h:headers.entrySet())conn.setRequestProperty(h.getKey(),h.getValue());
+  try{if(stopRequested){conn.disconnect();throw new InterruptedIOException("Cancelled by Guardian emergency stop.");}conn.getOutputStream().write(body.toString().getBytes("UTF-8"));int code=conn.getResponseCode();if(code<200||code>=300)return "Provider returned HTTP "+code+". Verify model ID, key, quota and endpoint.";InputStream in=conn.getInputStream();ByteArrayOutputStream out=new ByteArrayOutputStream();byte[] b=new byte[4096];int n;while((n=in.read(b))>0){if(out.size()+n>65536)throw new IOException("Test response too large.");out.write(b,0,n);}return "Provider connection succeeded. Response received ("+out.size()+" bytes).";}
+  finally{if(activeConnection==conn)activeConnection=null;conn.disconnect();}
  }
  private void models(){heading("Local Models","Import, load and unload GGUF models using the native C++ runtime.");
   LinearLayout c=card();try{JSONObject rt=new JSONObject(nativeRuntimeStatus());c.addView(text("Runtime: "+rt.optString("state"),17,Color.WHITE,true));c.addView(text("Backend: "+(rt.optBoolean("llamaAvailable")?"llama.cpp enabled":"llama.cpp not compiled"),12,muted,false));c.addView(text("Available memory: "+(rt.optLong("availableBytes")/1048576)+" MB",12,muted,false));if(rt.optBoolean("ready"))c.addView(text("Loaded model: "+rt.optString("model"),13,accent,true));}catch(Exception e){c.addView(text("Native runtime unavailable: "+e.getMessage(),12,muted,false));}button("Unload active model",panel,()->worker.execute(()->{nativeUnloadModel();runOnUiThread(this::render);}));
@@ -216,7 +218,13 @@ public final class MainActivity extends Activity {
   {"llama.cpp server","openai","http://127.0.0.1:8080/v1","local-model","Local GGUF server; enable local HTTP."},
   {"LocalAI","openai","http://127.0.0.1:8080/v1","local-model","Self-hosted OpenAI-compatible server."},
   {"vLLM server","openai","http://127.0.0.1:8000/v1","local-model","Usually a GPU workstation/server."},
-  {"SGLang server","openai","http://127.0.0.1:30000/v1","local-model","Usually a GPU workstation/server."}
+  {"SGLang server","openai","http://127.0.0.1:30000/v1","local-model","Usually a GPU workstation/server."},
+  {"Cerebras Inference","openai","https://api.cerebras.ai/v1","gpt-oss-120b","Trial or account-dependent; verify current access."},
+  {"Together AI","openai","https://api.together.xyz/v1","meta-llama/Llama-3.3-70B-Instruct-Turbo","Check account credits and model pricing."},
+  {"Fireworks AI","openai","https://api.fireworks.ai/inference/v1","accounts/fireworks/models/llama-v3p3-70b-instruct","Check trial credits and pricing."},
+  {"Perplexity API","openai","https://api.perplexity.ai","sonar","Paid API usage."},
+  {"xAI API","openai","https://api.x.ai/v1","grok-3-mini","Check current console credits and pricing."},
+  {"Hugging Face Router","openai","https://router.huggingface.co/v1","provider/model","Check current inference billing and provider support."}
  };}
  private void activateProvider(JSONObject p){prefs.edit().putString("active_provider",p.optString("id")).putString("provider",p.toString()).apply();render();}
  private void providers(){heading("Provider Hub","Multiple cloud and local/LAN profiles. Keys are encrypted with Android Keystore AES-GCM. Cloud requests require per-send confirmation.");
