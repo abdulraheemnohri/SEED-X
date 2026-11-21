@@ -122,3 +122,8 @@ Added local fatal-crash capture, explicit non-fatal error recording, diagnostic 
 ## Phase 15 — Diagnostics Center
 
 Expanded Diagnostics with crash/error history, recent screen-navigation breadcrumbs, Guardian audit verification and reviewed GitHub issue drafts. Added a local breadcrumb privacy setting and bounded retention. No automatic telemetry or self-modifying repairs. See [docs/PHASE15.md](docs/PHASE15.md).
+
+
+## Phase 16 — Error Intelligence & CI Evidence
+
+Added heuristic error categories, normalized duplicate-crash fingerprints, a duplicate grouping view, complete local diagnostic clearing, and GitHub Actions core-job summaries. Native signal crash dumps and ANR capture remain explicitly unsupported. See [docs/PHASE16.md](docs/PHASE16.md).
