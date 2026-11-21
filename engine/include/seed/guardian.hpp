@@ -3,6 +3,7 @@
 #include "seed/policy.hpp"
 #include <atomic>
 #include <chrono>
+#include <functional>
 #include <mutex>
 #include <string>
 #include <unordered_map>
@@ -14,6 +15,7 @@ public:
  Guardian();
  PolicyResult evaluate(const ToolRequest&) const;
  PolicyResult authorize(const ToolRequest&);
+ PolicyResult authorizeAndRun(const ToolRequest&,const std::string& ticketId,const std::function<void()>& action);
  PolicyValidation replacePolicies(std::vector<PolicyRule>,bool operatorConfirmed);
  std::vector<PolicyRule> policies() const;
  ApprovalTicket requestApproval(const ToolRequest&,bool operatorConfirmed,std::chrono::seconds lifetime=std::chrono::seconds(60));
