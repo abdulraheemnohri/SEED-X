@@ -6,35 +6,44 @@
 C++20 engine, Android NDK NativeActivity shell, OpenGL ES 3 rendering surface, lifecycle kernel, event bus and host-side tests.
 
 ## Phase 2 — Guardian security & governance
-- Independent default-deny policy engine with exact tool/operation and resource-prefix scopes.
-- Most-specific policy matching with deny-first tie breaking.
-- Candidate policy validation and in-memory replacement.
+- Independent default-deny policy engine with scoped tool/operation/resource rules.
 - Explicit operator approval tickets, bound to one request, short-lived and one-use.
-- Emergency stop that blocks authorization and invalidates pending approvals.
-- Bounded hash-linked audit trail; audit-capacity exhaustion fails closed.
+- Emergency stop and bounded hash-linked audit trail.
 - Host tests for policy, approval, emergency-stop and audit behavior.
 
-## Roadmap
-- Phase 3: local inference runtime and model manager.
-- Phase 4: online AI provider adapters.
-- Later: persistent memory, trusted tool runner, Android Keystore-backed policy storage, durable cryptographic audit checkpoints and controlled self-improvement.
+## Phase 3 — Local AI Brain
+- Backend-neutral C++20 inference interface and model lifecycle manager.
+- Optional real llama.cpp backend pinned to upstream b4514; GGUF model loading and autoregressive token generation.
+- Token streaming and cooperative cancellation callback.
+- Sampling controls (temperature, top-p), context limits and prompt bounds.
+- /proc/meminfo device-memory probe and RAM budget admission.
+- GGUF magic, file type, size, path and context validation.
+- Host-side deterministic fake-backend tests; llama.cpp integration is an opt-in build.
+- Default build stays lightweight and has no network dependency.
 
-## Repository layout
-- engine/: platform-independent C++20 core and Guardian.
-- android/app/: NativeActivity application and OpenGL ES UI.
-- tests/: host-side core tests.
-- docs/: architecture and implementation notes.
+## Enable real local inference
 
-## Build on Windows 10
-Install Android Studio, Android SDK Platform 35, Android NDK (Side by side), CMake 3.22.1 and JDK 17. Open the repository in Android Studio, sync Gradle, then run:
+The default build uses a no-backend stub so CI and the Android shell can compile without downloading a large inference dependency. To build with llama.cpp, allow CMake to fetch the pinned upstream source.
 
+Windows PowerShell (host build):
 ```powershell
-gradle assembleDebug
-adb install -r android\app\build\outputs\apk\debug\app-debug.apk
+cmake -S . -B build-llama -DSEEDX_ENABLE_LLAMA_CPP=ON
+cmake --build build-llama --config Release --parallel
+ctest --test-dir build-llama -C Release --output-on-failure
 ```
 
-## Run host tests
-Install CMake and a C++20 compiler (Visual Studio 2022 or Clang):
+Android ARM64 / emulator:
+```powershell
+gradle assembleDebug -PseedxLlamaCpp=ON
+```
+
+This fetches llama.cpp during CMake configuration and can take time. Android builds target arm64-v8a and x86_64. Keep model files in app-private storage and provide their absolute path to ModelManifest. The application must request model-storage access through Android's Storage Access Framework; do not hardcode shared-storage paths.
+
+## Model sizing guidance
+
+On a 6 GB RAM phone, begin with small quantized GGUF models and conservative context sizes (e.g. 2K–4K). The memory estimator is only an admission guard; it cannot guarantee that Android will not kill the process. Reserve RAM for Android, UI, KV cache, tokenizer and backend workspace. Do not load multiple models concurrently.
+
+## Run host tests without llama.cpp
 
 ```powershell
 cmake -S . -B build
@@ -42,8 +51,11 @@ cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
 ```
 
-## Security notes
-Phase 2 authorizes requests but does not execute tools. Unmatched actions are denied. Guardian policy is independent from the AI model. The current in-memory FNV-1a audit checksum is not cryptographic protection. Durable policy and audit persistence are later milestones.
+## Security boundary
+The model only generates text. This phase does not execute model-generated tools or commands. All future tool proposals must be separately authorized by Phase 2 Guardian. Guardian policy changes and emergency-stop reset are never model-controlled.
+
+## Current limitations
+SHA-256 model-file verification, signed model provenance, model downloading/catalog, Android UI wiring, GPU/Vulkan/NNAPI acceleration, persistent chat history and concurrent inference are not yet included. The llama.cpp backend is real when explicitly enabled; default CI uses a deterministic test backend and a stub factory.
 
 ## License
 MIT. See LICENSE.
