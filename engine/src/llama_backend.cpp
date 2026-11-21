@@ -32,7 +32,7 @@ public:
   if(prompt.size()>static_cast<std::size_t>(INT32_MAX))return {false,{},"Prompt is too large to tokenize."};
   const int32_t needed=-llama_tokenize(vocab_,prompt.c_str(),static_cast<int32_t>(prompt.size()),nullptr,0,true,false);
   if(needed<=0)return {false,{},"Prompt tokenization failed."};
-  if(static_cast<std::uint32_t>(needed)>=contextLimit_)return {false,{},"Prompt leaves no room for generated tokens."};
+  if(static_cast<std::uint64_t>(needed)+cfg.maxTokens>contextLimit_)return {false,{},"Prompt plus requested generation exceeds the configured context."};
   std::vector<llama_token>tokens(static_cast<std::size_t>(needed));
   const int32_t count=llama_tokenize(vocab_,prompt.c_str(),static_cast<int32_t>(prompt.size()),tokens.data(),needed,true,false);
   if(count<0)return {false,{},"Prompt tokenization failed."};
