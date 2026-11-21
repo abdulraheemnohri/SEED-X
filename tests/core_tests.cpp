@@ -1,6 +1,5 @@
 #include "seed/agent_kernel.hpp"
 #include "seed/tool_registry.hpp"
-#include "seed/tool_registry.hpp"
 #include <cassert>
 #include <iostream>
 int main(){
@@ -41,6 +40,8 @@ int main(){
  assert(!replay.success&&writes==1);
  const seed::ToolRequest unknown{"shell","execute","system://root","never run shell"};
  assert(!tools.execute(k,unknown).success);
+ assert(k.verifyAudit());
+ k.emergencyStop();auto stopped=tools.execute(k,note,"must not run");assert(!stopped.success&&writes==1);assert(k.resetEmergencyStop(true));
  assert(k.verifyAudit());
  std::cout<<"SEED-X core and Phase 7 tool registry tests passed\n";
 }
