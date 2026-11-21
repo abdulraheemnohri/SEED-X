@@ -32,7 +32,10 @@ import javax.crypto.spec.GCMParameterSpec;
 public final class MainActivity extends Activity {
  static { System.loadLibrary("seedx_android"); }
  public interface TokenListener { void onToken(String token); }
- private native boolean nativeInit();
+ private native boolean nativeInit(String workspaceRoot);
+ private native String nativeToolCatalog();
+ private native String nativeRequestApproval(String tool,String operation,String resource,boolean confirmed);
+ private native String nativeExecuteTool(String tool,String operation,String resource,String payload,String approvalTicket);
  private native String nativeRuntimeStatus();
  private native String nativeLoadModel(String path,String id,String displayName,int contextTokens);
  private native String nativeGenerate(String prompt,int maxTokens,float temperature,float topP,TokenListener listener);
@@ -50,15 +53,15 @@ public final class MainActivity extends Activity {
  private String page="Chat";
  private final ArrayList<JSONObject> history=new ArrayList<>();
  private static final int PICK_MODEL=4102;
- @Override public void onCreate(Bundle state){super.onCreate(state);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();nativeInit();shell();render();}
+ @Override public void onCreate(Bundle state){super.onCreate(state);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);loadHistory();nativeInit(getFilesDir().getAbsolutePath());shell();render();}
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
  private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);t.setTextSize(size);t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
  private void shell(){root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(16),dp(12),dp(16),dp(8));root.setBackgroundColor(bg);
   LinearLayout head=new LinearLayout(this);head.setOrientation(1);head.addView(text("SEED-X",25,accent,true));head.addView(text("LOCAL-FIRST AI WORKSPACE  •  v0.6.0",10,muted,true));root.addView(head,new LinearLayout.LayoutParams(-1,dp(58)));
   ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(0,dp(8),0,dp(12));scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-  LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER);String[] tabs={"Chat","Models","Providers","Guardian","Settings"};for(String tab:tabs){Button b=new Button(this);b.setText(tab);b.setTextSize(10);b.setAllCaps(false);b.setTextColor(page.equals(tab)?accent:muted);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(v->{page=tab;render();});nav.addView(b,new LinearLayout.LayoutParams(0,dp(48),1));}root.addView(nav);setContentView(root);}
- private void render(){content.removeAllViews();switch(page){case "Models":models();break;case "Providers":providers();break;case "Guardian":guardian();break;case "Settings":settings();break;default:chat();}}
+  LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER);String[] tabs={"Chat","Models","Providers","Tools","Guardian","Settings"};for(String tab:tabs){Button b=new Button(this);b.setText(tab);b.setTextSize(10);b.setAllCaps(false);b.setTextColor(page.equals(tab)?accent:muted);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(v->{page=tab;render();});nav.addView(b,new LinearLayout.LayoutParams(0,dp(48),1));}root.addView(nav);setContentView(root);}
+ private void render(){content.removeAllViews();switch(page){case "Models":models();break;case "Providers":providers();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Settings":settings();break;default:chat();}}
  private void heading(String title,String sub){content.addView(text(title,22,Color.WHITE,true));content.addView(text(sub,12,muted,false));space(10);}
  private void space(int h){View v=new View(this);content.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  private LinearLayout card(){LinearLayout c=new LinearLayout(this);c.setOrientation(1);c.setPadding(dp(14),dp(13),dp(14),dp(13));c.setBackground(rounded(panel,16));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.bottomMargin=dp(10);content.addView(c,p);return c;}
@@ -158,6 +161,59 @@ public final class MainActivity extends Activity {
   button("Save provider securely",accent,()->{try{String url=base.getText().toString().trim();if(!url.startsWith("https://"))throw new IllegalArgumentException("HTTPS required.");if(name.length()==0||model.length()==0)throw new IllegalArgumentException("Name and model are required.");String ref=old==null?"provider-main":old.optString("credentialRef","provider-main");if(key.length()>0)encrypt(ref,key.getText().toString());if(decrypt(ref).isEmpty())throw new IllegalArgumentException("Enter an API key.");String kind=type.getSelectedItemPosition()==1?"anthropic":type.getSelectedItemPosition()==2?"gemini":"openai";JSONObject cfg=new JSONObject().put("name",name.getText().toString()).put("kind",kind).put("base",url).put("model",model.getText().toString()).put("credentialRef",ref);prefs.edit().putString("provider",cfg.toString()).apply();page="Chat";render();}catch(Exception e){new AlertDialog.Builder(this).setMessage(e.getMessage()).setPositiveButton("OK",null).show();}});
   button("Remove provider",panel,()->{prefs.edit().remove("provider").apply();render();});
  }
+ private void tools(){
+  heading("Tool Center","Typed, allowlisted actions. Every request is checked by the native C++ Guardian.");
+  LinearLayout catalog=card();
+  catalog.addView(text("AVAILABLE TOOLS",11,accent,true));
+  try{
+   JSONArray entries=new JSONArray(nativeToolCatalog());
+   for(int i=0;i<entries.length();i++){
+    JSONObject item=entries.getJSONObject(i);
+    catalog.addView(text(item.optString("tool")+"  /  "+item.optString("operation"),14,Color.WHITE,true));
+    catalog.addView(text(item.optString("description"),11,muted,false));
+   }
+  }catch(Exception e){catalog.addView(text("Tool catalog unavailable.",12,muted,false));}
+  button("Read device / runtime status",accent,()->runTool("system.status","read","system://status","",""));
+  button("List private workspace files",panel,()->runTool("files.list","read","workspace://","",""));
+  LinearLayout read=card();
+  read.addView(text("Read a workspace text file",15,Color.WHITE,true));
+  EditText readPath=new EditText(this);readPath.setSingleLine(true);readPath.setHint("Relative path, e.g. notes.txt");readPath.setTextColor(Color.WHITE);readPath.setHintTextColor(muted);read.addView(readPath);
+  button("Read file",panel,()->{String path=readPath.getText().toString().trim();if(path.isEmpty()){toast("Enter a relative file path.");return;}runTool("files.read","read","workspace://"+path,"","");});
+  LinearLayout note=card();
+  note.addView(text("Create a new workspace note",15,Color.WHITE,true));
+  note.addView(text("This writes only inside the private workspace. Existing files are never overwritten. Guardian requires a one-use approval.",11,muted,false));
+  EditText notePath=new EditText(this);notePath.setSingleLine(true);notePath.setHint("New relative filename, e.g. notes.txt");notePath.setTextColor(Color.WHITE);notePath.setHintTextColor(muted);note.addView(notePath);
+  EditText noteBody=new EditText(this);noteBody.setMinLines(3);noteBody.setGravity(Gravity.TOP);noteBody.setHint("Note content (maximum 64 KiB)");noteBody.setTextColor(Color.WHITE);noteBody.setHintTextColor(muted);note.addView(noteBody);
+  button("Request approval & create note",Color.rgb(61,210,151),()->{
+   String relative=notePath.getText().toString().trim(),body=noteBody.getText().toString();
+   if(relative.isEmpty()||body.isEmpty()){toast("Filename and note content are required.");return;}
+   new AlertDialog.Builder(this).setTitle("Approve workspace write?")
+    .setMessage("SEED-X will create workspace://"+relative+". It cannot overwrite an existing file. The approval is one-use and bound to this exact request.")
+    .setNegativeButton("Cancel",null).setPositiveButton("Approve & create",(d,w)->{
+     String resource="workspace://"+relative;
+     String ticket=nativeRequestApproval("files.write","create",resource,true);
+     if(ticket.isEmpty()){showToolMessage("Guardian did not issue an approval ticket.");return;}
+     runTool("files.write","create",resource,body,ticket);
+    }).show();
+  });
+  LinearLayout info=card();info.addView(text("Security boundary",14,accent,true));info.addView(text("No shell, arbitrary command execution, contacts, SMS, accessibility control or unrestricted filesystem access. AI text is never executed as code.",12,muted,false));
+ }
+ private void runTool(String tool,String operation,String resource,String payload,String ticket){
+  worker.execute(()->{
+   String result;
+   try{result=nativeExecuteTool(tool,operation,resource,payload,ticket);}
+   catch(Exception e){result="{\\"success\\":false,\\"decision\\":\\"deny\\",\\"output\\":\\""+e.getMessage()+"\\"}";}
+   final String output=result;
+   runOnUiThread(()->showToolMessage(output));
+  });
+ }
+ private void showToolMessage(String value){
+  String message=value;
+  try{JSONObject json=new JSONObject(value);message=(json.optBoolean("success")?"SUCCESS":"BLOCKED")+"  •  "+json.optString("decision")+"\\n\\n"+json.optString("output");}
+  catch(Exception ignored){}
+  new AlertDialog.Builder(this).setTitle("SEED-X Tool Result").setMessage(message).setPositiveButton("OK",null).show();
+ }
+ private void toast(String value){Toast.makeText(this,value,Toast.LENGTH_SHORT).show();}
  private void guardian(){heading("Guardian & Safety","Live status from the C++ System 1 kernel.");
   String[] items={"Default-deny policy engine — Phase 2 core","One-use, request-bound operator approvals","Emergency-stop and audit chain","Provider responses treated as untrusted text","No shell or device-control actions exposed by chat"};for(String s:items){LinearLayout c=card();c.addView(text("✓  "+s,14,Color.WHITE,false));}
   LinearLayout c=card();try{JSONObject gs=new JSONObject(nativeGuardianStatus());c.addView(text("Emergency stop: "+(gs.optBoolean("emergencyStop")?"ACTIVE":"inactive"),16,gs.optBoolean("emergencyStop")?Color.RED:accent,true));c.addView(text("Audit chain: "+(gs.optBoolean("auditValid")?"valid":"INVALID"),13,Color.WHITE,true));c.addView(text("Kernel status code: "+gs.optInt("kernelStatus"),12,muted,false));}catch(Exception e){c.addView(text("Guardian status unavailable: "+e.getMessage(),12,muted,false));}button("ENGAGE EMERGENCY STOP",Color.rgb(190,55,65),()->new AlertDialog.Builder(this).setTitle("Emergency stop").setMessage("Block Guardian-authorized actions and cancel active local or online generation?").setNegativeButton("Cancel",null).setPositiveButton("Engage",(d,w)->{engageEmergencyStop();render();}).show());button("Reset emergency stop",panel,()->new AlertDialog.Builder(this).setTitle("Reset Guardian").setMessage("Only reset if you have checked the reason for the stop.").setNegativeButton("Cancel",null).setPositiveButton("I confirm",(d,w)->{boolean ok=nativeResetEmergencyStop(true);if(ok)stopRequested=false;Toast.makeText(this,ok?"Guardian reset.":"Reset rejected.",Toast.LENGTH_SHORT).show();render();}).show());
