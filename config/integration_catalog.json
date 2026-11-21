@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "notice": "Integration registry distinguishes usable built-in features from planned connector adapters. Entries marked planned are not connected or executable.",
+  "integrations": [
+    {
+      "id": "puter-js",
+      "name": "Puter.js",
+      "type": "online-ai",
+      "status": "integrated",
+      "features": [
+        "chat",
+        "image-understanding",
+        "image-generation",
+        "speech-to-text",
+        "text-to-speech"
+      ],
+      "url": "https://docs.puter.com/AI/"
+    },
+    {
+      "id": "android-saf",
+      "name": "Android Storage Access Framework",
+      "type": "file-connector",
+      "status": "integrated",
+      "features": [
+        "user-selected-files",
+        "cloud-document-providers",
+        "usb-storage"
+      ],
+      "url": "https://developer.android.com/training/data-storage/shared/documents-files"
+    },
+    {
+      "id": "guardian-tools",
+      "name": "SEED Guardian Tool Registry",
+      "type": "native-tools",
+      "status": "integrated",
+      "features": [
+        "default-deny",
+        "approval-policy",
+        "audit-log"
+      ],
+      "url": "https://github.com/abdulraheemnohri/SEED-X"
+    },
+    {
+      "id": "seed-skills",
+      "name": "SEED Skills",
+      "type": "prompt-skills",
+      "status": "integrated",
+      "features": [
+        "local-skill-catalog",
+        "prompt-templates"
+      ],
+      "url": "https://github.com/abdulraheemnohri/SEED-X"
+    },
+    {
+      "id": "mcp-http",
+      "name": "Model Context Protocol HTTP",
+      "type": "mcp-connector",
+      "status": "planned-adapter",
+      "features": [
+        "tools",
+        "resources",
+        "prompts"
+      ],
+      "url": "https://modelcontextprotocol.io/"
+    },
+    {
+      "id": "github",
+      "name": "GitHub Connector",
+      "type": "external-connector",
+      "status": "planned-adapter",
+      "features": [
+        "repositories",
+        "issues",
+        "pull-requests"
+      ],
+      "url": "https://docs.github.com/en/rest"
+    },
+    {
+      "id": "dropbox",
+      "name": "Dropbox Connector",
+      "type": "external-connector",
+      "status": "planned-adapter",
+      "features": [
+        "files",
+        "search",
+        "sharing"
+      ],
+      "url": "https://www.dropbox.com/developers/documentation"
+    },
+    {
+      "id": "google-drive",
+      "name": "Google Drive",
+      "type": "external-connector",
+      "status": "via-android-picker",
+      "features": [
+        "user-selected-files"
+      ],
+      "url": "https://developer.android.com/training/data-storage/shared/documents-files"
+    },
+    {
+      "id": "webdav",
+      "name": "WebDAV",
+      "type": "external-connector",
+      "status": "planned-adapter",
+      "features": [
+        "file-browse",
+        "download",
+        "upload"
+      ],
+      "url": "https://www.rfc-editor.org/rfc/rfc4918"
+    },
+    {
+      "id": "plugin-sandbox",
+      "name": "SEED Plugin SDK",
+      "type": "plugin-runtime",
+      "status": "planned-security-design",
+      "features": [
+        "signed-manifest",
+        "capability-permissions",
+        "sandbox"
+      ],
+      "url": "https://github.com/abdulraheemnohri/SEED-X"
+    }
+  ]
+}
