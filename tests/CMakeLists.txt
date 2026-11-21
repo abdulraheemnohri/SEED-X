@@ -3,3 +3,8 @@ add_executable(seedx_core_tests core_tests.cpp ../engine/src/agent_kernel.cpp ..
 target_include_directories(seedx_core_tests PRIVATE ../engine/include)
 target_compile_features(seedx_core_tests PRIVATE cxx_std_20)
 add_test(NAME seedx_core_tests COMMAND seedx_core_tests)
+
+add_executable(seedx_local_ai_tests local_ai_tests.cpp ../engine/src/local_ai.cpp)
+target_include_directories(seedx_local_ai_tests PRIVATE ../engine/include)
+target_compile_features(seedx_local_ai_tests PRIVATE cxx_std_20)
+add_test(NAME seedx_local_ai_tests COMMAND seedx_local_ai_tests)
