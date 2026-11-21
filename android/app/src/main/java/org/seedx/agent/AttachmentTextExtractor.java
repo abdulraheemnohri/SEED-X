@@ -126,13 +126,13 @@ public final class AttachmentTextExtractor {
             } else if (!inTag) token.append(c);
         }
         if (token.length() > 0) appendDecoded(out, token);
-        if (out.length() < MAX_OUTPUT_CHARS) out.append('\\n');
+        if (out.length() < MAX_OUTPUT_CHARS) out.append('\n');
     }
 
     private static void appendDecoded(StringBuilder out, StringBuilder raw) {
         String value = raw.toString().replace("&amp;", "&").replace("&lt;", "<")
-                .replace("&gt;", ">").replace("&quot;", "\\\"").replace("&apos;", "'");
-        value = value.replaceAll("[\\\\t\\\\r\\\\n ]+", " ").trim();
+                .replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'");
+        value = value.replaceAll("[\\t\\r\\n ]+", " ").trim();
         if (!value.isEmpty() && out.length() < MAX_OUTPUT_CHARS) {
             if (out.length() > 0 && out.charAt(out.length() - 1) != '\\n') out.append(' ');
             int remaining = MAX_OUTPUT_CHARS - out.length();
