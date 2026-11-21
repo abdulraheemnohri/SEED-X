@@ -23,7 +23,7 @@ Free-access labels are indicative, not guarantees:
 - OpenAI, Anthropic, DeepSeek, Mistral and Qwen entries are BYOK/plan-dependent; check current pricing and terms.
 - No API keys are bundled. The operator obtains and stores their own credentials.
 
-## Local runtimes
+## Model recommendations\nThe model catalog includes SmolLM2 360M Instruct GGUF Q4_K_M (~271 MB), Qwen2.5 0.5B Instruct GGUF Q4_K_M (~491 MB) and Qwen2.5 1.5B Instruct GGUF Q4_K_M (~1.12 GB). These are indicative repository file sizes; check the current model card, exact filename and license before downloading. For a 6 GB phone, start with the 360M or 0.5B model and a 2048-token context. Import is manual through Android's Storage Access Framework; there is no in-app model downloader yet.\n\n## Local runtimes
 - llama.cpp is the only embedded local LLM backend integrated into the current C++ runtime, optionally built with -PseedxLlamaCpp=ON.
 - LiteRT-LM, MLC LLM, ExecuTorch and ONNX Runtime GenAI are catalogued for future adapters. They are not falsely represented as active.
 - Ollama, LM Studio, LocalAI, llama.cpp server, vLLM and SGLang are external local/LAN servers reachable through compatible API profiles; they are not bundled into the APK.
