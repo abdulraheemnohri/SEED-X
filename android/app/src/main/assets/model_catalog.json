@@ -53,5 +53,40 @@
       "notes": "Generally not a sensible default for a 6 GB phone."
     }
   ],
-  "catalogUrl": "https://huggingface.co/models?pipeline_tag=text-generation&library=gguf"
+  "catalogUrl": "https://huggingface.co/models?pipeline_tag=text-generation&library=gguf",
+  "models": [
+    {
+      "id": "smollm2-360m-q4km",
+      "name": "SmolLM2 360M Instruct GGUF",
+      "repository": "QuantFactory/SmolLM2-360M-Instruct-GGUF",
+      "file": "SmolLM2-360M-Instruct-Q4_K_M.gguf",
+      "quantization": "Q4_K_M",
+      "approximateFileSizeMB": 271,
+      "license": "Apache-2.0",
+      "url": "https://huggingface.co/QuantFactory/SmolLM2-360M-Instruct-GGUF",
+      "recommendation": "Smallest practical starter; English-centric and limited reasoning."
+    },
+    {
+      "id": "qwen25-05b-q4km",
+      "name": "Qwen2.5 0.5B Instruct GGUF",
+      "repository": "Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+      "file": "qwen2.5-0.5b-instruct-q4_k_m.gguf",
+      "quantization": "Q4_K_M",
+      "approximateFileSizeMB": 491,
+      "license": "Apache-2.0",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-0.5B-Instruct-GGUF",
+      "recommendation": "Recommended low-RAM multilingual starting point; verify exact file name in model repository."
+    },
+    {
+      "id": "qwen25-15b-q4km",
+      "name": "Qwen2.5 1.5B Instruct GGUF",
+      "repository": "Qwen/Qwen2.5-1.5B-Instruct-GGUF",
+      "file": "qwen2.5-1.5b-instruct-q4_k_m.gguf",
+      "quantization": "Q4_K_M",
+      "approximateFileSizeMB": 1120,
+      "license": "Apache-2.0",
+      "url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF",
+      "recommendation": "Higher capability; allow extra memory for KV cache, runtime and Android OS."
+    }
+  ]
 }
