@@ -117,3 +117,8 @@ Added a user-started Android foreground-session service, notification permission
 ## Phase 14 — Crash and bug reporting
 
 Added local fatal-crash capture, explicit non-fatal error recording, diagnostic preview/copy/delete controls, and a privacy-reviewed GitHub issue draft handoff. Reports are never uploaded automatically and exclude chat history, model files, provider credentials and API keys. See [docs/PHASE14.md](docs/PHASE14.md).
+
+
+## Phase 15 — Diagnostics Center
+
+Expanded Diagnostics with crash/error history, recent screen-navigation breadcrumbs, Guardian audit verification and reviewed GitHub issue drafts. Added a local breadcrumb privacy setting and bounded retention. No automatic telemetry or self-modifying repairs. See [docs/PHASE15.md](docs/PHASE15.md).
