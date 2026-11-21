@@ -6,7 +6,7 @@
 - Added Model Download Manager for curated GGUF catalog entries using Android DownloadManager into app-specific external storage. Completed files can be imported into app-private model storage after GGUF magic-byte validation.
 - Existing Models screen continues to import via Storage Access Framework, validate GGUF, load/unload models and delete inactive imported models.
 - Added high-contrast text preference and adjustable in-app text scale (0.85x–1.5x).
-- Existing Workflow Studio remains a manually started prompt workflow library.
+- Workflow Studio supports locally saved custom workflow templates, editing custom workflows, saving built-in templates as custom copies, deleting custom workflows and manually launching them into Chat.
 
 ## Platform and safety boundaries
 - No broad storage permission is used; downloads use app-specific storage and imports use SAF.
