@@ -83,7 +83,7 @@ public final class MainActivity extends Activity {
   else{bg=Color.rgb(10,17,27);panel=Color.rgb(20,30,44);accent=Color.rgb(61,210,151);muted=Color.rgb(155,174,194);primaryText=Color.WHITE;}
  }
  private void updateSystemBars(){boolean light="light".equals(prefs.getString("ui_theme","dark"));if("system".equals(prefs.getString("ui_theme","dark")))light=(getResources().getConfiguration().uiMode&android.content.res.Configuration.UI_MODE_NIGHT_MASK)==android.content.res.Configuration.UI_MODE_NIGHT_NO;getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);getWindow().getDecorView().setSystemUiVisibility(light?(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR):0);}
- private void chooseTheme(){String[] labels={"Dark","Light","Follow Android system"};String[] values={"dark","light","system"};String current=prefs.getString("ui_theme","dark");int selected=Arrays.asList(values).indexOf(current);new AlertDialog.Builder(this).setTitle("Appearance theme").setSingleChoiceItems(labels,Math.max(0,selected),(d,which)->{prefs.edit().putString("ui_theme",values[which]).apply();d.dismiss();applyTheme();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);render();}).setNegativeButton("Cancel",null).show();}
+ private void chooseTheme(){String[] labels={"Dark","Light","Follow Android system"};String[] values={"dark","light","system"};String current=prefs.getString("ui_theme","dark");int selected=Arrays.asList(values).indexOf(current);new AlertDialog.Builder(this).setTitle("Appearance theme").setSingleChoiceItems(labels,Math.max(0,selected),(d,which)->{prefs.edit().putString("ui_theme",values[which]).apply();d.dismiss();applyTheme();updateSystemBars();render();}).setNegativeButton("Cancel",null).show();}
  private int lightenMuted(){return "light".equals(prefs.getString("ui_theme","dark"))?Color.rgb(65,77,90):Color.LTGRAY;}
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
@@ -135,7 +135,7 @@ public final class MainActivity extends Activity {
   setContentView(root);
  }
  private void navigateTo(String destination){if(destination==null)return;page=destination;render();}
- @Override public void onConfigurationChanged(android.content.res.Configuration newConfig){super.onConfigurationChanged(newConfig);applyTheme();getWindow().setStatusBarColor(bg);getWindow().setNavigationBarColor(bg);shell();render();}
+ @Override public void onConfigurationChanged(android.content.res.Configuration newConfig){super.onConfigurationChanged(newConfig);applyTheme();updateSystemBars();shell();render();}
  @Override public void onBackPressed(){if(!"Home".equals(page)){navigateTo("Home");return;}super.onBackPressed();}
  private void showMobileMenu(View anchor){
   android.widget.PopupMenu popup=new android.widget.PopupMenu(this,anchor);
