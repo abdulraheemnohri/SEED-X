@@ -6,7 +6,8 @@ int main(){
  const seed::ToolRequest read{"memory.read","read","memory://recent","read memory"};
  const seed::ToolRequest shell{"shell","execute","system://root","run command"};
  assert(k.authorize(read).decision==seed::Decision::Allow);assert(k.authorize(shell).decision==seed::Decision::Deny);
- auto proposed=std::vector<seed::PolicyRule>{{"files.write","write","files://documents/",seed::PolicyEffect::RequireApproval,true},{"files.write","write","files://documents/private/",seed::PolicyEffect::Deny,true}};\n assert(!k.replacePolicies(proposed,false).valid);\n auto set=k.replacePolicies(proposed,true);
+ auto proposed=std::vector<seed::PolicyRule>{{"files.write","write","files://documents/",seed::PolicyEffect::RequireApproval,true},{"files.write","write","files://documents/private/",seed::PolicyEffect::Deny,true}};
+ assert(!k.replacePolicies(proposed,false).valid);\n auto set=k.replacePolicies(proposed,true);
  assert(set.valid);
  const seed::ToolRequest write{"files.write","write","files://documents/report.txt","save report"};
  const seed::ToolRequest secret{"files.write","write","files://documents/private/secret.txt","save secret"};
