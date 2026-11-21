@@ -3,6 +3,7 @@
 #include "seed/guardian.hpp"
 #include "seed/local_ai.hpp"
 #include <atomic>
+#include <functional>
 #include <vector>
 namespace seed {
 class AgentKernel final {
@@ -10,6 +11,7 @@ public:
  bool initialize();bool start();void pause();void stop();AgentStatus status() const noexcept;
  LocalAiRuntime& localAi() noexcept;
  PolicyResult authorize(const ToolRequest&);
+ PolicyResult authorizeAndRun(const ToolRequest&,const std::string& ticketId,const std::function<void()>& action);
  PolicyValidation replacePolicies(std::vector<PolicyRule>,bool operatorConfirmed);
  ApprovalTicket requestApproval(const ToolRequest&,bool operatorConfirmed);
  bool consumeApproval(const ToolRequest&,const std::string&);
