@@ -143,3 +143,7 @@ CI now validates JSON catalogs and the declared Android permission boundary, bui
 SEED-X is free and open source. Optional donations help fund testing, model/runtime integration and maintenance. No subscription is required by this project.
 
 - [GitHub Sponsors](https://github.com/sponsors/abdulraheemnohri)
+
+
+## Phase 24–25 — Mobile UI and navigation
+The Android app now uses a four-tab bottom navigation bar, grouped hamburger menu, live screen search, favourite screens, a Home quick-launch grid, configurable startup destination, and menu actions for Guardian emergency stop and generation cancellation. CI validates the navigation entry points and screen registry. See [Phase 24](docs/PHASE24.md) and [Phase 25](docs/PHASE25.md).
