@@ -28,7 +28,7 @@ for relative in CATALOGS:
         bundled = ROOT / "android/app/src/main/assets" / pathlib.Path(relative).name
         if bundled.exists() and json.loads(bundled.read_text(encoding="utf-8")) != data:
             raise SystemExit(f"{relative}: Android asset catalog is out of sync")
-    if relative.endswith("provider_catalog.json"):
+    if relative == "config/provider_catalog.json":
         providers = data.get("providers", [])
         ids = [item.get("id") for item in providers]
         if not providers or len(ids) != len(set(ids)):
