@@ -72,14 +72,57 @@ public final class MainActivity extends Activity {
  private int dp(int v){return (int)(v*getResources().getDisplayMetrics().density);}
  private GradientDrawable rounded(int color,int radius){GradientDrawable d=new GradientDrawable();d.setColor(color);d.setCornerRadius(dp(radius));return d;}
  private TextView text(String s,int size,int color,boolean bold){TextView t=new TextView(this);t.setText(s);float scale=prefs==null?1f:prefs.getFloat("ui_text_scale",1f);t.setTextSize(size*scale);if(prefs!=null&&prefs.getBoolean("ui_high_contrast",false)&&color==muted)color=Color.LTGRAY;t.setTextColor(color);t.setPadding(0,dp(3),0,dp(3));if(bold)t.setTypeface(null,Typeface.BOLD);return t;}
- private void shell(){root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(16),dp(12),dp(16),dp(8));root.setBackgroundColor(bg);
+ private void shell(){
+  root=new LinearLayout(this);root.setOrientation(1);root.setPadding(dp(12),dp(8),dp(12),dp(6));root.setBackgroundColor(bg);
   LinearLayout head=new LinearLayout(this);head.setOrientation(0);head.setGravity(Gravity.CENTER_VERTICAL);
-  ImageView logo=new ImageView(this);logo.setImageResource(R.drawable.seedx_logo);head.addView(logo,new LinearLayout.LayoutParams(dp(42),dp(42)));
-  LinearLayout brand=new LinearLayout(this);brand.setOrientation(1);brand.setPadding(dp(10),0,0,0);brand.addView(text("SEED-X",23,accent,true));brand.addView(text("UNIVERSAL AI CONTROL CENTER  •  v0.8.0",9,muted,true));head.addView(brand,new LinearLayout.LayoutParams(0,dp(52),1));
-  root.addView(head,new LinearLayout.LayoutParams(-1,dp(56)));
-  ScrollView scroll=new ScrollView(this);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(0,dp(8),0,dp(12));scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
-  HorizontalScrollView navScroll=new HorizontalScrollView(this);navScroll.setHorizontalScrollBarEnabled(false);LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER_VERTICAL);
-  for(String tab:TABS){Button b=new Button(this);b.setText(tab);b.setTextSize(10);b.setAllCaps(false);b.setMinWidth(dp(66));b.setTextColor(page.equals(tab)?accent:muted);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(v->{page=tab;render();});nav.addView(b,new LinearLayout.LayoutParams(-2,dp(48)));}navScroll.addView(nav);root.addView(navScroll);setContentView(root);}
+  Button menuButton=new Button(this);menuButton.setText("☰");menuButton.setTextSize(22);menuButton.setAllCaps(false);menuButton.setTextColor(Color.WHITE);menuButton.setBackgroundColor(Color.TRANSPARENT);menuButton.setContentDescription("Open SEED-X mobile menu");menuButton.setOnClickListener(v->showMobileMenu(v));head.addView(menuButton,new LinearLayout.LayoutParams(dp(48),dp(48)));
+  ImageView logo=new ImageView(this);logo.setImageResource(R.drawable.seedx_logo);head.addView(logo,new LinearLayout.LayoutParams(dp(38),dp(38)));
+  LinearLayout brand=new LinearLayout(this);brand.setOrientation(1);brand.setPadding(dp(8),0,0,0);brand.addView(text("SEED-X",21,accent,true));brand.addView(text("AI CONTROL CENTER  •  v0.8.0",9,muted,true));head.addView(brand,new LinearLayout.LayoutParams(0,dp(52),1));
+  Button searchButton=new Button(this);searchButton.setText("⌕");searchButton.setTextSize(24);searchButton.setAllCaps(false);searchButton.setTextColor(Color.WHITE);searchButton.setBackgroundColor(Color.TRANSPARENT);searchButton.setContentDescription("Search screens");searchButton.setOnClickListener(v->showScreenSearch());head.addView(searchButton,new LinearLayout.LayoutParams(dp(44),dp(48)));
+  Button moreButton=new Button(this);moreButton.setText("⋮");moreButton.setTextSize(24);moreButton.setAllCaps(false);moreButton.setTextColor(Color.WHITE);moreButton.setBackgroundColor(Color.TRANSPARENT);moreButton.setContentDescription("More actions");moreButton.setOnClickListener(v->showMobileMenu(v));head.addView(moreButton,new LinearLayout.LayoutParams(dp(40),dp(48)));
+  root.addView(head,new LinearLayout.LayoutParams(-1,dp(54)));
+  View line=new View(this);line.setBackgroundColor(Color.rgb(38,52,69));root.addView(line,new LinearLayout.LayoutParams(-1,dp(1)));
+  ScrollView scroll=new ScrollView(this);scroll.setFillViewport(true);content=new LinearLayout(this);content.setOrientation(1);content.setPadding(0,dp(10),0,dp(14));scroll.addView(content);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
+  LinearLayout nav=new LinearLayout(this);nav.setGravity(Gravity.CENTER);nav.setBackground(rounded(panel,16));
+  String[] primary={"Home","Chat","Models","Settings"};for(String tab:primary){Button b=new Button(this);b.setText(tab.equals("Home")?"⌂  Home":tab.equals("Chat")?"✉  Chat":tab.equals("Models")?"▣  Models":"⚙  Settings");b.setTextSize(11);b.setAllCaps(false);b.setMinHeight(dp(50));b.setTextColor(page.equals(tab)?accent:muted);b.setBackgroundColor(Color.TRANSPARENT);b.setOnClickListener(v->{page=tab;render();});nav.addView(b,new LinearLayout.LayoutParams(0,dp(52),1));}
+  LinearLayout.LayoutParams navParams=new LinearLayout.LayoutParams(-1,dp(54));navParams.topMargin=dp(7);root.addView(nav,navParams);setContentView(root);
+ }
+ private void navigateTo(String destination){if(destination==null)return;page=destination;render();}
+ private void showMobileMenu(View anchor){
+  android.widget.PopupMenu popup=new android.widget.PopupMenu(this,anchor);
+  android.view.Menu menu=popup.getMenu();
+  menu.add(0,1,0,"Search screens");
+  menu.add(0,2,1,"New chat");
+  menu.add(0,3,2,"Toggle favourite for "+page);
+  android.view.SubMenu workspace=menu.addSubMenu("WORKSPACE");
+  addScreenMenu(workspace,new String[]{"Home","Chat","Voice","Memory"});
+  android.view.SubMenu intelligence=menu.addSubMenu("AI & MODELS");
+  addScreenMenu(intelligence,new String[]{"Models","Downloads","Runtimes","Providers"});
+  android.view.SubMenu automation=menu.addSubMenu("AUTOMATION & TOOLS");
+  addScreenMenu(automation,new String[]{"Skills","Workflows","Tasks","Tools"});
+  android.view.SubMenu security=menu.addSubMenu("SECURITY & HEALTH");
+  addScreenMenu(security,new String[]{"Permissions","Guardian","Diagnostics"});
+  android.view.SubMenu system=menu.addSubMenu("SYSTEM");
+  addScreenMenu(system,new String[]{"Settings"});
+  Set<String> favourites=prefs.getStringSet("favorite_screens",Collections.<String>emptySet());
+  if(!favourites.isEmpty()){android.view.SubMenu fav=menu.addSubMenu("FAVOURITES");for(String f:favourites)fav.add(0,screenMenuId(f),0,"★ "+f);}
+  popup.setOnMenuItemClickListener(item->{int id=item.getItemId();if(id==1){showScreenSearch();return true;}if(id==2){pendingChatDraft="";navigateTo("Chat");return true;}if(id==3){toggleFavourite(page);return true;}String destination=screenForMenuId(id);if(destination!=null){navigateTo(destination);return true;}return false;});
+  popup.show();
+ }
+ private void addScreenMenu(android.view.SubMenu menu,String[] screens){for(String screen:screens)menu.add(0,screenMenuId(screen),0,screen);}
+ private int screenMenuId(String screen){return 100+Arrays.asList(TABS).indexOf(screen);}
+ private String screenForMenuId(int id){int index=id-100;return index>=0&&index<TABS.length?TABS[index]:null;}
+ private void toggleFavourite(String screen){Set<String> next=new HashSet<>(prefs.getStringSet("favorite_screens",Collections.<String>emptySet()));if(next.contains(screen)){next.remove(screen);toast(screen+" removed from favourites.");}else{next.add(screen);toast(screen+" added to favourites.");}prefs.edit().putStringSet("favorite_screens",next).apply();}
+ private void showScreenSearch(){
+  LinearLayout wrap=new LinearLayout(this);wrap.setOrientation(1);wrap.setPadding(dp(16),dp(8),dp(16),dp(8));
+  EditText query=new EditText(this);query.setSingleLine(true);query.setHint("Search Home, Providers, Guardian…");query.setTextColor(Color.WHITE);query.setHintTextColor(muted);query.setBackground(rounded(panel,12));wrap.addView(query,new LinearLayout.LayoutParams(-1,dp(48)));
+  ScrollView scroll=new ScrollView(this);LinearLayout results=new LinearLayout(this);results.setOrientation(1);scroll.addView(results);wrap.addView(scroll,new LinearLayout.LayoutParams(-1,dp(360)));
+  AlertDialog dialog=new AlertDialog.Builder(this).setTitle("Find a screen").setView(wrap).setNegativeButton("Close",null).create();
+  Runnable refresh=()->{results.removeAllViews();String q=query.getText().toString().toLowerCase(Locale.ROOT);for(String screen:TABS)if(q.isEmpty()||screen.toLowerCase(Locale.ROOT).contains(q)){Button b=new Button(this);b.setText(screen);b.setAllCaps(false);b.setTextColor(Color.WHITE);b.setBackgroundColor(Color.TRANSPARENT);b.setGravity(Gravity.START|Gravity.CENTER_VERTICAL);b.setOnClickListener(v->{dialog.dismiss();navigateTo(screen);});results.addView(b,new LinearLayout.LayoutParams(-1,dp(44)));}};
+  query.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){refresh.run();}public void afterTextChanged(android.text.Editable e){}});
+  refresh.run();dialog.show();
+ }
+
  private void render(){if(!page.equals(lastBreadcrumbPage)){if(prefs==null||prefs.getBoolean("diagnostic_breadcrumbs",true))CrashReporter.breadcrumb(this,"Opened screen: "+page);lastBreadcrumbPage=page;}content.removeAllViews();switch(page){case "Home":home();break;case "Chat":chat();break;case "Voice":voice();break;case "Memory":memories();break;case "Models":models();break;case "Downloads":downloads();break;case "Tasks":tasks();break;case "Permissions":permissions();break;case "Runtimes":runtimes();break;case "Providers":providers();break;case "Skills":skills();break;case "Workflows":workflows();break;case "Tools":tools();break;case "Guardian":guardian();break;case "Diagnostics":diagnostics();break;case "Settings":settings();break;default:home();}}
  private void heading(String title,String sub){content.addView(text(title,22,Color.WHITE,true));content.addView(text(sub,12,muted,false));space(10);}
  private void space(int h){View v=new View(this);content.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
