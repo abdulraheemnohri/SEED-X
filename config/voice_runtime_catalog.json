@@ -147,6 +147,138 @@
         "Browser audio/file URL"
       ],
       "notes": "Optional user-authorized web services for speech2txt, txt2speech and realtime beta. User-pays terms apply."
+    },
+    {
+      "id": "parakeet",
+      "name": "NVIDIA Parakeet",
+      "kind": "local-asr",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": true,
+      "formats": [
+        "ONNX / NeMo export"
+      ],
+      "notes": "Offline ASR model family; exported model and tokenizer/config required."
+    },
+    {
+      "id": "zipformer",
+      "name": "Zipformer",
+      "kind": "local-asr",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": true,
+      "formats": [
+        "ONNX"
+      ],
+      "notes": "Streaming ASR architecture commonly used with sherpa-onnx."
+    },
+    {
+      "id": "sensevoice",
+      "name": "SenseVoice",
+      "kind": "local-asr",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": true,
+      "formats": [
+        "ONNX / supported export"
+      ],
+      "notes": "Multilingual speech recognition and audio tagging model family."
+    },
+    {
+      "id": "funasr",
+      "name": "FunASR",
+      "kind": "local-asr-framework",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": false,
+      "formats": [
+        "ONNX / runtime-specific"
+      ],
+      "notes": "Speech recognition toolkit; select an Android-compatible exported model."
+    },
+    {
+      "id": "wenet",
+      "name": "WeNet",
+      "kind": "local-asr-framework",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": false,
+      "formats": [
+        "ONNX / runtime-specific"
+      ],
+      "notes": "ASR toolkit and streaming model family."
+    },
+    {
+      "id": "mms-tts",
+      "name": "Meta MMS TTS",
+      "kind": "local-tts",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": false,
+      "formats": [
+        "Model-specific export"
+      ],
+      "notes": "Multilingual TTS model family; model packaging and license review required."
+    },
+    {
+      "id": "coqui-tts",
+      "name": "Coqui TTS",
+      "kind": "local-tts",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": false,
+      "formats": [
+        "ONNX / runtime-specific"
+      ],
+      "notes": "TTS toolkit; deployment depends on model export and license."
+    },
+    {
+      "id": "openwakeword",
+      "name": "openWakeWord",
+      "kind": "local-wake-word",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": true,
+      "formats": [
+        "ONNX / TFLite"
+      ],
+      "notes": "Wake-word detection; microphone service and battery policy need separate opt-in."
+    },
+    {
+      "id": "porcupine",
+      "name": "Picovoice Porcupine",
+      "kind": "wake-word-sdk",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": true,
+      "formats": [
+        "Native SDK"
+      ],
+      "notes": "Wake-word engine; review SDK license and key requirements."
+    },
+    {
+      "id": "speechbrain",
+      "name": "SpeechBrain",
+      "kind": "speaker-audio",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": false,
+      "formats": [
+        "ONNX / runtime-specific"
+      ],
+      "notes": "Speaker recognition, diarization and audio processing toolkit; Android exports required."
+    },
+    {
+      "id": "pyannote",
+      "name": "pyannote.audio",
+      "kind": "speaker-diarization",
+      "status": "catalog-only-adapter-needed",
+      "offline": "Potentially local after compatible export",
+      "streaming": false,
+      "formats": [
+        "ONNX / runtime-specific"
+      ],
+      "notes": "Speaker diarization pipeline; model licenses and Android export support vary."
     }
   ]
 }
