@@ -17,7 +17,7 @@ int main(){
  assert(k.authorize(read).decision==seed::Decision::Deny);
  assert(!k.replacePolicies({{"","read","memory://",seed::PolicyEffect::Allow,true}}).valid);
  assert(k.verifyAudit());
- k.emergencyStop();assert(k.authorize(write).decision==seed::Decision::Deny);assert(!k.resetEmergencyStop(false));assert(k.resetEmergencyStop(true));
+ k.emergencyStop();assert(k.authorize(write).decision==seed::Decision::Deny);assert(!k.start());assert(!k.resetEmergencyStop(false));assert(k.resetEmergencyStop(true));
  assert(k.verifyAudit());k.pause();assert(k.status()==seed::AgentStatus::Paused);assert(k.start());k.stop();assert(k.status()==seed::AgentStatus::Stopped);
  std::cout<<"SEED-X Phase 2 tests passed\n";
 }
