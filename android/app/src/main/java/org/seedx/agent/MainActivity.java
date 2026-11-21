@@ -56,7 +56,7 @@ public final class MainActivity extends Activity {
  private native String nativeGuardianStatus();
  private native void nativeEmergencyStop();
  private native boolean nativeResetEmergencyStop(boolean confirmed);
- private int bg=Color.rgb(10,17,27), panel=Color.rgb(20,30,44), accent=Color.rgb(61,210,151), muted=Color.rgb(155,174,194), primaryText=primaryText;
+ private int bg=Color.rgb(10,17,27), panel=Color.rgb(20,30,44), accent=Color.rgb(61,210,151), muted=Color.rgb(155,174,194), primaryText=Color.WHITE;
  private android.content.SharedPreferences prefs, secrets;
  private final ExecutorService worker=Executors.newSingleThreadExecutor();
  private volatile HttpURLConnection activeConnection;
