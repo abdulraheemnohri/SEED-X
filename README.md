@@ -90,6 +90,9 @@ System 1 (Guardian) owns policy and authorization. System 2 model output is untr
 - Model-initiated autonomous tool planning is not enabled; operators launch tools from the Tool Center. No GPU/NPU acceleration or physical-device benchmark is claimed.
 - SHA-256 model verification, signed model provenance and an in-app model downloader remain pending.
 
+## Project audit
+A repository-wide architecture, implementation, security and release-readiness review is available in [docs/PROJECT_AUDIT_2026-11-21.md](docs/PROJECT_AUDIT_2026-11-21.md). It distinguishes implemented features from catalog-only runtimes and documents remaining release, security and device-testing work.
+
 ## License
 MIT. See LICENSE.
 
