@@ -292,3 +292,12 @@ if "AttachmentTextExtractor.extractOfficeText(temp,name)" not in activity:
 if activity.count("private long directoryBytes(") != 1:
     raise SystemExit("MainActivity must contain exactly one directoryBytes helper")
 print("OK Phase 32 bounded DOCX/PPTX/XLSX/ODT/ODS/ODP extraction and duplicate-helper regression")
+
+
+# Phase 33: bounded PDF text extraction.
+if 'com.tom-roush:pdfbox-android:2.0.27.0' not in app_gradle:
+    raise SystemExit("PDFBox-Android dependency is missing")
+for marker in ("extractPdfText", "MAX_PDF_PAGES = 40", "MAX_OUTPUT_CHARS = 64 * 1024", "PDFBoxResourceLoader.init", "document.isEncrypted()", "new BoundedWriter", "AttachmentTextExtractor.extractText(getApplicationContext(),temp,name)"):
+    if marker not in extractor + activity:
+        raise SystemExit(f"PDF attachment extraction is missing safety/integration marker: {marker}")
+print("OK Phase 33 bounded PDF text extraction integration")
