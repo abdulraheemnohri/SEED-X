@@ -3,14 +3,21 @@
 #include <atomic>
 #include <cstdint>
 #include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <iterator>
 #include <mutex>
 #include <string>
 #include <vector>
 #include "seed/agent_kernel.hpp"
 #include "seed/llama_backend.hpp"
+#include "seed/tool_registry.hpp"
 
 namespace {
 seed::AgentKernel gKernel;
+seed::ToolRegistry gTools;
+std::filesystem::path gWorkspaceRoot;
+bool gToolsRegistered=false;
 std::mutex gMutex;
 std::atomic<bool> gCancel{false};
 std::atomic<bool> gModelReady{false};
@@ -118,16 +125,87 @@ std::string takeCompleteUtf8(std::string& pending) {
  pending.erase(0,i);
  return ready;
 }
+
+bool withinRoot(const std::filesystem::path& candidate,const std::filesystem::path& root) {
+ const auto rel=candidate.lexically_relative(root);
+ if(rel.empty()) return candidate==root;
+ return !rel.is_absolute() && *rel.begin()!="..";
+}
+bool relativeResource(const std::string& resource,std::string& relative) {
+ const std::string prefix="workspace://";
+ if(resource.rfind(prefix,0)!=0) return false;
+ relative=resource.substr(prefix.size());
+ std::filesystem::path p(relative);
+ if(p.is_absolute()) return false;
+ for(const auto& part:p) if(part==".."||part==".") return false;
+ return true;
+}
+void registerTools(const std::filesystem::path& root) {
+ if(gToolsRegistered) return;
+ gWorkspaceRoot=std::filesystem::weakly_canonical(root);
+ gTools.add({"system.status","read","system://","Read SEED-X runtime status"},
+  [](const seed::ToolRequest&,const std::string&) {
+   return seed::ToolResult{true,seed::Decision::Allow,
+    std::string("{\\"kernelReady\\":true,\\"emergencyStop\\":")+
+    (gKernel.emergencyStopped()?"true":"false")+",\\"modelReady\\":"+
+    (gModelReady.load()?"true":"false")+"}"};
+  });
+ gTools.add({"files.list","read","workspace://","List files in the private SEED-X workspace"},
+  [root=gWorkspaceRoot](const seed::ToolRequest& request,const std::string&) {
+   std::string rel;if(!relativeResource(request.resource,rel))return seed::ToolResult{false,seed::Decision::Deny,"Invalid workspace path."};
+   std::error_code ec;auto target=std::filesystem::canonical(root/std::filesystem::path(rel),ec);
+   if(ec||!withinRoot(target,root)||!std::filesystem::is_directory(target))return seed::ToolResult{false,seed::Decision::Deny,"Workspace directory does not exist or is outside the sandbox."};
+   std::string json="[";std::size_t count=0;
+   for(const auto& item:std::filesystem::directory_iterator(target,ec)) {
+    if(ec||count>=500)break;
+    if(item.is_symlink(ec))continue;
+    if(count++)json+=",";
+    const auto name=item.path().filename().string();
+    json+="{\\"name\\":\\""+escapeJson(name)+"\\",\\"type\\":\\""+(item.is_directory(ec)?std::string("directory"):std::string("file"))+"\\",\\"bytes\\":"+std::to_string(item.is_regular_file(ec)?item.file_size(ec):0)+"}";
+   }
+   json+="]";return seed::ToolResult{true,seed::Decision::Allow,json};
+  });
+ gTools.add({"files.read","read","workspace://","Read a small text file from the private workspace"},
+  [root=gWorkspaceRoot](const seed::ToolRequest& request,const std::string&) {
+   std::string rel;if(!relativeResource(request.resource,rel)||rel.empty())return seed::ToolResult{false,seed::Decision::Deny,"A relative workspace file path is required."};
+   std::error_code ec;auto target=std::filesystem::canonical(root/std::filesystem::path(rel),ec);
+   if(ec||!withinRoot(target,root)||!std::filesystem::is_regular_file(target))return seed::ToolResult{false,seed::Decision::Deny,"File does not exist or is outside the sandbox."};
+   const auto size=std::filesystem::file_size(target,ec);if(ec||size>1024*1024)return seed::ToolResult{false,seed::Decision::Deny,"File exceeds the 1 MiB read limit."};
+   std::ifstream in(target,std::ios::binary);if(!in)return seed::ToolResult{false,seed::Decision::Deny,"Cannot open workspace file."};
+   std::ostringstream data;data<<in.rdbuf();return seed::ToolResult{true,seed::Decision::Allow,data.str()};
+  });
+ gTools.add({"files.write","create","workspace://","Create a new note after one-use operator approval"},
+  [root=gWorkspaceRoot](const seed::ToolRequest& request,const std::string& payload) {
+   std::string rel;if(!relativeResource(request.resource,rel)||rel.empty())return seed::ToolResult{false,seed::Decision::Deny,"A relative workspace file path is required."};
+   if(payload.empty()||payload.size()>65536)return seed::ToolResult{false,seed::Decision::Deny,"Note must contain 1 to 65536 bytes."};
+   std::error_code ec;const auto parent=std::filesystem::canonical((root/std::filesystem::path(rel)).parent_path(),ec);
+   if(ec||!withinRoot(parent,root)||!std::filesystem::is_directory(parent))return seed::ToolResult{false,seed::Decision::Deny,"Parent directory must already exist inside workspace."};
+   const auto target=parent/std::filesystem::path(rel).filename();
+   if(std::filesystem::exists(target,ec)||ec)return seed::ToolResult{false,seed::Decision::Deny,"Refusing to overwrite an existing file."};
+   std::ofstream out(target,std::ios::binary|std::ios::out);if(!out)return seed::ToolResult{false,seed::Decision::Deny,"Cannot create workspace note."};
+   out.write(payload.data(),static_cast<std::streamsize>(payload.size()));out.close();
+   if(!out)return seed::ToolResult{false,seed::Decision::Deny,"Workspace note write failed."};
+   return seed::ToolResult{true,seed::Decision::Allow,"Created "+target.filename().string()};
+  });
+ gToolsRegistered=true;
+}
+
 void ensureInitialized() {
  if(!gInitialized) gInitialized=gKernel.initialize();
 }
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_org_seedx_agent_MainActivity_nativeInit(JNIEnv*,jobject) {
+Java_org_seedx_agent_MainActivity_nativeInit(JNIEnv* env,jobject,jstring workspaceValue) {
  std::lock_guard<std::mutex> lock(gMutex);
  ensureInitialized();
- return gInitialized?JNI_TRUE:JNI_FALSE;
+ const std::string base=fromJava(env,workspaceValue);
+ if(base.empty()) return JNI_FALSE;
+ std::error_code ec;auto workspace=std::filesystem::path(base)/"workspace";
+ std::filesystem::create_directories(workspace,ec);
+ if(ec) return JNI_FALSE;
+ registerTools(workspace);
+ return gInitialized&&gToolsRegistered?JNI_TRUE:JNI_FALSE;
 }
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -265,4 +343,24 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_org_seedx_agent_MainActivity_nativeResetEmergencyStop(JNIEnv*,jobject,jboolean confirmed) {
  if(confirmed!=JNI_TRUE) return JNI_FALSE;
  return gKernel.resetEmergencyStop(true)?JNI_TRUE:JNI_FALSE;
+}
+
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_seedx_agent_MainActivity_nativeToolCatalog(JNIEnv* env,jobject) {
+ return toJava(env,"[{\\"tool\\":\\"system.status\\",\\"operation\\":\\"read\\",\\"resource\\":\\"system://status\\",\\"description\\":\\"Read device and runtime status\\"},{\\"tool\\":\\"files.list\\",\\"operation\\":\\"read\\",\\"resource\\":\\"workspace://\\",\\"description\\":\\"List private workspace files\\"},{\\"tool\\":\\"files.read\\",\\"operation\\":\\"read\\",\\"resource\\":\\"workspace://relative/path.txt\\",\\"description\\":\\"Read a workspace text file up to 1 MiB\\"},{\\"tool\\":\\"files.write\\",\\"operation\\":\\"create\\",\\"resource\\":\\"workspace://notes/new.txt\\",\\"description\\":\\"Create a new note; operator approval required\\"}]");
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_seedx_agent_MainActivity_nativeRequestApproval(JNIEnv* env,jobject,jstring toolValue,jstring operationValue,jstring resourceValue,jboolean confirmed) {
+ if(confirmed!=JNI_TRUE||gKernel.emergencyStopped()) return toJava(env,"");
+ seed::ToolRequest request{fromJava(env,toolValue),fromJava(env,operationValue),fromJava(env,resourceValue),"Operator-approved Phase 7 tool request"};
+ const auto ticket=gKernel.requestApproval(request,true);
+ return toJava(env,ticket.id);
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_org_seedx_agent_MainActivity_nativeExecuteTool(JNIEnv* env,jobject,jstring toolValue,jstring operationValue,jstring resourceValue,jstring payloadValue,jstring ticketValue) {
+ if(gKernel.emergencyStopped()) return toJava(env,"{\\"success\\":false,\\"decision\\":\\"deny\\",\\"output\\":\\"Guardian emergency stop is active.\\"}");
+ seed::ToolRequest request{fromJava(env,toolValue),fromJava(env,operationValue),fromJava(env,resourceValue),"SEED-X Android Tools screen request"};
+ const auto result=gTools.execute(gKernel,request,fromJava(env,payloadValue),fromJava(env,ticketValue));
+ const std::string decision=result.decision==seed::Decision::Allow?"allow":result.decision==seed::Decision::RequireApproval?"approval":"deny";
+ return toJava(env,std::string("{\\"success\\":")+(result.success?"true":"false")+",\\"decision\\":\\""+decision+"\\",\\"output\\":\\""+escapeJson(result.output)+"\\"}");
 }
