@@ -112,3 +112,8 @@ Added explicit model package format identifiers and hardened runtime factory val
 ## Phase 12 — Android OS integration
 
 Added a user-started Android foreground-session service, notification permission flow, Android app-permission settings shortcuts, and battery-optimization settings access. The service is a lifecycle foundation only: it does not execute tools or access privileged device APIs. It remains subject to Android background-start and foreground-service limits. See [docs/PHASE12.md](docs/PHASE12.md).
+
+
+## Phase 14 — Crash and bug reporting
+
+Added local fatal-crash capture, explicit non-fatal error recording, diagnostic preview/copy/delete controls, and a privacy-reviewed GitHub issue draft handoff. Reports are never uploaded automatically and exclude chat history, model files, provider credentials and API keys. See [docs/PHASE14.md](docs/PHASE14.md).
