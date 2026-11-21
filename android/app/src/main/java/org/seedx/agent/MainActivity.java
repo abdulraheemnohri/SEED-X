@@ -277,26 +277,27 @@ public final class MainActivity extends Activity {
   button("Copy full conversation",panel,()->copyFullConversation());
   button("Export conversation (Markdown)",panel,()->startChatExport());
   button("Copy latest assistant response",panel,()->copyLatestAssistantResponse());
-  button("Clear current conversation",panel,()->new AlertDialog.Builder(this).setTitle("Clear conversation?").setMessage("Delete messages in this chat? Saved chat history remains available only if archived separately.").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->{history.clear();saveHistory();render();}).show());
+  button("Clear current conversation",panel,()->new AlertDialog.Builder(this).setTitle("Clear conversation?").setMessage("Delete messages and remove this conversation from local chat history?").setNegativeButton("Cancel",null).setPositiveButton("Clear",(d,w)->clearCurrentChat()).show());
  }
 private void pickChatAttachments(){
   Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.addCategory(Intent.CATEGORY_OPENABLE);i.setType("*/*");i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);startActivityForResult(i,PICK_CHAT_ATTACHMENTS);
  }
  private void importChatAttachment(Uri uri){
+  final String targetChatId=activeChatId;
   worker.execute(()->{
    File temp=null;
    try{
     String name=queryName(uri);if(name==null||name.trim().isEmpty())name="attachment";
     name=name.replaceAll("[^A-Za-z0-9._-]","_");String mime=getContentResolver().getType(uri);if(mime==null)mime="application/octet-stream";
-    File dir=new File(getFilesDir(),"chat-attachments/"+activeChatId);if(!dir.exists()&&!dir.mkdirs())throw new IOException("Cannot create private attachment folder.");
+    File dir=new File(getFilesDir(),"chat-attachments/"+targetChatId);if(!dir.exists()&&!dir.mkdirs())throw new IOException("Cannot create private attachment folder.");
     temp=new File(dir,UUID.randomUUID().toString()+"_"+name);long size=0;ByteArrayOutputStream extracted=new ByteArrayOutputStream();boolean textFile=isTextAttachment(name,mime);
     try(InputStream in=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(temp)){
      if(in==null)throw new IOException("Cannot read selected file.");byte[] buffer=new byte[32768];int n;
-     while((n=in.read(buffer))>0){size+=n;if(size>20L*1024L*1024L)throw new IOException("Each chat attachment is limited to 20 MB.");out.write(buffer,0,n);if(textFile&&extracted.size()<512*1024){int keep=(int)Math.min(n,512*1024-extracted.size());extracted.write(buffer,0,keep);}}
+     while((n=in.read(buffer))>0){size+=n;if(size>20L*1024L*1024L)throw new IOException("Each chat attachment is limited to 20 MB.");out.write(buffer,0,n);if(textFile&&extracted.size()<64*1024){int keep=(int)Math.min(n,64*1024-extracted.size());extracted.write(buffer,0,keep);}}
     }
     String extractedText=textFile?new String(extracted.toByteArray(),"UTF-8"):"";
     JSONObject item=new JSONObject().put("id",UUID.randomUUID().toString()).put("name",name).put("mime",mime).put("size",size).put("path",temp.getAbsolutePath()).put("text",extractedText).put("status",textFile?"text-extracted":"stored-attachment");
-    runOnUiThread(()->{pendingChatAttachments.add(item);toast("Attached "+item.optString("name"));render();});
+    runOnUiThread(()->{if(!activeChatId.equals(targetChatId)){temp.delete();toast("Chat changed while importing. Attach the file again in the active chat.");return;}pendingChatAttachments.add(item);toast("Attached "+item.optString("name"));render();});
    }catch(Exception e){if(temp!=null)temp.delete();runOnUiThread(()->toast("Attachment failed: "+e.getMessage()));}
   });
  }
@@ -335,8 +336,9 @@ private void pickChatAttachments(){
  }
  private JSONArray chatArchive(){try{return new JSONArray(prefs.getString("chat_archive","[]"));}catch(Exception e){return new JSONArray();}}
  private void saveChatArchive(JSONArray archive){while(archive.length()>30)archive.remove(archive.length()-1);prefs.edit().putString("chat_archive",archive.toString()).apply();}
+ private void clearCurrentChat(){history.clear();pendingChatAttachments.clear();try{JSONArray all=chatArchive(),next=new JSONArray();for(int i=0;i<all.length();i++){JSONObject item=all.optJSONObject(i);if(item!=null&&!activeChatId.equals(item.optString("id")))next.put(item);}saveChatArchive(next);}catch(Exception ignored){}prefs.edit().putString("history","[]").apply();render();}
  private void upsertActiveChat(){
-  if(history.isEmpty())return;
+  if(history.isEmpty()||!prefs.getBoolean("retain_history",true))return;
   try{
    JSONArray archive=chatArchive(),next=new JSONArray();JSONObject current=new JSONObject().put("id",activeChatId).put("title",activeChatTitle).put("updatedAt",System.currentTimeMillis()).put("messages",new JSONArray(new JSONArray(prefs.getString("history","[]")).toString()));
    boolean found=false;
@@ -1237,7 +1239,7 @@ navigation.addView(text("Four primary tabs stay visible at the bottom. All remai
   nativeEmergencyStop();
  }
  private void addMessage(String role,String value){addMessage(role,value,new JSONArray());}
- private void addMessage(String role,String value,JSONArray attachments){try{JSONObject message=new JSONObject().put("id",UUID.randomUUID().toString()).put("chatId",activeChatId).put("role",role).put("text",value).put("timestamp",System.currentTimeMillis()).put("attachments",attachments);history.add(message);if("user".equals(role)&&"New chat".equals(activeChatTitle)){activeChatTitle=value.length()>48?value.substring(0,48)+"…":value;prefs.edit().putString("active_chat_title",activeChatTitle).apply();}saveHistory();}catch(Exception ignored){}}
+ private void addMessage(String role,String value,JSONArray attachments){try{JSONArray safeAttachments=new JSONArray();for(int i=0;i<attachments.length();i++){JSONObject source=attachments.optJSONObject(i);if(source!=null){JSONObject safe=new JSONObject(source.toString());safe.remove("text");safeAttachments.put(safe);}}JSONObject message=new JSONObject().put("id",UUID.randomUUID().toString()).put("chatId",activeChatId).put("role",role).put("text",value).put("timestamp",System.currentTimeMillis()).put("attachments",safeAttachments);history.add(message);if("user".equals(role)&&"New chat".equals(activeChatTitle)){activeChatTitle=value.length()>48?value.substring(0,48)+"…":value;prefs.edit().putString("active_chat_title",activeChatTitle).apply();}saveHistory();}catch(Exception ignored){}}
  private void loadHistory(){try{activeChatId=prefs.getString("active_chat_id","chat-default");activeChatTitle=prefs.getString("active_chat_title","New chat");JSONArray a=new JSONArray(prefs.getString("history","[]"));for(int i=0;i<a.length();i++)history.add(a.getJSONObject(i));}catch(Exception ignored){}}
  private void saveHistory(){JSONArray a=new JSONArray();for(int i=Math.max(0,history.size()-100);i<history.size();i++)a.put(history.get(i));if(prefs.getBoolean("retain_history",true))prefs.edit().putString("history",a.toString()).putString("active_chat_id",activeChatId).putString("active_chat_title",activeChatTitle).apply();else prefs.edit().remove("history").apply();upsertActiveChat();}
  private SecretKey key()throws Exception{KeyStore ks=KeyStore.getInstance("AndroidKeyStore");ks.load(null);if(ks.containsAlias("seedx.provider.aesgcm.v1"))return(SecretKey)ks.getKey("seedx.provider.aesgcm.v1",null);KeyGenerator g=KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore");g.init(new KeyGenParameterSpec.Builder("seedx.provider.aesgcm.v1",KeyProperties.PURPOSE_ENCRYPT|KeyProperties.PURPOSE_DECRYPT).setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).setRandomizedEncryptionRequired(true).build());return g.generateKey();}
