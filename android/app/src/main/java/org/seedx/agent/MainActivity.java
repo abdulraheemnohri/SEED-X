@@ -112,7 +112,7 @@ public final class MainActivity extends Activity {
    if(kind.equals("anthropic"))return json.optJSONArray("content").optJSONObject(0).optString("text","Empty response.");
    if(kind.equals("gemini"))return json.optJSONArray("candidates").optJSONObject(0).optJSONObject("content").optJSONArray("parts").optJSONObject(0).optString("text","Empty response.");
    return json.optJSONArray("choices").optJSONObject(0).optJSONObject("message").optString("content","Empty response.");
-  }finally{conn.disconnect();}
+  }finally{if(activeConnection==conn)activeConnection=null;conn.disconnect();}
  }
  private void models(){heading("Local Models","Import, load and unload GGUF models using the native C++ runtime.");
   LinearLayout c=card();try{JSONObject rt=new JSONObject(nativeRuntimeStatus());c.addView(text("Runtime: "+rt.optString("state"),17,Color.WHITE,true));c.addView(text("Backend: "+(rt.optBoolean("llamaAvailable")?"llama.cpp enabled":"llama.cpp not compiled"),12,muted,false));c.addView(text("Available memory: "+(rt.optLong("availableBytes")/1048576)+" MB",12,muted,false));if(rt.optBoolean("ready"))c.addView(text("Loaded model: "+rt.optString("model"),13,accent,true));}catch(Exception e){c.addView(text("Native runtime unavailable: "+e.getMessage(),12,muted,false));}button("Unload active model",panel,()->worker.execute(()->{nativeUnloadModel();runOnUiThread(this::render);}));
