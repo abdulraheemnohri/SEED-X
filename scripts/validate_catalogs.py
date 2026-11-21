@@ -138,6 +138,8 @@ for marker in (
     'getAvailableBytes()',
     'Allow cloud/remote provider fallback',
     'Allow trusted private-LAN HTTP endpoints',
+    'DECLARED PERMISSIONS • LIVE PACKAGE STATUS',
+    'getPackageInfo(getPackageName()',
 ):
     if marker not in activity:
         raise SystemExit(f"MainActivity is missing device/backend feature: {marker}")
