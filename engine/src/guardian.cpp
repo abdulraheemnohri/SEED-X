@@ -15,7 +15,7 @@ PolicyResult Guardian::authorizeAndRun(const ToolRequest&r,const std::string&tic
  if(policy.decision==Decision::RequireApproval){
   if(ticketId.empty()){record(r,policy);return policy;}
   const auto it=approvals_.find(ticketId);
-  if(it==approvals_.end())return {Decision::Deny,"Approval ticket is unknown or already consumed."};
+  if(it==approvals_.end()){const PolicyResult denied{Decision::Deny,"Approval ticket is unknown or already consumed."};record(r,denied);return denied;}
   const bool valid=it->second.expiresAt>std::chrono::system_clock::now()&&it->second.requestFingerprint==fingerprint(r);
   approvals_.erase(it);
   if(!valid){const PolicyResult denied{Decision::Deny,"Approval ticket expired or belongs to another request."};record(r,denied);return denied;}
