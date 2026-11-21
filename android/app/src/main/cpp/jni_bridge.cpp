@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <mutex>
 #include <string>
+#include <vector>
 #include "seed/agent_kernel.hpp"
 #include "seed/llama_backend.hpp"
 
@@ -17,13 +18,50 @@ constexpr std::uint64_t kReserveBytes=768ULL*1024ULL*1024ULL;
 
 std::string fromJava(JNIEnv* env,jstring value) {
  if(!value) return {};
- const char* chars=env->GetStringUTFChars(value,nullptr);
+ const jsize length=env->GetStringLength(value);
+ const jchar* chars=env->GetStringChars(value,nullptr);
  if(!chars) return {};
- std::string out(chars);
- env->ReleaseStringUTFChars(value,chars);
+ std::string out;
+ out.reserve(static_cast<std::size_t>(length)*3);
+ for(jsize i=0;i<length;++i) {
+  std::uint32_t cp=chars[i];
+  if(cp>=0xd800&&cp<=0xdbff&&i+1<length) {
+   const std::uint32_t low=chars[i+1];
+   if(low>=0xdc00&&low<=0xdfff) { cp=0x10000+((cp-0xd800)<<10)+(low-0xdc00); ++i; }
+   else cp=0xfffd;
+  } else if(cp>=0xdc00&&cp<=0xdfff) cp=0xfffd;
+  if(cp<=0x7f) out.push_back(static_cast<char>(cp));
+  else if(cp<=0x7ff) { out.push_back(static_cast<char>(0xc0|(cp>>6))); out.push_back(static_cast<char>(0x80|(cp&0x3f))); }
+  else if(cp<=0xffff) { out.push_back(static_cast<char>(0xe0|(cp>>12))); out.push_back(static_cast<char>(0x80|((cp>>6)&0x3f))); out.push_back(static_cast<char>(0x80|(cp&0x3f))); }
+  else { out.push_back(static_cast<char>(0xf0|(cp>>18))); out.push_back(static_cast<char>(0x80|((cp>>12)&0x3f))); out.push_back(static_cast<char>(0x80|((cp>>6)&0x3f))); out.push_back(static_cast<char>(0x80|(cp&0x3f))); }
+ }
+ env->ReleaseStringChars(value,chars);
  return out;
 }
-jstring toJava(JNIEnv* env,const std::string& value) { return env->NewStringUTF(value.c_str()); }
+jstring toJava(JNIEnv* env,const std::string& value) {
+ std::vector<jchar> utf16;
+ utf16.reserve(value.size());
+ const auto* bytes=reinterpret_cast<const unsigned char*>(value.data());
+ std::size_t i=0;
+ while(i<value.size()) {
+  const unsigned char a=bytes[i];
+  std::uint32_t cp=0xfffd;
+  std::size_t n=1;
+  if(a<=0x7f) cp=a;
+  else if(a>=0xc2&&a<=0xdf&&i+1<value.size()&&(bytes[i+1]&0xc0)==0x80) { cp=((a&0x1f)<<6)|(bytes[i+1]&0x3f); n=2; }
+  else if(a>=0xe0&&a<=0xef&&i+2<value.size()&&(bytes[i+1]&0xc0)==0x80&&(bytes[i+2]&0xc0)==0x80) {
+   cp=((a&0x0f)<<12)|((bytes[i+1]&0x3f)<<6)|(bytes[i+2]&0x3f); n=3;
+   if(cp<0x800||(cp>=0xd800&&cp<=0xdfff)) cp=0xfffd;
+  } else if(a>=0xf0&&a<=0xf4&&i+3<value.size()&&(bytes[i+1]&0xc0)==0x80&&(bytes[i+2]&0xc0)==0x80&&(bytes[i+3]&0xc0)==0x80) {
+   cp=((a&0x07)<<18)|((bytes[i+1]&0x3f)<<12)|((bytes[i+2]&0x3f)<<6)|(bytes[i+3]&0x3f); n=4;
+   if(cp<0x10000||cp>0x10ffff) cp=0xfffd;
+  }
+  if(cp<=0xffff) utf16.push_back(static_cast<jchar>(cp));
+  else { cp-=0x10000; utf16.push_back(static_cast<jchar>(0xd800+(cp>>10))); utf16.push_back(static_cast<jchar>(0xdc00+(cp&0x3ff))); }
+  i+=n;
+ }
+ return env->NewString(utf16.data(),static_cast<jsize>(utf16.size()));
+}
 std::string stateName(seed::RuntimeState s) {
  switch(s) {
   case seed::RuntimeState::Unavailable:return "unavailable";
