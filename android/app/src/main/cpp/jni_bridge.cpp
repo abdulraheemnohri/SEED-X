@@ -293,10 +293,10 @@ Java_org_seedx_agent_MainActivity_nativeRuntimeCatalog(JNIEnv* env,jobject) {
   const char* status=d.availability==seed::RuntimeAvailability::Available?"available":
    d.availability==seed::RuntimeAvailability::OptionalBuildDisabled?"optional-build-disabled":
    d.availability==seed::RuntimeAvailability::RemoteService?"remote-service":"adapter-missing";
-  json+="{\\"id\\":\\""+escapeJson(d.id)+"\\",\\"name\\":\\""+escapeJson(d.displayName)+"\\",\\"category\\":\\""+escapeJson(d.category)+"\\",\\"status\\":\\""+status+"\\",\\"embedded\\":";
+  json+="{\"id\":\""+escapeJson(d.id)+"\",\"name\":\""+escapeJson(d.displayName)+"\",\"category\":\""+escapeJson(d.category)+"\",\"status\":\""+status+"\",\"embedded\":";
   json+=d.embedded?"true":"false";
-  json+=",\\"canRun\\":";json+=registry.canRun(d.id)?"true":"false";
-  json+=",\\"detail\\":\\""+escapeJson(d.detail)+"\\"}";
+  json+=",\"canRun\":";json+=registry.canRun(d.id)?"true":"false";
+  json+=",\"detail\":\""+escapeJson(d.detail)+"\"}";
  }
  json+="]";
  return toJava(env,json);
