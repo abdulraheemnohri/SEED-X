@@ -206,6 +206,33 @@ void registerTools(const std::filesystem::path& root) {
    if(!writeOk||!closeOk){::unlink(target.c_str());return seed::ToolResult{false,seed::Decision::Deny,"Workspace note write failed; partial file removed."};}
    return seed::ToolResult{true,seed::Decision::Allow,"Created "+target.filename().string()};
   });
+ gTools.add({"workspace.search","search","workspace://","Search text files in the private workspace"},
+  [root=gWorkspaceRoot](const seed::ToolRequest& request,const std::string& payload) {
+   std::string rel;
+   if(!relativeResource(request.resource,rel))return seed::ToolResult{false,seed::Decision::Deny,"Invalid workspace search path."};
+   if(payload.empty()||payload.size()>256)return seed::ToolResult{false,seed::Decision::Deny,"Search query must contain 1 to 256 bytes."};
+   auto lower=[](std::string value){for(char& ch:value)ch=static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));return value;};
+   const std::string query=lower(payload);
+   std::error_code ec;const auto start=std::filesystem::canonical(root/std::filesystem::path(rel),ec);
+   if(ec||!withinRoot(start,root)||!std::filesystem::is_directory(start))return seed::ToolResult{false,seed::Decision::Deny,"Search directory does not exist or is outside workspace."};
+   std::string json="[";std::size_t matches=0,visited=0;
+   for(std::filesystem::recursive_directory_iterator it(start,std::filesystem::directory_options::skip_permission_denied,ec),end;it!=end&&visited<200&&matches<50;it.increment(ec)){
+    if(ec){ec.clear();continue;}
+    if(it.depth()>3){it.disable_recursion_pending();continue;}
+    if(it->is_symlink(ec)){it.disable_recursion_pending();continue;}
+    if(!it->is_regular_file(ec))continue;
+    ++visited;const auto size=it->file_size(ec);if(ec||size>262144){ec.clear();continue;}
+    std::ifstream in(it->path(),std::ios::binary);if(!in)continue;
+    std::string data((std::istreambuf_iterator<char>(in)),std::istreambuf_iterator<char>());
+    if(data.find('\0')!=std::string::npos)continue;
+    if(lower(data).find(query)==std::string::npos)continue;
+    const auto relPath=it->path().lexically_relative(root).generic_string();
+    if(matches++)json+=",";
+    json+="{\\"path\\":\\""+escapeJson(relPath)+"\\",\\"bytes\\":"+std::to_string(size)+"}";
+   }
+   json+="]";
+   return seed::ToolResult{true,seed::Decision::Allow,json};
+  });
  gToolsRegistered=true;
 }
 
