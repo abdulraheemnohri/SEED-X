@@ -77,9 +77,9 @@ required_ui = (
 for marker in required_ui:
     if marker not in activity:
         raise SystemExit(f"MainActivity is missing mobile UI entry point: {marker}")
-for screen in ("Home", "Chat", "Voice", "Memory", "Models", "Downloads", "Runtimes",
+for screen in ("Home", "Chat", "Voice", "Memory", "Prompts", "Models", "Downloads", "Runtimes",
                "Providers", "Skills", "Workflows", "Tasks", "Permissions", "Tools",
-               "Guardian", "Diagnostics", "Settings"):
+               "Guardian", "Diagnostics", "Network", "Storage", "About", "Settings"):
     if f'"{screen}"' not in activity:
         raise SystemExit(f"MainActivity is missing registered screen: {screen}")
 print("OK mobile navigation and screen entry points")
@@ -109,5 +109,16 @@ for marker in ("running = false;", "running = true;", "onDestroy()"):
 if "boolean ok=result.startsWith(\"Provider connection succeeded.\");" not in activity:
     raise SystemExit("Provider health test must classify only explicit success responses as success")
 print("OK foreground-service lifecycle and provider-test result classification")
+
+# Additional workspace screen and conversation utilities.
+for marker in ("private void prompts()", "private void createPromptTemplate()", "private void searchConversation()", "private void startChatExport()", "private void exportChatTo(Uri uri)", "private void storageManager()", "private void networkDiagnostics()", "private void about()"):
+    if marker not in activity:
+        raise SystemExit(f"MainActivity is missing workspace feature: {marker}")
+if "private static final int EXPORT_CHAT=4106;" not in activity:
+    raise SystemExit("Conversation export activity result code is missing")
+if "Clear conversation" not in activity or "Search conversation" not in activity or "Copy latest assistant response" not in activity:
+    raise SystemExit("Chat history controls are incomplete")
+print("OK prompt library, chat search/export, storage, network and about screens")
+
 
 
