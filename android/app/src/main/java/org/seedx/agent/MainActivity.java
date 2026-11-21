@@ -119,7 +119,35 @@ public final class MainActivity extends Activity {
   button("Import GGUF model",accent,()->{Intent i=new Intent(Intent.ACTION_OPEN_DOCUMENT);i.setType("*/*");i.addCategory(Intent.CATEGORY_OPENABLE);startActivityForResult(i,PICK_MODEL);});
   File dir=new File(getFilesDir(),"models");File[] files=dir.listFiles();if(files!=null)for(File f:files){LinearLayout item=card();item.addView(text(f.getName(),14,Color.WHITE,true));item.addView(text((f.length()/1048576)+" MB • app-private storage",11,muted,false));button("Load this model",accent,()->{ProgressBar loading=new ProgressBar(this);loading.setIndeterminate(true);content.addView(loading);worker.execute(()->{String result=nativeLoadModel(f.getAbsolutePath(),f.getName(),f.getName(),2048);runOnUiThread(()->{new AlertDialog.Builder(this).setMessage(result).setPositiveButton("OK",null).show();render();});});});}
  }
- @Override protected void onActivityResult(int request,int result,Intent data){super.onActivityResult(request,result,data);if(request==PICK_MODEL&&result==RESULT_OK&&data!=null&&data.getData()!=null){try{Uri uri=data.getData();String name=queryName(uri).replaceAll("[^A-Za-z0-9._-]","_");if(!name.toLowerCase(Locale.ROOT).endsWith(".gguf"))throw new IllegalArgumentException("Only .gguf files accepted.");File dir=new File(getFilesDir(),"models");dir.mkdirs();try(InputStream in=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(new File(dir,name))){if(in==null)throw new IOException("Cannot open file");byte[] b=new byte[8192];int n;while((n=in.read(b))>0)out.write(b,0,n);}Toast.makeText(this,"Model copied to private storage.",Toast.LENGTH_LONG).show();}catch(Exception e){Toast.makeText(this,e.getMessage(),Toast.LENGTH_LONG).show();}render();}}
+ @Override protected void onActivityResult(int request,int result,Intent data){
+  super.onActivityResult(request,result,data);
+  if(request!=PICK_MODEL||result!=RESULT_OK||data==null||data.getData()==null)return;
+  Uri uri=data.getData();
+  ProgressBar loading=new ProgressBar(this);loading.setIndeterminate(true);content.addView(loading);
+  worker.execute(()->{
+   String message;
+   try {
+    String name=queryName(uri).replaceAll("[^A-Za-z0-9._-]","_");
+    if(!name.toLowerCase(Locale.ROOT).endsWith(".gguf"))throw new IllegalArgumentException("Only .gguf files accepted.");
+    File dir=new File(getFilesDir(),"models");if(!dir.exists()&&!dir.mkdirs())throw new IOException("Cannot create private model directory.");
+    File temp=new File(dir,name+".importing");File target=new File(dir,name);
+    try(InputStream in=getContentResolver().openInputStream(uri);OutputStream out=new FileOutputStream(temp)){
+     if(in==null)throw new IOException("Cannot open selected document.");
+     byte[] buffer=new byte[64*1024];int n;long total=0;
+     while((n=in.read(buffer))>0){total+=n;if(total>8L*1024L*1024L*1024L)throw new IOException("Model import exceeds the 8 GiB safety limit.");out.write(buffer,0,n);}
+    }
+    try(InputStream check=new FileInputStream(temp)){
+     byte[] magic=new byte[4];
+     if(check.read(magic)!=4||magic[0]!='G'||magic[1]!='G'||magic[2]!='U'||magic[3]!='F')throw new IllegalArgumentException("Selected file does not contain GGUF magic bytes.");
+    }
+    if(target.exists()&&!target.delete())throw new IOException("Cannot replace existing model file.");
+    if(!temp.renameTo(target))throw new IOException("Could not finalize imported model file.");
+    message="GGUF model copied to private storage.";
+   } catch(Exception e){message="Import failed: "+(e.getMessage()==null?"unknown error":e.getMessage());}
+   final String resultMessage=message;
+   runOnUiThread(()->{Toast.makeText(this,resultMessage,Toast.LENGTH_LONG).show();render();});
+  });
+ }
  private String queryName(Uri uri){try(android.database.Cursor c=getContentResolver().query(uri,null,null,null,null)){if(c!=null&&c.moveToFirst()){int i=c.getColumnIndex(OpenableColumns.DISPLAY_NAME);if(i>=0)return c.getString(i);}}return "model.gguf";}
  private void providers(){heading("AI Providers","Configure OpenAI-compatible, Anthropic or Gemini. API keys are encrypted with Android Keystore AES-GCM.");JSONObject old=config();
   EditText name=field("Provider name",old==null?"My AI":old.optString("name"),false);
