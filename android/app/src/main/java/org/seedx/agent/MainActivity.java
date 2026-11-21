@@ -435,7 +435,42 @@ private void send(String prompt){if(!nativeReady){addMessage("assistant","Native
   button("Delete all local memories",panel,()->new AlertDialog.Builder(this).setTitle("Delete all memories?").setMessage("This removes all manually saved local memory entries from this app.").setNegativeButton("Cancel",null).setPositiveButton("Delete all",(d,w)->{prefs.edit().remove("memory_items").apply();render();}).show());
   list.addView(text("Memory is OFF until enabled in Settings. When enabled, saved entries are added to prompts sent to the selected local or cloud model.",11,muted,false));
  }
- private void voice(){
+ private void integrations(){
+  heading("Plugins, Connectors & Integrations","A capability registry for external services. Integrated means usable now; planned means no live connector is shipped yet.");
+  button("Configure an MCP HTTP endpoint (saved only)",accent,()->configureMcpEndpoint());
+  JSONArray saved=mcpConnectors();LinearLayout configured=card();configured.addView(text("CONFIGURED CONNECTOR ENDPOINTS • "+saved.length(),12,accent,true));
+  for(int i=0;i<saved.length();i++){JSONObject item=saved.optJSONObject(i);if(item==null)continue;configured.addView(text(item.optString("name")+" • "+item.optString("status"),13,primaryText,true));configured.addView(text(item.optString("url"),11,muted,false));button("Remove connector configuration",panel,()->{JSONArray next=new JSONArray();for(int n=0;n<saved.length();n++){JSONObject x=saved.optJSONObject(n);if(x!=null&&!x.optString("id").equals(item.optString("id")))next.put(x);}prefs.edit().putString("mcp_connectors",next.toString()).apply();render();});}
+  try{
+   JSONArray list=assetJson("integration_catalog.json").optJSONArray("integrations");
+   for(int i=0;list!=null&&i<list.length();i++){JSONObject item=list.getJSONObject(i);LinearLayout card=card();card.addView(text(item.optString("name")+" • "+item.optString("status"),14,Color.WHITE,true));card.addView(text(item.optString("type")+" • "+item.optString("features"),11,muted,false));card.addView(text(item.optString("status").contains("planned")?"Not connected: adapter, authentication and Guardian permission integration still required.":"Available through the existing SEED-X feature.",11,muted,false));Button docs=new Button(this);docs.setText("Open official documentation");docs.setAllCaps(false);docs.setOnClickListener(v->openUrl(item.optString("url")));card.addView(docs);}
+  }catch(Exception e){card().addView(text("Integration catalogue unavailable: "+e.getMessage(),12,muted,false));}
+  LinearLayout boundary=card();boundary.addView(text("PLUGIN SECURITY POLICY",12,accent,true));boundary.addView(text("Third-party plugin code is not loaded or executed by this screen. Future plugins must use signed manifests, explicit capabilities, isolated execution and Guardian authorization. Connector configuration does not mean a server is connected.",12,muted,false));
+ }
+ private JSONArray mcpConnectors(){try{return new JSONArray(prefs.getString("mcp_connectors","[]"));}catch(Exception e){return new JSONArray();}}
+ private void configureMcpEndpoint(){
+  LinearLayout box=new LinearLayout(this);box.setOrientation(1);box.setPadding(dp(12),dp(8),dp(12),dp(8));
+  EditText name=new EditText(this);name.setHint("Connector name");name.setTextColor(primaryText);box.addView(name);
+  EditText url=new EditText(this);url.setHint("HTTPS MCP endpoint URL");url.setTextColor(primaryText);url.setInputType( android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_URI);box.addView(url);
+  new AlertDialog.Builder(this).setTitle("Save MCP endpoint").setMessage("This saves an endpoint profile only. It does not connect, authenticate or execute tools yet.").setView(box).setNegativeButton("Cancel",null).setPositiveButton("Save",(d,w)->{
+   String n=name.getText().toString().trim(),u=url.getText().toString().trim();
+   try{Uri parsed=Uri.parse(u);String scheme=parsed.getScheme(),host=parsed.getHost();if(n.isEmpty()||n.length()>60||u.length()>2048||parsed.getUserInfo()!=null||host==null||!("https".equalsIgnoreCase(scheme)||(prefs.getBoolean("allow_local_http",false)&&"http".equalsIgnoreCase(scheme))))throw new IllegalArgumentException("Use a valid HTTPS endpoint. Local HTTP requires explicit local-network policy.");
+    JSONArray all=mcpConnectors();all.put(new JSONObject().put("id",UUID.randomUUID().toString()).put("name",n).put("url",u).put("status","configured-not-connected").put("createdAt",System.currentTimeMillis()));prefs.edit().putString("mcp_connectors",all.toString()).apply();toast("MCP endpoint profile saved. It is not connected yet.");render();
+   }catch(Exception e){toast("Connector not saved: "+e.getMessage());}
+  }).show();
+ }
+ private void growth(){
+  heading("SEED Growth & Evolution","Track progress, propose improvements and review changes. The model cannot rewrite Guardian, policy or trusted control code.");
+  JSONArray archive=chatArchive();JSONArray proposals;try{proposals=new JSONArray(prefs.getString("growth_proposals","[]"));}catch(Exception e){proposals=new JSONArray();}
+  LinearLayout metrics=card();metrics.addView(text("LOCAL GROWTH METRICS",12,accent,true));metrics.addView(text("Active chat messages: "+history.size(),13,primaryText,false));metrics.addView(text("Archived conversations: "+archive.length(),13,primaryText,false));metrics.addView(text("Saved workflows: "+customWorkflows().length(),13,primaryText,false));metrics.addView(text("Pending improvement proposals: "+countGrowthPending(proposals),13,primaryText,false));metrics.addView(text("Current app version: 0.8.0 • model updates require explicit operator approval",11,muted,false));
+  EditText idea=field("Describe a SEED improvement proposal","Improve retrieval quality, add a model adapter, reduce memory use…",false);
+  button("Save growth proposal for review",accent,()->{String value=idea.getText().toString().trim();if(value.isEmpty()||value.length()>2000){toast("Enter a proposal of 1–2000 characters.");return;}try{JSONArray all=new JSONArray(prefs.getString("growth_proposals","[]"));all.put(0,new JSONObject().put("id",UUID.randomUUID().toString()).put("proposal",value).put("status","pending-review").put("createdAt",System.currentTimeMillis()));while(all.length()>100)all.remove(all.length()-1);prefs.edit().putString("growth_proposals",all.toString()).apply();toast("Proposal saved for human review.");render();}catch(Exception e){toast("Could not save proposal.");}});
+  LinearLayout list=card();list.addView(text("GROWTH BACKLOG • "+proposals.length(),12,accent,true));
+  for(int i=0;i<proposals.length();i++){JSONObject p=proposals.optJSONObject(i);if(p==null)continue;list.addView(text(p.optString("status")+" • "+p.optString("proposal"),12,primaryText,false));button("Copy proposal",panel,()->{((android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("SEED growth proposal",p.optString("proposal")));toast("Copied.");});}
+  LinearLayout safety=card();safety.addView(text("SYSTEM 1 / SYSTEM 2 BOUNDARY",12,accent,true));safety.addView(text("SEED can collect feedback, evaluate models in a test workspace and prepare proposed changes. It must not autonomously modify the Guardian, authorization policies, signing keys, audit logic or trusted update mechanism. A human-approved, tested release is required.",12,muted,false));
+  button("Open Model Manager",panel,()->navigateTo("Models"));button("Open Skills & workflows",panel,()->navigateTo("Skills"));button("Open Diagnostics",panel,()->navigateTo("Diagnostics"));
+ }
+ private int countGrowthPending(JSONArray proposals){int n=0;for(int i=0;i<proposals.length();i++){JSONObject p=proposals.optJSONObject(i);if(p!=null&&"pending-review".equals(p.optString("status")))n++;}return n;}
+private void voice(){
   heading("Voice & Speech Studio","ASR, TTS, voice controls and runtime inventory. Microphone is requested only when you start recognition.");
   LinearLayout asr=card();asr.addView(text("SPEECH RECOGNITION (ASR)",13,accent,true));
   String mode=prefs.getString("voice_asr_mode","on_device");asr.addView(text("Selected engine: "+("on_device".equals(mode)?"On-device Android SpeechRecognizer":"Android system SpeechRecognizer"),12,primaryText,true));
