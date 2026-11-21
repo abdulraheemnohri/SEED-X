@@ -1,5 +1,6 @@
 #include <jni.h>
 #include <algorithm>
+#include <cctype>
 #include <atomic>
 #include <cstdint>
 #include <filesystem>
