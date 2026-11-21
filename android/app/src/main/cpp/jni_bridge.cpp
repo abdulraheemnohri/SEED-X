@@ -149,9 +149,15 @@ void registerTools(const std::filesystem::path& root) {
  gTools.add({"system.status","read","system://","Read SEED-X runtime status"},
   [](const seed::ToolRequest&,const std::string&) {
    return seed::ToolResult{true,seed::Decision::Allow,
-    std::string("{\"kernelReady\":true,\"emergencyStop\":")+
-    (gKernel.emergencyStopped()?"true":"false")+",\"modelReady\":"+
-    (gModelReady.load()?"true":"false")+"}"};
+    []{
+     seed::DeviceMemory memory;std::string error;
+     const bool available=seed::DeviceMemoryProbe::read(memory,error,kReserveBytes);
+     return std::string("{\"kernelReady\":true,\"emergencyStop\":")+
+      (gKernel.emergencyStopped()?"true":"false")+",\"modelReady\":"+
+      (gModelReady.load()?"true":"false")+",\"availableBytes\":"+
+      std::to_string(available?memory.availableBytes:0)+",\"memoryProbeOk\":"+
+      (available?"true":"false")+"}";
+    }()};
   });
  gTools.add({"files.list","read","workspace://","List files in the private SEED-X workspace"},
   [root=gWorkspaceRoot](const seed::ToolRequest& request,const std::string&) {
