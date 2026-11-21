@@ -64,7 +64,7 @@ jobs:
         with:
           gradle-version: '8.9'
       - name: Assemble complete debug APK with embedded llama.cpp
-        run: gradle clean assembleDebug -PseedxLlamaCpp=ON
+        run: gradle clean assembleDebug -PseedxLlamaCpp=ON -PseedxRuntimeSdks=litert,executorch,onnxruntime
       - name: Upload complete debug APK
         uses: actions/upload-artifact@v4
         with:
