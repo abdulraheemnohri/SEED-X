@@ -183,4 +183,4 @@ The app now includes Prompt Library (built-in and custom local templates), conve
 - No additional Android permissions were added. Device information is read through Android public status APIs; radio toggles, privileged controls, private sensor streams and other-app access are not provided.
 - Provider templates remain compatibility presets. The current catalog includes 24 known provider profiles, with custom OpenAI-compatible endpoints supported; account availability, model aliases, pricing, regional support and free quotas must be verified with each provider.
 - Runtime catalog entries remain distinct from runnable adapters. llama.cpp is the embedded engine available in the optional build; other listed runtimes must not be treated as installed or executable until their adapters are integrated and verified.
-- Device-specific hardware readings, thermal reporting and power behavior require validation on physical Android devices.
+- Device-specific hardware readings, thermal reporting and power behavior require validation on physical Android devices. See [docs/PHASE26.md](docs/PHASE26.md).
