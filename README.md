@@ -137,3 +137,9 @@ Added Permission Center, foreground-session Task Manager, curated GGUF Model Dow
 
 ## Phase 23 — Release Engineering
 CI now validates JSON catalogs and the declared Android permission boundary, builds debug APK plus unsigned release APK/AAB artifacts, and uploads release artifacts. Added a security policy. Release signing and physical-device validation remain maintainer actions. See [docs/PHASE23.md](docs/PHASE23.md) and [SECURITY.md](SECURITY.md).
+
+
+## Support development
+SEED-X is free and open source. Optional donations help fund testing, model/runtime integration and maintenance. No subscription is required by this project.
+
+- [GitHub Sponsors](https://github.com/sponsors/abdulraheemnohri)
