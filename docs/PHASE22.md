@@ -21,3 +21,13 @@
 - Grouped mobile drawer menu for all screens, global screen search, screen favourites and startup-screen selection.
 - Quick-launch dashboard grid and top-bar overflow actions for emergency stop, cancellation and support.
 - Settings JSON export/import through Android's Storage Access Framework. The backup is allowlisted and excludes provider profiles, API keys, chat history and model files; imported values are schema- and range-validated.
+
+
+## Phase 24 — Theme, command palette and dashboard controls
+- Dark, light and Android-system theme selection with persisted preference and matching system bars.
+- Command palette searches all app screens and exposes guarded actions for emergency stop, generation cancellation, model unload, background session controls, settings export and optional donation support.
+- Home dashboard widgets can be individually shown or hidden: system overview, quick-launch grid and favourites.
+- Theme and dashboard preferences are included in the allowlisted JSON settings backup; provider secrets, provider profiles, chat history and model files remain excluded.
+- High-contrast text uses a theme-aware muted text color.
+
+Limitations: this is a native Android command palette, not an arbitrary shell. It only exposes the listed fixed actions and screen routes. System theme changes are applied when Android recreates the Activity; manual theme selection is applied immediately.
