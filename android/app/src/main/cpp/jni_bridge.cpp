@@ -6,6 +6,9 @@
 #include <fstream>
 #include <sstream>
 #include <iterator>
+#include <cerrno>
+#include <fcntl.h>
+#include <unistd.h>
 #include <mutex>
 #include <string>
 #include <vector>
@@ -182,9 +185,17 @@ void registerTools(const std::filesystem::path& root) {
    if(ec||!withinRoot(parent,root)||!std::filesystem::is_directory(parent))return seed::ToolResult{false,seed::Decision::Deny,"Parent directory must already exist inside workspace."};
    const auto target=parent/std::filesystem::path(rel).filename();
    if(std::filesystem::exists(target,ec)||ec)return seed::ToolResult{false,seed::Decision::Deny,"Refusing to overwrite an existing file."};
-   std::ofstream out(target,std::ios::binary|std::ios::out);if(!out)return seed::ToolResult{false,seed::Decision::Deny,"Cannot create workspace note."};
-   out.write(payload.data(),static_cast<std::streamsize>(payload.size()));out.close();
-   if(!out)return seed::ToolResult{false,seed::Decision::Deny,"Workspace note write failed."};
+   const int fd=::open(target.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC,0600);
+   if(fd<0)return seed::ToolResult{false,seed::Decision::Deny,errno==EEXIST?"Refusing to overwrite an existing file.":"Cannot create workspace note."};
+   std::size_t offset=0;bool writeOk=true;
+   while(offset<payload.size()) {
+    const auto n=::write(fd,payload.data()+offset,payload.size()-offset);
+    if(n<0&&errno==EINTR)continue;
+    if(n<=0){writeOk=false;break;}
+    offset+=static_cast<std::size_t>(n);
+   }
+   const bool closeOk=::close(fd)==0;
+   if(!writeOk||!closeOk){::unlink(target.c_str());return seed::ToolResult{false,seed::Decision::Deny,"Workspace note write failed; partial file removed."};}
    return seed::ToolResult{true,seed::Decision::Allow,"Created "+target.filename().string()};
   });
  gToolsRegistered=true;
