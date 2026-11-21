@@ -15,7 +15,7 @@ public:
  PolicyValidation replacePolicies(std::vector<PolicyRule>,bool operatorConfirmed);
  ApprovalTicket requestApproval(const ToolRequest&,bool operatorConfirmed);
  bool consumeApproval(const ToolRequest&,const std::string&);
- void emergencyStop();bool resetEmergencyStop(bool operatorConfirmed);bool verifyAudit() const;bool emergencyStopped() const noexcept;
+ void emergencyStop();bool resetEmergencyStop(bool operatorConfirmed);bool verifyAudit() const;bool emergencyStopped() const noexcept;std::vector<AuditEntry> auditSnapshot() const;std::vector<PolicyRule> policies() const;
  EventBus& events() noexcept;
 private: std::atomic<AgentStatus> status_{AgentStatus::Stopped};Guardian guardian_;EventBus events_;LocalAiRuntime localAi_;
 };
