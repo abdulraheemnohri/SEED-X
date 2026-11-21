@@ -275,3 +275,8 @@ for marker in (
 if "addJavascriptInterface" in activity:
     raise SystemExit("SEED WebViews must not expose an unrestricted native JavaScript bridge")
 print("OK Phase 31 universal chat, attachments, model selection, chat archive, voice chat, integrations and growth")
+
+# Keep Java and Kotlin bytecode targets aligned to avoid Android packaging failures.
+if "sourceCompatibility JavaVersion.VERSION_17" not in app_gradle or "targetCompatibility JavaVersion.VERSION_17" not in app_gradle or 'jvmTarget = "17"' not in app_gradle:
+    raise SystemExit("Android Java/Kotlin JVM targets must both be 17")
+print("OK Android Java/Kotlin JVM 17 target alignment")
