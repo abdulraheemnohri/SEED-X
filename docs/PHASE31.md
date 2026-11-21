@@ -18,9 +18,10 @@ Chat archive is local-only and is not included in settings backup. If history re
 - Each selected file is copied into app-private storage; no broad storage permission is requested.
 - Per-file import limit: 20 MB.
 - Text-like formats (TXT, Markdown, CSV, JSON, XML, YAML, HTML and logs) are extracted up to 64 KiB per file and included as untrusted prompt context.
-- Other file types (including PDF, Office documents, images, audio, video, archives and binary files) are retained as attachment metadata and private files.
+- Images are retained privately and sent as base64 image payloads to compatible Gemini, Anthropic and OpenAI-compatible cloud transports. Image payloads are capped at 6 MB each. The selected model must support vision; local text-only models cannot inspect them.
+- Audio, video, PDF, Office documents, archives and other binary files are retained as attachment metadata and private files, but their contents are not yet decoded or sent as model payloads.
 
-**Important capability boundary:** attaching a binary file does not mean every model can inspect it. This phase does not yet add PDF/Office parsing, image payload encoding for provider APIs, audio-file transcription, video frame extraction or archive decompression. A model/runtime adapter must explicitly support the modality and payload format before SEED-X can analyze those contents. The chat UI must not claim it has read an unsupported attachment.
+**Important capability boundary:** attaching a binary file does not mean every model can inspect it. This phase does not yet add PDF/Office parsing, audio-file transcription, video frame extraction or archive decompression. A model/runtime adapter must explicitly support the modality and payload format before SEED-X can analyze those contents. The chat UI must not claim it has read an unsupported attachment.
 
 ## Voice chat
 
@@ -57,7 +58,7 @@ The CI static guard checks the new integration catalogue, screen registration, c
 Still needed:
 - Android build and device testing.
 - PDF and Office document text extraction.
-- Native image and audio payload support for each compatible provider.
+- Native audio payload / transcription support and additional image provider adapters.
 - Audio file transcription and video frame extraction.
 - MCP HTTP client, auth and Guardian-scoped tool execution.
 - Signed plugin manifest format, sandbox and permission review.
