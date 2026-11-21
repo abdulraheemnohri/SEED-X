@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "privacy": {
+    "onlineFallbackEnabled": false,
+    "allowLocalHttp": false,
+    "sendDiagnostics": false,
+    "retainChatHistory": true
+  },
+  "routing": {
+    "strategy": "local-first",
+    "automaticFallback": false,
+    "requireConfirmationForCloud": true
+  },
+  "generation": {
+    "maxOutputTokens": 512,
+    "temperature": 0.7,
+    "topP": 0.9,
+    "contextTokens": 2048,
+    "timeoutMs": 60000,
+    "maxResponseBytes": 2097152
+  },
+  "memory": {
+    "systemReserveBytes": 805306368,
+    "modelRamMultiplier": 1.5,
+    "maxImportedModelBytes": 8589934592
+  },
+  "ui": {
+    "theme": "dark",
+    "compactMode": false,
+    "showAdvancedSettings": false
+  },
+  "donations": {
+    "enabled": false,
+    "provider": "GitHub Sponsors",
+    "url": "https://github.com/sponsors/abdulraheemnohri"
+  }
+}
