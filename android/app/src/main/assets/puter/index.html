@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' https://js.puter.com 'unsafe-inline'; connect-src https: wss:; img-src 'self' https: data: blob:; media-src https: blob:; style-src 'self' 'unsafe-inline'">
+<title>SEED-X • Puter.js AI Workspace</title>
+<script src="https://js.puter.com/v2/"></script>
+<style>
+:root{color-scheme:dark;--bg:#0b1220;--card:#152238;--line:#263a55;--text:#eef5ff;--muted:#9db0c8;--accent:#48d6a0}
+*{box-sizing:border-box}body{margin:0;padding:18px;background:var(--bg);color:var(--text);font:15px system-ui,sans-serif}
+h1{font-size:22px;margin:0 0 5px}p,.muted{color:var(--muted);line-height:1.5}.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:15px;margin:14px 0}
+textarea,input,select{width:100%;margin:8px 0;padding:12px;border:1px solid var(--line);border-radius:10px;background:#0d192b;color:var(--text);font:inherit}
+button{border:0;border-radius:10px;padding:12px 14px;margin:5px 5px 5px 0;background:var(--accent);color:#062318;font-weight:700}
+button.secondary{background:#263a55;color:var(--text)}button:disabled{opacity:.45}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#0d192b;padding:12px;border-radius:10px;min-height:70px}
+small{color:var(--muted)}label{display:block;margin-top:7px}
+</style></head>
+<body>
+<h1>SEED-X · Puter.js Online AI</h1>
+<p>Optional cloud tools. Puter user-pays model may charge the signed-in Puter user. Review the model, data and current terms before every request. No SEED-X API key is required or stored here.</p>
+<div class="panel">
+<strong>Account & model discovery</strong>
+<p id="auth">Puter.js loading…</p>
+<button id="signin" class="secondary">Sign in / authorize Puter</button>
+<button id="models" class="secondary">List available AI models</button>
+<pre id="modelList">Model discovery not run.</pre>
+</div>
+<div class="panel">
+<strong>AI Chat</strong>
+<label>Optional model ID</label><input id="model" placeholder="Leave blank to use Puter default model">
+<textarea id="prompt" rows="4" placeholder="Ask a question…"></textarea>
+<button id="chat">Send to Puter AI</button><pre id="chatOut">Chat response appears here.</pre>
+</div>
+<div class="panel">
+<strong>Text to Speech</strong>
+<textarea id="ttsText" rows="3" placeholder="Text to speak…"></textarea>
+<button id="tts">Generate speech</button><div id="audioOut"></div>
+</div>
+<div class="panel">
+<strong>Speech to Text</strong>
+<p>Provide a publicly reachable audio URL. This sends the audio URL to Puter; local microphone capture is not enabled in this web workspace.</p>
+<input id="audioUrl" type="url" placeholder="https://example.com/recording.wav">
+<button id="stt">Transcribe audio URL</button><pre id="sttOut">Transcript appears here.</pre>
+</div>
+<div class="panel">
+<strong>Image understanding / OCR</strong>
+<input id="imageUrl" type="url" placeholder="https://example.com/image.png">
+<button id="ocr">Describe / extract image text</button><pre id="ocrOut">Image result appears here.</pre>
+</div>
+<div class="panel">
+<strong>Image generation</strong>
+<textarea id="imagePrompt" rows="2" placeholder="Describe an image…"></textarea>
+<label><input id="testMode" type="checkbox" checked style="width:auto"> Use Puter test mode (sample output)</label>
+<button id="image">Generate image</button><div id="imageOut"></div>
+</div>
+<div class="panel"><strong>Privacy & limitations</strong><p>Online requests leave the device. Do not submit passwords, OTPs, private records, confidential work data or sensitive personal information. Chat/video/realtime availability, pricing and quotas vary by provider/model. Realtime and speech-to-speech are not enabled in this initial bridge.</p><small>Official docs: https://docs.puter.com/AI/</small></div>
+<script>
+const $=id=>document.getElementById(id);
+function putText(id,value){$(id).textContent=String(value??"");}
+function requireConsent(action){return window.confirm("Send data to Puter for "+action+"? This is an online service. The signed-in Puter user may incur usage costs under Puter's current user-pays terms. Continue?");}
+function ready(){return typeof window.puter!=="undefined"&&puter.ai;}
+function guard(){if(!ready()){alert("Puter.js is not available. Check internet access and reload.");return false;}return true;}
+$("signin").onclick=async()=>{if(!guard())return;try{await puter.auth.signIn();putText("auth","Puter sign-in flow completed. Check account status in Puter.");}catch(e){putText("auth","Sign-in: "+e.message);}};
+$("models").onclick=async()=>{if(!guard())return;try{const models=await puter.ai.listModels();putText("modelList",JSON.stringify(models,null,2).slice(0,12000));}catch(e){putText("modelList","Model list error: "+e.message);}};
+$("chat").onclick=async()=>{if(!guard())return;const prompt=$("prompt").value.trim();if(!prompt)return;if(!requireConsent("AI chat"))return;putText("chatOut","Working…");try{const model=$("model").value.trim();const result=model?await puter.ai.chat(prompt,{model}):await puter.ai.chat(prompt);putText("chatOut",typeof result==="string"?result:JSON.stringify(result,null,2));}catch(e){putText("chatOut","Chat failed: "+e.message);}};
+$("tts").onclick=async()=>{if(!guard())return;const value=$("ttsText").value.trim();if(!value)return;if(!requireConsent("text-to-speech"))return;$("audioOut").textContent="Generating…";try{const audio=await puter.ai.txt2speech(value);$("audioOut").replaceChildren(audio);}catch(e){$("audioOut").textContent="TTS failed: "+e.message;}};
+$("stt").onclick=async()=>{if(!guard())return;const url=$("audioUrl").value.trim();if(!/^https:\/\//i.test(url)){alert("Enter a public HTTPS audio URL.");return;}if(!requireConsent("speech transcription"))return;putText("sttOut","Transcribing…");try{const result=await puter.ai.speech2txt(url);putText("sttOut",result?.text??result);}catch(e){putText("sttOut","Transcription failed: "+e.message);}};
+$("ocr").onclick=async()=>{if(!guard())return;const url=$("imageUrl").value.trim();if(!/^https:\/\//i.test(url)){alert("Enter a public HTTPS image URL.");return;}if(!requireConsent("image understanding / OCR"))return;putText("ocrOut","Processing…");try{const result=await puter.ai.img2txt(url);putText("ocrOut",typeof result==="string"?result:JSON.stringify(result,null,2));}catch(e){putText("ocrOut","Image understanding failed: "+e.message);}};
+$("image").onclick=async()=>{if(!guard())return;const prompt=$("imagePrompt").value.trim();if(!prompt)return;const test=$("testMode").checked;if(!test&&!requireConsent("paid/usage-metered image generation"))return;if(test&&!requireConsent("Puter image-generation test mode"))return;$("imageOut").textContent="Generating…";try{const result=await puter.ai.txt2img(prompt,test);$("imageOut").replaceChildren(result);}catch(e){$("imageOut").textContent="Image generation failed: "+e.message;}};
+if(ready())putText("auth","Puter.js ready. Sign in only when you choose to use online services.");else window.addEventListener("load",()=>putText("auth",ready()?"Puter.js ready.":"Puter.js unavailable; check internet connection."));
+</script></body></html>
