@@ -1,4 +1,4 @@
-name: Phase 1 CI
+name: SEED-X Core CI
 
 on:
   push:
