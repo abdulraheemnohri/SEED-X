@@ -303,8 +303,9 @@ private void deletePendingChatAttachments(){for(JSONObject item:pendingChatAttac
      if(in==null)throw new IOException("Cannot read selected file.");byte[] buffer=new byte[32768];int n;
      while((n=in.read(buffer))>0){size+=n;if(size>20L*1024L*1024L)throw new IOException("Each chat attachment is limited to 20 MB.");out.write(buffer,0,n);if(textFile&&extracted.size()<64*1024){int keep=(int)Math.min(n,64*1024-extracted.size());extracted.write(buffer,0,keep);}}
     }
-    String extractedText=textFile?new String(extracted.toByteArray(),"UTF-8"):"";
-    JSONObject item=new JSONObject().put("id",UUID.randomUUID().toString()).put("name",name).put("mime",mime).put("size",size).put("path",temp.getAbsolutePath()).put("text",extractedText).put("status",textFile?"text-extracted":"stored-attachment");
+    String extractedText=textFile?new String(extracted.toByteArray(),"UTF-8"):AttachmentTextExtractor.extractOfficeText(temp,name);
+    String extractionStatus=textFile?"text-extracted":(!extractedText.isEmpty()?"office-text-extracted":"stored-attachment");
+    JSONObject item=new JSONObject().put("id",UUID.randomUUID().toString()).put("name",name).put("mime",mime).put("size",size).put("path",temp.getAbsolutePath()).put("text",extractedText).put("status",extractionStatus);
     File storedFile=temp;
     runOnUiThread(()->{pendingAttachmentImports=Math.max(0,pendingAttachmentImports-1);if(!activeChatId.equals(targetChatId)){storedFile.delete();toast("Chat changed while importing. Attach the file again in the active chat.");return;}pendingChatAttachments.add(item);toast("Attached "+item.optString("name"));render();});
    }catch(Exception e){if(temp!=null)temp.delete();runOnUiThread(()->{pendingAttachmentImports=Math.max(0,pendingAttachmentImports-1);toast("Attachment failed: "+e.getMessage());});}
