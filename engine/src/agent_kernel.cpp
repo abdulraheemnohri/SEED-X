@@ -12,7 +12,7 @@ PolicyValidation AgentKernel::replacePolicies(std::vector<PolicyRule> r,bool con
 ApprovalTicket AgentKernel::requestApproval(const ToolRequest&r,bool c){return guardian_.requestApproval(r,c);}
 bool AgentKernel::consumeApproval(const ToolRequest&r,const std::string&id){return guardian_.consumeApproval(r,id);}
 void AgentKernel::emergencyStop(){guardian_.emergencyStop();status_.store(AgentStatus::Paused);events_.publish({"guardian.emergency_stop","Emergency stop engaged; tool authorization is blocked."});}
-bool AgentKernel::resetEmergencyStop(bool c){const bool ok=guardian_.resetEmergencyStop(c);if(ok)events_.publish({"guardian.emergency_stop_reset","Emergency stop reset by operator confirmation."});return ok;}
+bool AgentKernel::resetEmergencyStop(bool c){const bool ok=guardian_.resetEmergencyStop(c);if(ok&&status_.load()==AgentStatus::Paused)status_.store(AgentStatus::Ready);if(ok)events_.publish({"guardian.emergency_stop_reset","Emergency stop reset by operator confirmation."});return ok;}
 bool AgentKernel::verifyAudit()const{return guardian_.verifyAudit();}\nbool AgentKernel::emergencyStopped()const noexcept{return guardian_.isFrozen();}
 EventBus& AgentKernel::events()noexcept{return events_;}
 }
