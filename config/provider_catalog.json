@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-21",
+  "notice": "Free tiers, model IDs, region availability, privacy terms and quotas change. Verify on provider dashboard before use. Never assume unlimited free inference.",
+  "providers": [
+    {
+      "id": "gemini",
+      "name": "Google Gemini API",
+      "kind": "gemini",
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "defaultModel": "gemini-3.8-flash",
+      "access": "free-tier-limited",
+      "keyUrl": "https://aistudio.google.com/app/apikey",
+      "notes": "Free tier for selected models; free-tier content may be used to improve Google products."
+    },
+    {
+      "id": "groq",
+      "name": "GroqCloud",
+      "kind": "openai",
+      "baseUrl": "https://api.groq.com/openai/v1",
+      "defaultModel": "openai/gpt-oss-120b",
+      "access": "free-plan-limited",
+      "keyUrl": "https://console.groq.com/keys",
+      "notes": "Free plan has organization/model rate limits; check your account limits."
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter",
+      "kind": "openai",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "defaultModel": "openrouter/free",
+      "access": "free-models-limited",
+      "keyUrl": "https://openrouter.ai/keys",
+      "notes": "Free model variants are rate-limited; model availability can change."
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare Workers AI",
+      "kind": "openai",
+      "baseUrl": "https://api.cloudflare.com/client/v4/accounts/YOUR_ACCOUNT_ID/ai/v1",
+      "defaultModel": "@cf/openai/gpt-oss-120b",
+      "access": "daily-free-allocation",
+      "keyUrl": "https://dash.cloudflare.com/",
+      "notes": "10,000 Neurons/day free allocation; some models require paid billing. Replace YOUR_ACCOUNT_ID."
+    },
+    {
+      "id": "nvidia",
+      "name": "NVIDIA NIM",
+      "kind": "openai",
+      "baseUrl": "https://integrate.api.nvidia.com/v1",
+      "defaultModel": "meta/llama-3.1-70b-instruct",
+      "access": "free-developer-prototyping",
+      "keyUrl": "https://build.nvidia.com/",
+      "notes": "Free developer prototyping access is rate-limited and model-dependent."
+    },
+    {
+      "id": "zai",
+      "name": "Z.AI / GLM",
+      "kind": "openai",
+      "baseUrl": "https://api.z.ai/api/paas/v4",
+      "defaultModel": "glm-4.7-flash",
+      "access": "check-current-terms",
+      "keyUrl": "https://open.bigmodel.cn/",
+      "notes": "Verify current free-plan availability, regional endpoint and model ID."
+    },
+    {
+      "id": "sambanova",
+      "name": "SambaNova Cloud",
+      "kind": "openai",
+      "baseUrl": "https://api.sambanova.ai/v1",
+      "defaultModel": "DeepSeek-V3.1",
+      "access": "check-current-terms",
+      "keyUrl": "https://cloud.sambanova.ai/",
+      "notes": "Access and quota may be account/plan dependent; verify before use."
+    },
+    {
+      "id": "cohere",
+      "name": "Cohere",
+      "kind": "openai",
+      "baseUrl": "https://api.cohere.com/compatibility/v1",
+      "defaultModel": "command-a-03-2025",
+      "access": "trial-or-limited",
+      "keyUrl": "https://dashboard.cohere.com/api-keys",
+      "notes": "Trial limits and supported compatibility endpoints depend on account."
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI API",
+      "kind": "openai",
+      "baseUrl": "https://api.openai.com/v1",
+      "defaultModel": "gpt-4.1-mini",
+      "access": "paid-by-usage",
+      "keyUrl": "https://platform.openai.com/api-keys",
+      "notes": "API billing is separate from ChatGPT subscriptions."
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic API",
+      "kind": "anthropic",
+      "baseUrl": "https://api.anthropic.com",
+      "defaultModel": "claude-sonnet-4-5",
+      "access": "paid-by-usage",
+      "keyUrl": "https://console.anthropic.com/",
+      "notes": "Requires API billing; API key is stored locally in Android Keystore."
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek API",
+      "kind": "openai",
+      "baseUrl": "https://api.deepseek.com/v1",
+      "defaultModel": "deepseek-chat",
+      "access": "paid-or-promo-check",
+      "keyUrl": "https://platform.deepseek.com/api_keys",
+      "notes": "Check current model aliases, pricing and regional terms."
+    },
+    {
+      "id": "mistral",
+      "name": "Mistral API",
+      "kind": "openai",
+      "baseUrl": "https://api.mistral.ai/v1",
+      "defaultModel": "mistral-small-latest",
+      "access": "check-current-terms",
+      "keyUrl": "https://console.mistral.ai/",
+      "notes": "API access and free allowances vary; verify current console."
+    },
+    {
+      "id": "qwen",
+      "name": "Qwen / DashScope",
+      "kind": "openai",
+      "baseUrl": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+      "defaultModel": "qwen-plus",
+      "access": "check-current-terms",
+      "keyUrl": "https://dashscope.console.aliyun.com/",
+      "notes": "Use the endpoint and model ID for your account region."
+    },
+    {
+      "id": "ollama",
+      "name": "Ollama local server",
+      "kind": "openai",
+      "baseUrl": "http://127.0.0.1:11434/v1",
+      "defaultModel": "qwen2.5:3b",
+      "access": "local-self-hosted",
+      "keyUrl": "https://ollama.com/",
+      "notes": "Requires Ollama running on the same Android device or a reachable LAN host."
+    },
+    {
+      "id": "lmstudio",
+      "name": "LM Studio local server",
+      "kind": "openai",
+      "baseUrl": "http://127.0.0.1:1234/v1",
+      "defaultModel": "local-model",
+      "access": "local-self-hosted",
+      "keyUrl": "https://lmstudio.ai/",
+      "notes": "Requires LM Studio server running on a reachable desktop."
+    },
+    {
+      "id": "llamacpp-server",
+      "name": "llama.cpp server",
+      "kind": "openai",
+      "baseUrl": "http://127.0.0.1:8080/v1",
+      "defaultModel": "local-model",
+      "access": "local-self-hosted",
+      "keyUrl": "https://github.com/ggml-org/llama.cpp",
+      "notes": "Requires llama-server on this device or LAN; not the same as the embedded JNI runtime."
+    },
+    {
+      "id": "localai",
+      "name": "LocalAI",
+      "kind": "openai",
+      "baseUrl": "http://127.0.0.1:8080/v1",
+      "defaultModel": "local-model",
+      "access": "local-self-hosted",
+      "keyUrl": "https://localai.io/",
+      "notes": "Requires LocalAI on a reachable host."
+    },
+    {
+      "id": "vllm",
+      "name": "vLLM server",
+      "kind": "openai",
+      "baseUrl": "http://127.0.0.1:8000/v1",
+      "defaultModel": "local-model",
+      "access": "self-hosted-server",
+      "keyUrl": "https://docs.vllm.ai/",
+      "notes": "Usually runs on a workstation/server, not directly on a 6 GB phone."
+    },
+    {
+      "id": "sglang",
+      "name": "SGLang server",
+      "kind": "openai",
+      "baseUrl": "http://127.0.0.1:30000/v1",
+      "defaultModel": "local-model",
+      "access": "self-hosted-server",
+      "keyUrl": "https://docs.sglang.ai/",
+      "notes": "Usually runs on a workstation/server."
+    }
+  ]
+}
