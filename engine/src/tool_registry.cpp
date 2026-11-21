@@ -1,5 +1,6 @@
 #include "seed/tool_registry.hpp"
 #include <utility>
+#include <exception>
 namespace seed {
 bool ToolRegistry::add(ToolDescriptor descriptor, Handler handler) {
  if(descriptor.tool.empty()||descriptor.operation.empty()||descriptor.resourcePrefix.empty()||!handler) return false;
@@ -31,7 +32,7 @@ ToolResult ToolRegistry::execute(AgentKernel& kernel,const ToolRequest& request,
  }
  try {
   auto result=selected->handler(request,payload);
-  result.decision=Decision::Allow;
+  result.decision=result.success?Decision::Allow:Decision::Deny;
   return result;
  } catch(const std::exception& e) {
   return {false,Decision::Deny,std::string("Tool handler failed safely: ")+e.what()};
