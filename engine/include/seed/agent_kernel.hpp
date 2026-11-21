@@ -12,6 +12,7 @@ public:
  LocalAiRuntime& localAi() noexcept;
  PolicyResult authorize(const ToolRequest&);
  PolicyResult authorizeAndRun(const ToolRequest&,const std::string& ticketId,const std::function<void()>& action);
+ void recordToolOutcome(const ToolRequest&,bool success);
  PolicyValidation replacePolicies(std::vector<PolicyRule>,bool operatorConfirmed);
  ApprovalTicket requestApproval(const ToolRequest&,bool operatorConfirmed);
  bool consumeApproval(const ToolRequest&,const std::string&);
