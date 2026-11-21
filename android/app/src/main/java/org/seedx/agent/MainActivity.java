@@ -70,13 +70,13 @@ public final class MainActivity extends Activity {
   button("Send message",accent,()->{String prompt=input.getText().toString().trim();if(!prompt.isEmpty()){addMessage("user",prompt);render();send(prompt);}});
   button("Clear conversation",panel,()->{history.clear();saveHistory();render();});
  }
- private void send(String prompt){try{JSONObject rt=new JSONObject(nativeRuntimeStatus());if(rt.optBoolean("ready")){sendLocal(prompt);return;}}catch(Exception ignored){}if(!prefs.getBoolean("online_allowed",false)){addMessage("assistant","Online fallback is disabled. Enable it in Settings.");render();return;}JSONObject cfg=config();if(cfg==null){addMessage("assistant","No provider configured. Open Providers to add one.");render();return;}
+ private void send(String prompt){try{JSONObject gs=new JSONObject(nativeGuardianStatus());if(gs.optBoolean("emergencyStop")){addMessage("assistant","Guardian emergency stop is active. Reset it from the Guardian screen before sending new requests.");render();return;}}catch(Exception ignored){}try{JSONObject rt=new JSONObject(nativeRuntimeStatus());if(rt.optBoolean("ready")){sendLocal(prompt);return;}}catch(Exception ignored){}if(!prefs.getBoolean("online_allowed",false)){addMessage("assistant","Online fallback is disabled. Enable it in Settings.");render();return;}JSONObject cfg=config();if(cfg==null){addMessage("assistant","No provider configured. Open Providers to add one.");render();return;}
   ProgressBar progress=new ProgressBar(this);progress.setIndeterminate(true);content.addView(progress);
   worker.execute(()->{String answer;try{answer=requestProvider(cfg);}catch(Exception e){answer="Request failed: "+(e.getMessage()==null?"network error":e.getMessage());}final String result=answer;runOnUiThread(()->{addMessage("assistant",result);render();});});
  }
  private void sendLocal(String prompt){
   TextView live=text("",14,Color.WHITE,false);live.setPadding(dp(8),dp(8),dp(8),dp(8));content.addView(live);
-  worker.execute(()->{String result;try{result=nativeGenerate(prompt,512,0.7f,0.9f,token->runOnUiThread(()->live.append(token)));if(result.startsWith("ERROR:"))result=result.substring(7);}catch(Exception e){result="Local inference failed: "+e.getMessage();}final String answer=result;runOnUiThread(()->{addMessage("assistant",answer);render();});});
+  worker.execute(()->{String result;try{result=nativeGenerate(localPrompt,512,0.7f,0.9f,token->runOnUiThread(()->live.append(token)));if(result.startsWith("ERROR:"))result=result.substring(7);}catch(Exception e){result="Local inference failed: "+e.getMessage();}final String answer=result;runOnUiThread(()->{addMessage("assistant",answer);render();});});
   button("Stop generation",panel,()->nativeCancel());
  }
  private String requestProvider(JSONObject c)throws Exception{
@@ -128,5 +128,5 @@ public final class MainActivity extends Activity {
  private SecretKey key()throws Exception{KeyStore ks=KeyStore.getInstance("AndroidKeyStore");ks.load(null);if(ks.containsAlias("seedx.provider.aesgcm.v1"))return(SecretKey)ks.getKey("seedx.provider.aesgcm.v1",null);KeyGenerator g=KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES,"AndroidKeyStore");g.init(new KeyGenParameterSpec.Builder("seedx.provider.aesgcm.v1",KeyProperties.PURPOSE_ENCRYPT|KeyProperties.PURPOSE_DECRYPT).setBlockModes(KeyProperties.BLOCK_MODE_GCM).setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE).setRandomizedEncryptionRequired(true).build());return g.generateKey();}
  private void encrypt(String ref,String value)throws Exception{Cipher c=Cipher.getInstance("AES/GCM/NoPadding");c.init(Cipher.ENCRYPT_MODE,key());byte[] encrypted=c.doFinal(value.getBytes("UTF-8")),iv=c.getIV(),packed=new byte[iv.length+encrypted.length];System.arraycopy(iv,0,packed,0,iv.length);System.arraycopy(encrypted,0,packed,iv.length,encrypted.length);secrets.edit().putString(ref,Base64.getEncoder().encodeToString(packed)).apply();}
  private String decrypt(String ref){try{byte[] p=Base64.getDecoder().decode(secrets.getString(ref,""));byte[] iv=Arrays.copyOfRange(p,0,12);Cipher c=Cipher.getInstance("AES/GCM/NoPadding");c.init(Cipher.DECRYPT_MODE,key(),new GCMParameterSpec(128,iv));return new String(c.doFinal(Arrays.copyOfRange(p,12,p.length)),"UTF-8");}catch(Exception e){return "";}}
- @Override protected void onDestroy(){worker.shutdownNow();super.onDestroy();}
+ @Override protected void onDestroy(){nativeCancel();worker.shutdownNow();super.onDestroy();}
 }
