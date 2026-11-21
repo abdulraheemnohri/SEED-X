@@ -18,6 +18,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.*;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
+import java.util.concurrent.TimeUnit;
 import android.security.keystore.KeyGenParameterSpec;
 import android.security.keystore.KeyProperties;
 import org.json.JSONArray;
@@ -488,11 +492,11 @@ public final class MainActivity extends Activity {
    Intent intent=new Intent(this,AgentForegroundService.class);
    intent.setAction(AgentForegroundService.ACTION_START);
    if(android.os.Build.VERSION.SDK_INT>=26)startForegroundService(intent);else startService(intent);
-   toast("Background session start requested. Check the persistent notification.");
+   recordTaskEvent("Foreground session start requested");toast("Background session start requested. Check the persistent notification.");
   }catch(Exception e){toast("Android blocked background session: "+e.getMessage());}
  }
  private void stopAgentSession(){
-  try{Intent intent=new Intent(this,AgentForegroundService.class);intent.setAction(AgentForegroundService.ACTION_STOP);startService(intent);toast("Stop requested.");}
+  try{Intent intent=new Intent(this,AgentForegroundService.class);intent.setAction(AgentForegroundService.ACTION_STOP);startService(intent);recordTaskEvent("Foreground session stop requested");toast("Stop requested.");}
   catch(Exception e){stopService(new Intent(this,AgentForegroundService.class));toast("Background session stopped.");}
  }
  private void openAppPermissionSettings(){
@@ -650,12 +654,18 @@ public final class MainActivity extends Activity {
   button("Open battery optimization settings",panel,()->openBatterySettings());
   LinearLayout boundary=card();boundary.addView(text("NOT REQUESTED",12,accent,true));boundary.addView(text("Accessibility service, overlay, microphone, camera, location, contacts, SMS, call logs, notification listener, all-files access and device-admin are not declared. Voice input is delegated to Android's installed speech recognizer.",12,muted,false));
  }
+ private JSONArray taskHistory(){try{return new JSONArray(prefs.getString("task_history","[]"));}catch(Exception e){return new JSONArray();}}
+ private void recordTaskEvent(String event){try{JSONArray a=taskHistory();a.put(new JSONObject().put("event",event).put("time",System.currentTimeMillis()));while(a.length()>50){JSONArray n=new JSONArray();for(int i=1;i<a.length();i++)n.put(a.get(i));a=n;}prefs.edit().putString("task_history",a.toString()).apply();}catch(Exception ignored){}}
+ private void scheduleTaskReminder(){NumberPicker picker=new NumberPicker(this);picker.setMinValue(1);picker.setMaxValue(24);picker.setValue(prefs.getInt("task_reminder_hours",4));LinearLayout wrap=new LinearLayout(this);wrap.setOrientation(1);wrap.setPadding(dp(18),dp(8),dp(18),dp(8));wrap.addView(text("Repeat reminder every (hours)",14,primaryText,true));wrap.addView(picker);new AlertDialog.Builder(this).setTitle("Schedule a task reminder").setMessage("This schedules a notification reminder only. It will not start SEED-X, contact an AI provider, or run tools. Android may delay reminders to save battery.").setView(wrap).setNegativeButton("Cancel",null).setPositiveButton("Schedule",(d,w)->{int hours=picker.getValue();PeriodicWorkRequest request=new PeriodicWorkRequest.Builder(SessionReminderWorker.class,hours,TimeUnit.HOURS).build();WorkManager.getInstance(this).enqueueUniquePeriodicWork("seedx_task_reminder",ExistingPeriodicWorkPolicy.REPLACE,request);prefs.edit().putInt("task_reminder_hours",hours).putBoolean("task_reminder_enabled",true).apply();recordTaskEvent("Scheduled task reminder every "+hours+" hour(s)");toast("Reminder scheduled. Android controls exact delivery time.");render();}).show();}
+ private void cancelTaskReminder(){WorkManager.getInstance(this).cancelUniqueWork("seedx_task_reminder");prefs.edit().putBoolean("task_reminder_enabled",false).apply();recordTaskEvent("Scheduled task reminder cancelled");toast("Task reminder cancelled.");render();}
+ private void showTaskHistory(){JSONArray a=taskHistory();if(a.length()==0){toast("No task history recorded yet.");return;}StringBuilder b=new StringBuilder();for(int i=a.length()-1;i>=0;i--){JSONObject item=a.optJSONObject(i);if(item!=null)b.append(new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm",Locale.US).format(new Date(item.optLong("time")))).append("  •  ").append(item.optString("event")).append("\n");}new AlertDialog.Builder(this).setTitle("Local task history").setMessage(b.toString()).setPositiveButton("Close",null).setNeutralButton("Clear history",(d,w)->new AlertDialog.Builder(this).setTitle("Clear task history?").setMessage("Only local event history will be deleted.").setNegativeButton("Cancel",null).setPositiveButton("Clear",(x,y)->{prefs.edit().remove("task_history").apply();render();}).show()).show();}
  private void tasks(){
-  heading("Task Manager","Current foreground-session controls. Scheduled WorkManager jobs are not enabled in this build.");
-  LinearLayout c=card();c.addView(text("AGENT SESSION",12,accent,true));c.addView(text("State: "+(AgentForegroundService.isRunning()?"RUNNING":"STOPPED"),16,Color.WHITE,true));c.addView(text("The service is started by the operator and is not an always-on daemon.",11,muted,false));
-  button("Start foreground session",accent,()->startAgentSession());
-  button("Stop foreground session",panel,()->stopAgentSession());
-  LinearLayout safety=card();safety.addView(text("TASK SAFETY",12,accent,true));safety.addView(text("No background tool execution, unattended provider calls, hidden schedules or autonomous device actions are performed. Workflow prompts remain manually started from Workflow Studio.",12,muted,false));
+  heading("Task Manager","Local task history and user-scheduled reminders. Reminders never execute AI or device actions.");
+  LinearLayout c=card();c.addView(text("AGENT SESSION",12,accent,true));c.addView(text("State: "+(AgentForegroundService.isRunning()?"RUNNING":"STOPPED"),16,primaryText,true));c.addView(text("The service is explicitly started by you and is not an always-on daemon.",11,muted,false));
+  button("Start foreground session",accent,()->startAgentSession());button("Stop foreground session",panel,()->stopAgentSession());
+  LinearLayout schedule=card();schedule.addView(text("SCHEDULED REMINDERS",12,accent,true));schedule.addView(text(prefs.getBoolean("task_reminder_enabled",false)?"Enabled • every "+prefs.getInt("task_reminder_hours",4)+" hour(s)":"No recurring reminder scheduled",12,muted,false));button("Configure recurring reminder",panel,()->scheduleTaskReminder());button("Cancel recurring reminder",panel,()->cancelTaskReminder());
+  LinearLayout historyCard=card();historyCard.addView(text("TASK HISTORY • "+taskHistory().length()+" EVENTS",12,accent,true));historyCard.addView(text("Only local session and reminder events are recorded. Prompts and provider responses are not stored here.",11,muted,false));button("View task history",panel,()->showTaskHistory());
+  LinearLayout safety=card();safety.addView(text("TASK SAFETY",12,accent,true));safety.addView(text("WorkManager schedules reminders only. No background tool execution, unattended provider calls, or autonomous device actions are performed. Android may delay periodic work.",12,muted,false));
  }
  private void downloads(){
   heading("Model Download Manager","Download catalog GGUF files to app-specific storage, then import and validate them.");
