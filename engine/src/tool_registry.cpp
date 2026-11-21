@@ -24,14 +24,13 @@ ToolResult ToolRegistry::execute(AgentKernel& kernel,const ToolRequest& request,
   const auto denied=kernel.authorize(request);
   return {false,denied.decision,"Tool is not registered. No handler was executed."};
  }
- const auto policy=kernel.authorize(request);
- if(policy.decision==Decision::Deny) return {false,Decision::Deny,policy.explanation};
- if(policy.decision==Decision::RequireApproval) {
-  if(!kernel.consumeApproval(request,approvalTicket))
-   return {false,Decision::RequireApproval,"A valid, unexpired, request-bound operator approval ticket is required."};
- }
  try {
-  auto result=selected->handler(request,payload);
+  ToolResult result;
+  const auto authorization=kernel.authorizeAndRun(request,approvalTicket,[&]{
+   result=selected->handler(request,payload);
+  });
+  if(authorization.decision!=Decision::Allow)
+   return {false,authorization.decision,authorization.explanation};
   result.decision=result.success?Decision::Allow:Decision::Deny;
   return result;
  } catch(const std::exception& e) {
