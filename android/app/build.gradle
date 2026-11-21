@@ -1,5 +1,22 @@
 plugins { id "com.android.application" }
-dependencies { implementation "androidx.work:work-runtime:2.10.1" }
+
+// Third-party mobile runtime SDKs are independently switchable. The full debug
+// workflow opts into all three supported Android SDK packages below.
+def seedxRuntimeSdks = (project.findProperty("seedxRuntimeSdks") ?: "").toString()
+    .split(",").collect { it.trim().toLowerCase() }.findAll { !it.isEmpty() }
+
+dependencies {
+ implementation "androidx.work:work-runtime:2.10.1"
+ if (seedxRuntimeSdks.contains("litert")) {
+  implementation "com.google.ai.edge.litertlm:litertlm-android:latest.release"
+ }
+ if (seedxRuntimeSdks.contains("executorch")) {
+  implementation "org.pytorch:executorch-android:1.0.0"
+ }
+ if (seedxRuntimeSdks.contains("onnxruntime")) {
+  implementation "com.microsoft.onnxruntime:onnxruntime-android:latest.release"
+ }
+}
 android {
  namespace "org.seedx.agent"
  compileSdk 35
