@@ -25,7 +25,7 @@ C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surfa
 - Mock HTTP adapter tests. See docs/PHASE4.md.
 
 ## Phase 5 — Android AI Studio
-- Native Android Java UI: Chat, Models, Providers, Guardian and Settings.
+- Native Android Java UI: Chat, Models, Providers, Tools, Guardian and Settings.
 - OpenAI-compatible, Anthropic and Gemini chat requests.
 - Android Keystore AES-GCM credential encryption; online fallback OFF by default.
 - GGUF document picker and app-private model storage.
@@ -37,6 +37,16 @@ C++20 engine, Android NDK NativeActivity foundation, OpenGL ES 3 rendering surfa
 - Local model is selected before cloud providers.
 - Guardian screen reads live emergency-stop and audit-chain status; explicit operator confirmation controls stop/reset.
 - See docs/PHASE6.md.
+
+## Phase 7 — Guardian-Gated Tool Execution
+- C++ typed tool registry with no shell or arbitrary command handler.
+- Android Tools tab for device/runtime status and private-workspace listing/reading.
+- New note creation is limited to the app-private workspace and requires a one-use, 60-second, request-bound Guardian approval.
+- Guardian permission dashboard and recent audit-history viewer.
+- Atomic authorization-and-execution boundary: emergency stop prevents new handlers and waits for an in-flight bounded handler to finish.
+- Workspace path traversal protection, 1 MiB read cap, 64 KiB write cap, exclusive no-overwrite note creation.
+- Host tests cover tool registration, approvals, replay rejection and emergency-stop blocking.
+- See docs/PHASE7.md.
 
 ## Build on Windows PowerShell
 
@@ -62,8 +72,8 @@ System 1 (Guardian) owns policy and authorization. System 2 model output is untr
 ## Current limitations
 - Android local inference requires -PseedxLlamaCpp=ON; default CI compiles the JNI bridge with a stub backend.
 - The online Java provider client and C++ Phase 4 provider adapter are not yet unified.
-- Full policy editor, approval-ticket UX and audit-log browser are pending.
-- No GPU/NPU acceleration or physical-device benchmark is claimed.
+- Policy dashboard is read-only; a visual policy editor and third-party dynamic plugin loading are pending.
+- Model-initiated autonomous tool planning is not enabled; operators launch tools from the Tool Center. No GPU/NPU acceleration or physical-device benchmark is claimed.
 - SHA-256 model verification, signed model provenance and model catalog/downloader remain pending.
 
 ## License
