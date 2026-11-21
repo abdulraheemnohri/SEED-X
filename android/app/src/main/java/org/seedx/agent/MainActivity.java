@@ -43,7 +43,9 @@ public final class MainActivity extends Activity {
  private native boolean nativeResetEmergencyStop(boolean confirmed);
  private final int bg=Color.rgb(10,17,27), panel=Color.rgb(20,30,44), accent=Color.rgb(61,210,151), muted=Color.rgb(155,174,194);
  private android.content.SharedPreferences prefs, secrets;
- private final ExecutorService worker=Executors.newSingleThreadExecutor();\n private volatile HttpURLConnection activeConnection;\n private volatile boolean stopRequested=false;
+ private final ExecutorService worker=Executors.newSingleThreadExecutor();
+ private volatile HttpURLConnection activeConnection;
+ private volatile boolean stopRequested=false;
  private LinearLayout root,content;
  private String page="Chat";
  private final ArrayList<JSONObject> history=new ArrayList<>();
