@@ -3,7 +3,7 @@
 #include <utility>
 namespace seed {
 namespace { int precedence(PolicyEffect e){return e==PolicyEffect::Deny?3:(e==PolicyEffect::RequireApproval?2:1);} }
-PolicyEngine::PolicyEngine(){rules_.push_back({"memory.read","read","memory://",PolicyEffect::Allow,true});rules_.push_back({"system.status","read","system://",PolicyEffect::Allow,true});}
+PolicyEngine::PolicyEngine(){rules_.push_back({"memory.read","read","memory://",PolicyEffect::Allow,true});rules_.push_back({"system.status","read","system://",PolicyEffect::Allow,true});rules_.push_back({"files.list","read","workspace://",PolicyEffect::Allow,true});rules_.push_back({"files.read","read","workspace://",PolicyEffect::Allow,true});rules_.push_back({"files.write","create","workspace://",PolicyEffect::RequireApproval,true});}
 PolicyResult PolicyEngine::evaluate(const ToolRequest&r)const{
  if(r.tool.empty()||r.operation.empty()||r.resource.empty())return {Decision::Deny,"Tool, operation and resource are required."};
  const PolicyRule* selected=nullptr;
