@@ -92,7 +92,7 @@ public final class CrashReporter {
             for (String line : lines) {
                 String trimmed = line.trim();
                 if (trimmed.startsWith("at ") || trimmed.endsWith("Exception") || trimmed.endsWith("Error")) {
-                    normalized.append(trimmed.replaceAll(":\\d+\\)", ":#)")).append('\\n');
+                    normalized.append(trimmed.replaceAll(":\\d+\\)", ":#)")).append('\n');
                     if (++count >= 10) break;
                 }
             }
