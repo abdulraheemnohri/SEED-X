@@ -123,6 +123,23 @@ for marker in ("showMessageActions", "retryLastUserMessage", "copyFullConversati
         raise SystemExit(f"Chat message action is missing: {marker}")
 print("OK prompt library, chat search/export, storage, network and about screens")
 
+
+# Device status and backend management entry points.
+for marker in (
+    'case "Device":deviceStatus();break;',
+    'case "Backends":backends();break;',
+    'private void deviceStatus()',
+    'private void backends()',
+    'BatteryManager.EXTRA_LEVEL',
+    'getCurrentThermalStatus()',
+    'getAvailableBytes()',
+    'Allow cloud/remote provider fallback',
+    'Allow trusted private-LAN HTTP endpoints',
+):
+    if marker not in activity:
+        raise SystemExit(f"MainActivity is missing device/backend feature: {marker}")
+print("OK Android device status and backend manager")
+
 # Adaptive Android workspace: phone bottom bar, large-screen navigation rail and density settings.
 for marker in ("private boolean useSideNavigation()", "private void addSidebar(", "private void shell()", "onConfigurationChanged(android.content.res.Configuration", "ui_navigation_mode", "ui_density", "screenWidthDp()>=900?4:screenWidthDp()>=600?3:2", "android:resizeableActivity=\"true\""):
     if marker not in activity and marker not in (ROOT / "android/app/src/main/AndroidManifest.xml").read_text(encoding="utf-8"):
