@@ -853,6 +853,17 @@ navigation.addView(text("Four primary tabs stay visible at the bottom. All remai
   status.addView(text("POST_NOTIFICATIONS: "+(notificationPermissionGranted()?"granted":"not granted")+" • needed for foreground-session notification on Android 13+",12,Color.WHITE,false));
   status.addView(text("Foreground service: declared • user-started session only",12,Color.WHITE,false));
   status.addView(text("Storage: no broad storage permission • SAF and app-specific storage only",12,Color.WHITE,false));
+  status.addView(text("DECLARED PERMISSIONS • LIVE PACKAGE STATUS",11,accent,true));
+  try{
+   android.content.pm.PackageInfo packageInfo=getPackageManager().getPackageInfo(getPackageName(),android.content.pm.PackageManager.GET_PERMISSIONS);
+   String[] declared=packageInfo.requestedPermissions;
+   if(declared!=null)for(String permission:declared){
+    boolean granted=checkSelfPermission(permission)==android.content.pm.PackageManager.PERMISSION_GRANTED;
+    String shortName=permission.startsWith("android.permission.")?permission.substring("android.permission.".length()):permission;
+    status.addView(text(shortName+": "+(granted?"GRANTED / NORMAL":"NOT GRANTED"),11,granted?accent:muted,false));
+   }
+   else status.addView(text("No manifest permissions were returned by PackageManager.",11,muted,false));
+  }catch(Exception e){status.addView(text("Could not inspect manifest permissions: "+e.getMessage(),11,Color.RED,false));}
   button("Request notification permission",accent,()->requestNotificationPermission());
   button("Open Android app permission settings",panel,()->openAppPermissionSettings());
   button("Open battery optimization settings",panel,()->openBatterySettings());
