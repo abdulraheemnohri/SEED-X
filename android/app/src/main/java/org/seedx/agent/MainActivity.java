@@ -80,11 +80,15 @@ public final class MainActivity extends Activity {
  private String pendingSkillPrompt="";
  private static final String[] TABS={"Home","Chat","Voice","Puter.js","AI Capabilities","Memory","Prompts","Models","Downloads","Runtimes","Providers","Backends","Skills","Workflows","Tasks","Permissions","Device","Tools","Guardian","Diagnostics","Network","Storage","About","Settings"};
  private final ArrayList<JSONObject> history=new ArrayList<>();
+ private final ArrayList<JSONObject> pendingChatAttachments=new ArrayList<>();
+ private String activeChatId="chat-default",activeChatTitle="New chat";
+ private boolean voiceChatArmed=false;
  private static final int PICK_MODEL=4102;
  private static final int EXPORT_SETTINGS=4104;
  private static final int IMPORT_SETTINGS=4105;
  private static final int EXPORT_CHAT=4106;
  private static final int VOICE_INPUT=4103;
+ private static final int PICK_CHAT_ATTACHMENTS=4107;
  @Override public void onCreate(Bundle state){super.onCreate(state);CrashReporter.install(this);prefs=getSharedPreferences("seedx_app",MODE_PRIVATE);secrets=getSharedPreferences("seedx_secrets",MODE_PRIVATE);migrateProviderProfiles();applyTheme();String startup=prefs.getString("startup_screen","Home");page=Arrays.asList(TABS).contains(startup)?startup:"Home";updateSystemBars();loadHistory();runtimeAdapters=new RuntimeAdapterManager(this);nativeReady=nativeInit(getFilesDir().getAbsolutePath());if(!nativeReady)Toast.makeText(this,"Native Guardian or workspace initialization failed. AI inference and tools are disabled for safety.",Toast.LENGTH_LONG).show();updateSystemBars();tts=new TextToSpeech(this,status->{ttsReady=status==TextToSpeech.SUCCESS;if(ttsReady){int result=tts.setLanguage(Locale.getDefault());if(result==TextToSpeech.LANG_MISSING_DATA||result==TextToSpeech.LANG_NOT_SUPPORTED)Toast.makeText(this,"Default text-to-speech language is unavailable.",Toast.LENGTH_SHORT).show();}});shell();render();}
  private void applyTheme(){
   String mode=prefs==null?"dark":prefs.getString("ui_theme","dark");boolean light="light".equals(mode);
