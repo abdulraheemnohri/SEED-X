@@ -17,6 +17,24 @@ jobs:
         run: cmake --build build --parallel 2
       - name: Test
         run: ctest --test-dir build --output-on-failure
+      - name: Write CI diagnostics summary
+        if: always()
+        env:
+          JOB_STATUS: ${{ job.status }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          {
+            echo "## SEED-X core CI diagnostics"
+            echo "- Job result: \`$JOB_STATUS\`"
+            echo "- Commit: \`$COMMIT_SHA\`"
+            echo "- Run: $RUN_URL"
+            if [ "$JOB_STATUS" = "success" ]; then
+              echo "- Core build and test steps completed successfully."
+            else
+              echo "- One or more build/test steps failed. Open the run link and inspect the first failing step."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
   llama-backend-build:
     runs-on: ubuntu-latest
