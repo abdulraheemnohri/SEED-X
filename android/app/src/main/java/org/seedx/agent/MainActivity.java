@@ -284,16 +284,7 @@ public final class MainActivity extends Activity {
  private void tools(){
   heading("Tool Center","Typed, allowlisted actions. Every request is checked by the native C++ Guardian.");
   LinearLayout device=card();device.addView(text("ANDROID DEVICE",11,accent,true));device.addView(text(android.os.Build.MANUFACTURER+" "+android.os.Build.MODEL,14,Color.WHITE,true));device.addView(text("Android "+android.os.Build.VERSION.RELEASE+" • API "+android.os.Build.VERSION.SDK_INT,11,muted,false));
-  LinearLayout catalog=card();
-  catalog.addView(text("AVAILABLE TOOLS",11,accent,true));
-  try{
-   JSONArray entries=new JSONArray(nativeToolCatalog());
-   for(int i=0;i<entries.length();i++){
-    JSONObject item=entries.getJSONObject(i);
-    catalog.addView(text(item.optString("tool")+"  /  "+item.optString("operation"),14,Color.WHITE,true));
-    catalog.addView(text(item.optString("description"),11,muted,false));
-   }
-  }catch(Exception e){catalog.addView(text("Tool catalog unavailable.",12,muted,false));}
+  EditText toolSearch=field("Search registered tools","",false);LinearLayout catalog=card();Runnable[] refreshTools=new Runnable[1];refreshTools[0]=()->{catalog.removeAllViews();catalog.addView(text("REGISTERED GUARDIAN-GATED TOOLS",11,accent,true));try{JSONArray entries=new JSONArray(nativeToolCatalog());String q=toolSearch.getText().toString().toLowerCase(Locale.ROOT);for(int i=0;i<entries.length();i++){JSONObject item=entries.getJSONObject(i);String hay=(item.optString("tool")+" "+item.optString("operation")+" "+item.optString("description")).toLowerCase(Locale.ROOT);if(!q.isEmpty()&&!hay.contains(q))continue;catalog.addView(text(item.optString("tool")+"  /  "+item.optString("operation"),14,Color.WHITE,true));catalog.addView(text(item.optString("description"),11,muted,false));}}catch(Exception e){catalog.addView(text("Tool catalog unavailable.",12,muted,false));}};toolSearch.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int count,int after){}public void onTextChanged(CharSequence s,int st,int before,int count){refreshTools[0].run();}public void afterTextChanged(android.text.Editable e){}});refreshTools[0].run();
   button("Read device / runtime status",accent,()->runTool("system.status","read","system://status","",""));
   button("View recent tool audit history",panel,()->showAuditLog());
   button("List private workspace files",panel,()->runTool("files.list","read","workspace://","",""));
