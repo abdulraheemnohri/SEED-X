@@ -8,7 +8,7 @@ int main(){
  const seed::ToolRequest shell{"shell","execute","system://root","run command"};
  assert(k.authorize(read).decision==seed::Decision::Allow);assert(k.authorize(shell).decision==seed::Decision::Deny);
  assert(k.authorize({"files.list","read","workspace://","list workspace"}).decision==seed::Decision::Allow);
- assert(k.authorize({"files.read","read","workspace://notes.txt","read workspace"}).decision==seed::Decision::Allow);
+ assert(k.authorize({"files.read","read","workspace://notes.txt","read workspace"}).decision==seed::Decision::Allow);assert(k.authorize({"workspace.search","search","workspace://","search workspace"}).decision==seed::Decision::Allow);
  assert(k.authorize({"files.write","create","workspace://notes.txt","create note"}).decision==seed::Decision::RequireApproval);
  auto proposed=std::vector<seed::PolicyRule>{{"files.write","write","files://documents/",seed::PolicyEffect::RequireApproval,true},{"files.write","write","files://documents/private/",seed::PolicyEffect::Deny,true}};
  assert(!k.replacePolicies(proposed,false).valid);
