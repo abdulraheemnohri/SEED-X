@@ -287,7 +287,7 @@ extractor = (ROOT / "android/app/src/main/java/org/seedx/agent/AttachmentTextExt
 for marker in ("extractOfficeText", "MAX_ENTRIES = 128", "MAX_ENTRY_BYTES = 256 * 1024", "MAX_TOTAL_BYTES = 2 * 1024 * 1024", "MAX_OUTPUT_CHARS = 64 * 1024", "word/document.xml", "ppt/slides/slide", "xl/sharedStrings.xml", "content.xml", "ZipInputStream"):
     if marker not in extractor:
         raise SystemExit(f"Bounded Office attachment extractor is missing: {marker}")
-if "AttachmentTextExtractor.extractOfficeText(temp,name)" not in activity:
+if "AttachmentTextExtractor.extractText(getApplicationContext(),temp,name)" not in activity:
     raise SystemExit("Chat attachment import is not connected to the bounded Office extractor")
 if activity.count("private long directoryBytes(") != 1:
     raise SystemExit("MainActivity must contain exactly one directoryBytes helper")
