@@ -134,7 +134,7 @@ public final class AttachmentTextExtractor {
                 .replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'");
         value = value.replaceAll("[\\t\\r\\n ]+", " ").trim();
         if (!value.isEmpty() && out.length() < MAX_OUTPUT_CHARS) {
-            if (out.length() > 0 && out.charAt(out.length() - 1) != '\\n') out.append(' ');
+            if (out.length() > 0 && out.charAt(out.length() - 1) != '\n') out.append(' ');
             int remaining = MAX_OUTPUT_CHARS - out.length();
             out.append(value, 0, Math.min(value.length(), remaining));
         }
